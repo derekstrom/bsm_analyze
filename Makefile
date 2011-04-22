@@ -1,7 +1,7 @@
 CCC      = g++
 
 # Subsystems that have compilable libraries
-SUBMOD   = input
+SUBMOD   = bsm_input
 LIB		 = libBSMAnalyze.so
 
 # Get list of all heads, sources and objects. Each source (%.cc) whould have
@@ -54,7 +54,8 @@ prog: $(PROGS)
 # Compile modules
 $(SUBMOD):
 	$(MAKE) -C $@ 
-	@find ./$@/lib/ -type f -name \*.so | head -n1 | xargs -I {} ln -fs .{} ./lib/lib$@.so
+	ln -fs ./$@/lib/lib$@.so ../lib
+	#@find ./$@/lib/ -type f -name \*.so | head -n1 | xargs -I {} ln -fs .{} ./lib/lib$@.so
 
 # Object files depend on all sources and headers but only sources should be
 # compiled
