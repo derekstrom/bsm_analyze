@@ -1,3 +1,10 @@
+// Monitor BSM Input
+//
+// Read events and plot basic distributions
+//
+// Created by Samvel Khalatyan, Apr 22, 2011
+// Copyright 2011, All rights reserved
+
 #include <iostream>
 
 #include <boost/shared_ptr.hpp>
@@ -55,10 +62,10 @@ int main(int argc, char *argv[])
                     event->jets().end() != jet;
                     ++jet)
             {
-                if (!jet->has_gen_particle())
+                if (!jet->has_gen_parton())
                     continue;
 
-                gen_particles->fill(jet->gen_particle());
+                gen_particles->fill(jet->gen_parton());
             }
 
             muons->fill(event->muons());
