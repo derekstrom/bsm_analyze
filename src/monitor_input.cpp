@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         char *empty_argv[] = { argv[0] };
         shared_ptr<TRint> app(new TRint("app", &empty_argc, empty_argv));
 
-        shared_ptr<TCanvas> jet_canvas(new TCanvas("jets", "Jets", 800, 480));
+        shared_ptr<TCanvas> jet_canvas(new TCanvas("jets", "Jets", 800, 320));
         jet_canvas->Divide(3);
 
         jet_canvas->cd(1);
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         jet_canvas->cd(3);
         jets->pt()->Draw();
 
-        shared_ptr<TCanvas> gen_particle_canvas(new TCanvas("gen_particles", "GenParticles", 800, 480));
+        shared_ptr<TCanvas> gen_particle_canvas(new TCanvas("gen_particles", "GenParticles", 800, 320));
         gen_particle_canvas->Divide(3);
 
         gen_particle_canvas->cd(1);
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         gen_particle_canvas->cd(3);
         gen_particles->pt()->Draw();
 
-        shared_ptr<TCanvas> muon_canvas(new TCanvas("muons", "Muons", 800, 480));
+        shared_ptr<TCanvas> muon_canvas(new TCanvas("muons", "Muons", 800, 320));
         muon_canvas->Divide(3);
 
         muon_canvas->cd(1);
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
         muon_canvas->cd(3);
         muons->pt()->Draw();
 
-        shared_ptr<TCanvas> electron_canvas(new TCanvas("electrons", "Electrons", 800, 480));
+        shared_ptr<TCanvas> electron_canvas(new TCanvas("electrons", "Electrons", 800, 320));
         electron_canvas->Divide(3);
 
         electron_canvas->cd(1);
