@@ -9,13 +9,13 @@
 #include <TLorentzVector.h>
 
 #include "interface/MuonMonitor.h"
+#include "interface/Utility.h"
 
 using bsm::MuonMonitor;
 
 MuonMonitor::MuonMonitor()
 {
-    bool status = TH1::AddDirectoryStatus();
-    TH1::AddDirectory(false);
+    utility::SupressTHistAddDirectory supressor;
 
     _multiplicity.reset(new TH1I("muon_multiplicity", "Muons Multiplicity",
                 10, 0, 10));
@@ -29,8 +29,6 @@ MuonMonitor::MuonMonitor()
     _leading_muon_pt->GetXaxis()->SetTitle("P_{T}^{leading muon} [GeV/c]");
 
     _p4.reset(new TLorentzVector());
-
-    TH1::AddDirectory(status);
 }
 
 MuonMonitor::~MuonMonitor()

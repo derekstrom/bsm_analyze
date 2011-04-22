@@ -9,13 +9,13 @@
 #include <TLorentzVector.h>
 
 #include "interface/JetMonitor.h"
+#include "interface/Utility.h"
 
 using bsm::JetMonitor;
 
 JetMonitor::JetMonitor()
 {
-    bool status = TH1::AddDirectoryStatus();
-    TH1::AddDirectory(false);
+    utility::SupressTHistAddDirectory supressor;
 
     _multiplicity.reset(new TH1I("jet_multiplicity", "Jets Multiplicity",
                 10, 0, 10));
@@ -29,8 +29,6 @@ JetMonitor::JetMonitor()
     _leading_jet_pt->GetXaxis()->SetTitle("P_{T}^{leading jet} [GeV/c]");
 
     _p4.reset(new TLorentzVector());
-
-    TH1::AddDirectory(status);
 }
 
 JetMonitor::~JetMonitor()

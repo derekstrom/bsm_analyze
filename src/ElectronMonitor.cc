@@ -9,13 +9,13 @@
 #include <TLorentzVector.h>
 
 #include "interface/ElectronMonitor.h"
+#include "interface/Utility.h"
 
 using bsm::ElectronMonitor;
 
 ElectronMonitor::ElectronMonitor()
 {
-    bool status = TH1::AddDirectoryStatus();
-    TH1::AddDirectory(false);
+    utility::SupressTHistAddDirectory supressor;
 
     _multiplicity.reset(new TH1I("electron_multiplicity", "Electrons Multiplicity",
                 10, 0, 10));
@@ -29,8 +29,6 @@ ElectronMonitor::ElectronMonitor()
     _leading_electron_pt->GetXaxis()->SetTitle("P_{T}^{leading electron} [GeV/c]");
 
     _p4.reset(new TLorentzVector());
-
-    TH1::AddDirectory(status);
 }
 
 ElectronMonitor::~ElectronMonitor()
