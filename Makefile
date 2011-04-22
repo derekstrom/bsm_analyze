@@ -54,8 +54,7 @@ prog: $(PROGS)
 # Compile modules
 $(SUBMOD):
 	$(MAKE) -C $@ 
-	ln -fs ./$@/lib/lib$@.so ../lib
-	#@find ./$@/lib/ -type f -name \*.so | head -n1 | xargs -I {} ln -fs .{} ./lib/lib$@.so
+	ln -fs ../$@/lib/lib$@.so ./lib/
 
 # Object files depend on all sources and headers but only sources should be
 # compiled

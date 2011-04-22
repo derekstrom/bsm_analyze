@@ -10,7 +10,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "input/interface/Muon.pb.h"
+#include "bsm_input/interface/Muon.pb.h"
 
 class TH1;
 class TLorentzVector;

@@ -6,8 +6,8 @@
 #include <TH1.h>
 #include <TRint.h>
 
-#include "input/interface/Reader.h"
-#include "input/interface/Event.pb.h"
+#include "bsm_input/interface/Reader.h"
+#include "bsm_input/interface/Event.pb.h"
 #include "interface/JetMonitor.h"
 #include "interface/MuonMonitor.h"
 #include "interface/ElectronMonitor.h"
