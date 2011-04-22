@@ -8,9 +8,10 @@
 
 #include "bsm_input/interface/Reader.h"
 #include "bsm_input/interface/Event.pb.h"
+#include "interface/ElectronMonitor.h"
+#include "interface/GenParticleMonitor.h"
 #include "interface/JetMonitor.h"
 #include "interface/MuonMonitor.h"
-#include "interface/ElectronMonitor.h"
 
 using std::cerr;
 using std::cout;
@@ -20,9 +21,10 @@ using boost::shared_ptr;
 
 using bsm::Reader;
 using bsm::Event;
+using bsm::ElectronMonitor;
+using bsm::GenParticleMonitor;
 using bsm::JetMonitor;
 using bsm::MuonMonitor;
-using bsm::ElectronMonitor;
 
 int main(int argc, char *argv[])
 {
@@ -35,9 +37,10 @@ int main(int argc, char *argv[])
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
+    shared_ptr<ElectronMonitor> electrons(new ElectronMonitor());
+    shared_ptr<GenParticleMonitor> gen_particles(new GenParticleMonitor());
     shared_ptr<JetMonitor> jets(new JetMonitor());
     shared_ptr<MuonMonitor> muons(new MuonMonitor());
-    shared_ptr<ElectronMonitor> electrons(new ElectronMonitor());
 
     {
         shared_ptr<Reader> reader(new Reader(argv[1]));
@@ -47,6 +50,17 @@ int main(int argc, char *argv[])
                 ++events_read)
         {
             jets->fill(event->jets());
+
+            for(JetMonitor::Jets::const_iterator jet = event->jets().begin();
+                    event->jets().end() != jet;
+                    ++jet)
+            {
+                if (!jet->has_gen_particle())
+                    continue;
+
+                gen_particles->fill(jet->gen_particle());
+            }
+
             muons->fill(event->muons());
             electrons->fill(event->electrons());
 
@@ -72,6 +86,18 @@ int main(int argc, char *argv[])
 
         jet_canvas->cd(3);
         jets->pt()->Draw();
+
+        shared_ptr<TCanvas> gen_particle_canvas(new TCanvas("gen_particles", "GenParticles", 800, 480));
+        gen_particle_canvas->Divide(3);
+
+        gen_particle_canvas->cd(1);
+        gen_particles->id()->Draw();
+
+        gen_particle_canvas->cd(2);
+        gen_particles->status()->Draw();
+
+        gen_particle_canvas->cd(3);
+        gen_particles->pt()->Draw();
 
         shared_ptr<TCanvas> muon_canvas(new TCanvas("muons", "Muons", 800, 480));
         muon_canvas->Divide(3);
