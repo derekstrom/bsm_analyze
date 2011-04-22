@@ -39,7 +39,8 @@ void MuonMonitor::fill(const Muons &muons)
 {
     _multiplicity->Fill(muons.size());
 
-    bool is_leading_muon = true;
+    double leading_muon_pt = 0;
+    double pt = 0;
     for(Muons::const_iterator muon = muons.begin();
             muons.end() != muon;
             ++muon)
@@ -49,15 +50,16 @@ void MuonMonitor::fill(const Muons &muons)
                 muon->physics_object().p4().pz(),
                 muon->physics_object().p4().e());
 
-        if (is_leading_muon)
-        {
-            _leading_muon_pt->Fill(_p4->Pt());
+        pt = _p4->Pt();
 
-            is_leading_muon = false;
-        }
+        if (leading_muon_pt < pt)
+            leading_muon_pt = pt;
 
-        _pt->Fill(_p4->Pt());
+        _pt->Fill(pt);
     }
+
+    if (leading_muon_pt)
+        _leading_muon_pt->Fill(leading_muon_pt);
 }
 
 const MuonMonitor::H1Ptr MuonMonitor::multiplicity() const

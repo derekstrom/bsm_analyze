@@ -39,7 +39,8 @@ void JetMonitor::fill(const Jets &jets)
 {
     _multiplicity->Fill(jets.size());
 
-    bool is_leading_jet = true;
+    double leading_jet_pt = 0;
+    double pt = 0;
     for(Jets::const_iterator jet = jets.begin();
             jets.end() != jet;
             ++jet)
@@ -49,15 +50,16 @@ void JetMonitor::fill(const Jets &jets)
                 jet->physics_object().p4().pz(),
                 jet->physics_object().p4().e());
 
-        if (is_leading_jet)
-        {
-            _leading_jet_pt->Fill(_p4->Pt());
+        pt = _p4->Pt();
 
-            is_leading_jet = false;
-        }
+        if (leading_jet_pt < pt)
+            leading_jet_pt = pt;
 
-        _pt->Fill(_p4->Pt());
+        _pt->Fill(pt);
     }
+
+    if (leading_jet_pt)
+        _leading_jet_pt->Fill(leading_jet_pt);
 }
 
 const JetMonitor::H1Ptr JetMonitor::multiplicity() const

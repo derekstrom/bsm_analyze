@@ -39,7 +39,8 @@ void ElectronMonitor::fill(const Electrons &electrons)
 {
     _multiplicity->Fill(electrons.size());
 
-    bool is_leading_electron = true;
+    double leading_electron_pt = 0;
+    double pt = 0;
     for(Electrons::const_iterator electron = electrons.begin();
             electrons.end() != electron;
             ++electron)
@@ -49,15 +50,16 @@ void ElectronMonitor::fill(const Electrons &electrons)
                 electron->physics_object().p4().pz(),
                 electron->physics_object().p4().e());
 
-        if (is_leading_electron)
-        {
-            _leading_electron_pt->Fill(_p4->Pt());
+        pt = _p4->Pt();
 
-            is_leading_electron = false;
-        }
+        if (leading_electron_pt < pt)
+            leading_electron_pt = pt;
 
         _pt->Fill(_p4->Pt());
     }
+
+    if (leading_electron_pt)
+        _leading_electron_pt->Fill(leading_electron_pt);
 }
 
 const ElectronMonitor::H1Ptr ElectronMonitor::multiplicity() const
