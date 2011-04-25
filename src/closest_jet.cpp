@@ -16,6 +16,7 @@
 #include "bsm_input/interface/Reader.h"
 #include "bsm_input/interface/Event.pb.h"
 #include "interface/LorentzVectorMonitor.h"
+#include "interface/DeltaMonitor.h"
 #include "interface/JetMonitor.h"
 #include "interface/Algorithm.h"
 
@@ -25,6 +26,7 @@ using std::endl;
 
 using boost::shared_ptr;
 
+using bsm::DeltaMonitor;
 using bsm::Event;
 using bsm::Electron;
 using bsm::Jet;
@@ -46,10 +48,12 @@ try
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     shared_ptr<LorentzVectorMonitor> jet_monitor(new LorentzVectorMonitor());
+    shared_ptr<DeltaMonitor> delta_monitor(new DeltaMonitor());
 
     {
         shared_ptr<ClosestJet> closest_jet(new ClosestJet());
         shared_ptr<Reader> reader(new Reader(argv[1]));
+
         uint32_t events_read = 0;
         for(shared_ptr<Event> event(new Event());
                 reader->read(*event);
@@ -66,6 +70,8 @@ try
                 continue;
 
             jet_monitor->fill(jet->physics_object().p4());
+            delta_monitor->fill(jet->physics_object().p4(),
+                    electron.physics_object().p4());
 
             event->Clear();
         }
@@ -107,9 +113,23 @@ try
         jet_canvas_2->cd(3);
         jet_monitor->phi()->Draw();
 
+        shared_ptr<TCanvas> delta_canvas(new TCanvas("Delta",
+                    "Delta", 800, 320));
+        delta_canvas->Divide(3);
+
+        delta_canvas->cd(1);
+        delta_monitor->r()->Draw();
+
+        delta_canvas->cd(2);
+        delta_monitor->eta()->Draw();
+
+        delta_canvas->cd(3);
+        delta_monitor->phi()->Draw();
+
         app->Run();
     }
 
+    delta_monitor.reset();
     jet_monitor.reset();
 
     // Clean Up any memory allocated by libprotobuf
