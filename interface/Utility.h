@@ -8,8 +8,12 @@
 #ifndef BSM_UTILITY
 #define BSM_UTILITY
 
+class TLorentzVector;
+
 namespace bsm
 {
+    class LorentzVector;
+
     namespace utility
     {
         class SupressTHistAddDirectory
@@ -21,6 +25,8 @@ namespace bsm
             private:
                 bool _flag;
         };
+
+        void set(TLorentzVector *root_p4, const LorentzVector *bsm_p4);
     }
 }
 
