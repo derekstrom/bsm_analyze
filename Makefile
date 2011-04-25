@@ -2,7 +2,7 @@ CCC      = g++
 
 # Subsystems that have compilable libraries
 SUBMOD   = bsm_input
-LIB		 = libBSMAnalyze.so
+LIB		 = libbsm_analyze.so.1.0
 
 # Get list of all heads, sources and objects. Each source (%.cc) whould have
 # an object file
@@ -66,6 +66,7 @@ $(OBJS): $(addprefix ./src/,$(patsubst %.o,%.cc,$(notdir $@)))
 $(LIB): $(OBJS)
 	@echo "[+] Creating shared libraries ..."
 	$(CCC) $(LDFLAGS) -o $(addprefix ./lib/,$@) $(OBJS)
+	@cd ./lib; ln -fs $@ $(basename $@); ln -fs $(basename $@) $(basename $(basename $@))
 	@echo
 
 
@@ -87,7 +88,7 @@ endif
 
 clean: cleanbin
 	rm -f ./obj/*.o
-	rm -f $(addprefix ./lib/,$(LIB))
+	rm -f $(addprefix ./lib/,$(basename $(basename $(LIB)))*)
 
 $(CLEAN_MOD):
 	$(MAKE) -C $(subst CLN_,,$@) clean
