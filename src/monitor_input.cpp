@@ -18,6 +18,7 @@
 #include "interface/ElectronMonitor.h"
 #include "interface/GenParticleMonitor.h"
 #include "interface/JetMonitor.h"
+#include "interface/MissingEnergyMonitor.h"
 #include "interface/MuonMonitor.h"
 #include "interface/PrimaryVertexMonitor.h"
 
@@ -32,10 +33,12 @@ using bsm::Event;
 using bsm::ElectronMonitor;
 using bsm::GenParticleMonitor;
 using bsm::JetMonitor;
+using bsm::MissingEnergyMonitor;
 using bsm::MuonMonitor;
 using bsm::PrimaryVertexMonitor;
 
 int main(int argc, char *argv[])
+try
 {
     if (2 > argc)
     {
@@ -49,6 +52,7 @@ int main(int argc, char *argv[])
     shared_ptr<ElectronMonitor> electrons(new ElectronMonitor());
     shared_ptr<GenParticleMonitor> gen_particles(new GenParticleMonitor());
     shared_ptr<JetMonitor> jets(new JetMonitor());
+    shared_ptr<MissingEnergyMonitor> missing_energy(new MissingEnergyMonitor());
     shared_ptr<MuonMonitor> muons(new MuonMonitor());
     shared_ptr<PrimaryVertexMonitor> primary_vertices(new PrimaryVertexMonitor());
 
@@ -74,6 +78,9 @@ int main(int argc, char *argv[])
             muons->fill(event->muons());
             electrons->fill(event->electrons());
             primary_vertices->fill(event->primary_vertices());
+
+            if (event->has_missing_energy())
+                missing_energy->fill(event->missing_energy());
 
             event->Clear();
         }
@@ -149,10 +156,39 @@ int main(int argc, char *argv[])
         primary_vertex_canvas->cd(4);
         primary_vertices->z()->Draw();
 
+        shared_ptr<TCanvas> missing_energy_canvas(new TCanvas("missing_energy", "Missing Energy", 640, 480));
+        missing_energy_canvas->Divide(2, 2);
+
+        missing_energy_canvas->cd(1);
+        missing_energy->pt()->Draw();
+
+        missing_energy_canvas->cd(2);
+        missing_energy->x()->Draw();
+
+        missing_energy_canvas->cd(3);
+        missing_energy->y()->Draw();
+
+        missing_energy_canvas->cd(4);
+        missing_energy->z()->Draw();
+
         app->Run();
     }
 
     jets.reset();
 
+    // Clean Up any memory allocated by libprotobuf
+    //
+    google::protobuf::ShutdownProtobufLibrary();
+
     return 0;
+}
+catch(...)
+{
+    // Clean Up any memory allocated by libprotobuf
+    //
+    google::protobuf::ShutdownProtobufLibrary();
+
+    cerr << "Unknown error" << endl;
+
+    return 1;
 }
