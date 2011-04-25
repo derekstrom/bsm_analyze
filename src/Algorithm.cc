@@ -26,7 +26,7 @@ const bsm::Jet *ClosestJet::operator()(const Jets &jets,
     if (!jets.size())
         return 0;
 
-    utility::set(_lepton_p4.get(), &electron->physics_object().p4());
+    utility::set(_lepton_p4.get(), &electron.physics_object().p4());
 
     return operator()(jets);
 }
@@ -36,7 +36,7 @@ const bsm::Jet *ClosestJet::operator()(const Jets &jets, const Muon &muon)
     if (!jets.size())
         return 0;
 
-    utility::set(_lepton_p4.get(), &muon->physics_object().p4());
+    utility::set(_lepton_p4.get(), &muon.physics_object().p4());
 
     return operator()(jets);
 }
