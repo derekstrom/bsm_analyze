@@ -83,7 +83,7 @@ $(PROGS): $(OBJS)
 # from top folder for global clean of all systems
 cleanbin:
 ifneq ($(strip $(PROGS)),)
-	rm -f $(addprefix ./bin/,$(PROGS))
+	rm -f $(addprefix ./bin/bsm_,$(PROGS))
 endif
 
 clean: cleanbin
