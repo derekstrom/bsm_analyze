@@ -21,19 +21,19 @@ LorentzVectorMonitor::LorentzVectorMonitor()
     _energy.reset(new TH1F("energy", "Energy", 100, 0, 100));
     _energy->GetXaxis()->SetTitle("E [GeV]");
 
-    _px.reset(new TH1F("px", "P_X", 100, 0, 100));
-    _px->GetXaxis()->SetTitle("P_X [GeV/c]");
+    _px.reset(new TH1F("px", "P_{X}", 100, 0, 100));
+    _px->GetXaxis()->SetTitle("P_{X} [GeV/c]");
 
-    _py.reset(new TH1F("py", "P_Y", 100, 0, 100));
-    _py->GetXaxis()->SetTitle("P_Y [GeV/c]");
+    _py.reset(new TH1F("py", "P_{Y}", 100, 0, 100));
+    _py->GetXaxis()->SetTitle("P_{Y} [GeV/c]");
 
-    _pz.reset(new TH1F("pz", "P_Z", 100, 0, 100));
-    _pz->GetXaxis()->SetTitle("P_Z [GeV/c]");
+    _pz.reset(new TH1F("pz", "P_{Z}", 100, 0, 100));
+    _pz->GetXaxis()->SetTitle("P_{Z} [GeV/c]");
 
-    _pt.reset(new TH1F("pt", "P_T", 100, 0, 100));
-    _pt->GetXaxis()->SetTitle("P_T [GeV/c]");
+    _pt.reset(new TH1F("pt", "P_{T}", 500, 0, 500));
+    _pt->GetXaxis()->SetTitle("P_{T} [GeV/c]");
 
-    _eta.reset(new TH1F("eta", "#eta", 200, -10, 10));
+    _eta.reset(new TH1F("eta", "#eta", 100, -5, 5));
     _eta->GetXaxis()->SetTitle("#eta");
 
     _phi.reset(new TH1F("phi", "#phi", 80, -4, 4));
