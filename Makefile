@@ -75,7 +75,7 @@ $(LIB): $(OBJS)
 #
 $(PROGS): $(OBJS) 
 	@echo "[+] Compiling programs ..."
-	$(CCC) $(CXXFLAGS) `root-config --glibs` $(LIBS) $(OBJS) $(PROTOCOBJS) ./src/$@.cpp -o ./bin/$@
+	$(CCC) $(CXXFLAGS) `root-config --glibs` $(LIBS) $(OBJS) $(PROTOCOBJS) ./src/$@.cpp -o ./bin/bsm_$@
 	@echo
 
 # This rule will clean libraries also code depend on. Run:
