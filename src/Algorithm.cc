@@ -55,7 +55,8 @@ const bsm::Jet *ClosestJet::operator()(const Jets &jets)
 
         double delta_r = _lepton_p4->DeltaR(*_jet_p4);
 
-        if (delta_r < min_delta_r)
+        if (-1 == min_delta_r
+                || delta_r < min_delta_r)
         {
             min_delta_r = delta_r;
 
