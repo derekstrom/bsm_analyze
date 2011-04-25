@@ -19,6 +19,7 @@
 #include "interface/GenParticleMonitor.h"
 #include "interface/JetMonitor.h"
 #include "interface/MuonMonitor.h"
+#include "interface/PrimaryVertexMonitor.h"
 
 using std::cerr;
 using std::cout;
@@ -32,6 +33,7 @@ using bsm::ElectronMonitor;
 using bsm::GenParticleMonitor;
 using bsm::JetMonitor;
 using bsm::MuonMonitor;
+using bsm::PrimaryVertexMonitor;
 
 int main(int argc, char *argv[])
 {
@@ -48,6 +50,7 @@ int main(int argc, char *argv[])
     shared_ptr<GenParticleMonitor> gen_particles(new GenParticleMonitor());
     shared_ptr<JetMonitor> jets(new JetMonitor());
     shared_ptr<MuonMonitor> muons(new MuonMonitor());
+    shared_ptr<PrimaryVertexMonitor> primary_vertices(new PrimaryVertexMonitor());
 
     {
         shared_ptr<Reader> reader(new Reader(argv[1]));
@@ -70,6 +73,7 @@ int main(int argc, char *argv[])
 
             muons->fill(event->muons());
             electrons->fill(event->electrons());
+            primary_vertices->fill(event->primary_vertices());
 
             event->Clear();
         }
@@ -129,6 +133,21 @@ int main(int argc, char *argv[])
 
         electron_canvas->cd(3);
         electrons->pt()->Draw();
+
+        shared_ptr<TCanvas> primary_vertex_canvas(new TCanvas("primary_vertices", "Priamary Vertices", 640, 480));
+        primary_vertex_canvas->Divide(2, 2);
+
+        primary_vertex_canvas->cd(1);
+        primary_vertices->multiplicity()->Draw();
+
+        primary_vertex_canvas->cd(2);
+        primary_vertices->x()->Draw();
+
+        primary_vertex_canvas->cd(3);
+        primary_vertices->y()->Draw();
+
+        primary_vertex_canvas->cd(4);
+        primary_vertices->z()->Draw();
 
         app->Run();
     }
