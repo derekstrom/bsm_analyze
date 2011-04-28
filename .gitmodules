@@ -1,3 +1,6 @@
 [submodule "bsm_input"]
 	path = bsm_input
 	url = git://github.com/ksamdev/bsm_input.git
+[submodule "bsm_keyboard"]
+	path = bsm_keyboard
+	url = git://github.com/ksamdev/bsm_keyboard.git
