@@ -25,7 +25,13 @@ else
 endif
 
 CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -I./ -I/opt/local/include -I${ROOTSYS}/include -I${BOOST_ROOT}/include  -I./input/interface $(foreach subsys,$(SUBMOD),$(addprefix -I./,$(subsys)))
-LIBS     = -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -L./lib $(foreach mod,$(SUBMOD),$(addprefix -l,$(mod)))
+
+ifeq ($(shell uname),Linux)
+	LIBS     = -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -L./lib $(foreach mod,$(SUBMOD),$(addprefix -l,$(mod))) -lboost_thread
+else
+	LIBS     = -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -L./lib $(foreach mod,$(SUBMOD),$(addprefix -l,$(mod))) -lboost_thread-mt
+endif
+
 LDFLAGS  = `root-config --libs` -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -L./lib $(foreach mod,$(SUBMOD),$(addprefix -l,$(mod)))
 
 # Rules to be always executed: empty ones
