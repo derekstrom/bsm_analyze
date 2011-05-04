@@ -39,10 +39,10 @@ try:
     _max_threads(boost::thread::hardware_concurrency()),
     _running_threads(0)
 {
-    // Max threads are limited by 2 x hardware
+    // Max threads are limited by hardware Core(s)
     //
     if (max_threads
-            && max_threads <= 2 *_max_threads)
+            && max_threads < _max_threads)
 
         _max_threads = max_threads;
 
