@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "bsm_input/interface/Reader.h"
 
@@ -15,13 +16,14 @@
 
 using namespace std;
 
+using boost::lexical_cast;
 using boost::shared_ptr;
 
 using bsm::core::AnalyzerThread;
 using bsm::core::Files;
 using bsm::core::ThreadController;
 
-void run(const Files &input_files);
+void run(const uint32_t &max_threads, const Files &input_files);
 
 int main(int argc, char *argv[])
 try
@@ -43,7 +45,7 @@ try
         for(int i = 2; argc > i; ++i)
             input_files.push_back(argv[i]);
 
-        run(input_files);
+        run(lexical_cast<uint32_t>(argv[1]), input_files);
     }
 
     // Clean Up any memory allocated by libprotobuf
@@ -63,10 +65,10 @@ catch(...)
     return 1;
 }
 
-void run(const Files &input_files)
+void run(const uint32_t &max_threads, const Files &input_files)
 try
 {
-    shared_ptr<ThreadController> controller(new ThreadController());
+    shared_ptr<ThreadController> controller(new ThreadController(max_threads));
 
     for(Files::const_iterator input = input_files.begin();
             input_files.end() != input;

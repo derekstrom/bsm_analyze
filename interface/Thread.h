@@ -17,6 +17,8 @@
 
 namespace bsm
 {
+    class Reader;
+
     namespace core
     {
         class Condition;
@@ -98,7 +100,7 @@ namespace bsm
 
             private:
                 boost::shared_ptr<Condition> _condition;
-                boost::shared_ptr<boost::thread> _thread;
+                boost::thread _thread;
 
                 ThreadController *_controller;
         };
@@ -120,6 +122,12 @@ namespace bsm
 
                 bool _continue;
                 bool _wait_for_instructions;
+
+                typedef boost::shared_ptr<Reader> ReaderPtr;
+                ReaderPtr _reader;
+
+                uint32_t _events_read; // read events in last file
+                uint32_t _events_processed;
         };
 
         class KeyboardThread: public Thread

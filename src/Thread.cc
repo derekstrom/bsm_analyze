@@ -6,18 +6,23 @@
 // Copyright 2011, All rights reserved
 
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "bsm_input/interface/Event.pb.h"
+#include "bsm_input/interface/Input.pb.h"
+#include "bsm_input/interface/Reader.h"
 #include "bsm_keyboard/interface/KeyboardController.h"
 
 #include "interface/Thread.h"
 
+using std::bad_alloc;
 using std::cerr;
 using std::cout;
+using std::distance;
 using std::endl;
-using std::bad_alloc;
 
 using bsm::core::AnalyzerThread;
 using bsm::core::Condition;
@@ -30,19 +35,25 @@ using bsm::core::ThreadController;
 // ThreadController class
 //
 ThreadController::ThreadController(const uint32_t &max_threads) throw()
-try
-    : _max_threads(boost::thread::hardware_concurrency())
+try:
+    _max_threads(boost::thread::hardware_concurrency()),
+    _running_threads(0)
 {
+    // Max threads are limited by 2 x hardware
+    //
     if (max_threads
-            && max_threads < _max_threads)
+            && max_threads <= 2 *_max_threads)
 
         _max_threads = max_threads;
 
     _condition.reset(new Condition());
+
+    _next_file = _input_files.begin();
 }
 catch(const bad_alloc &error)
 {
-    cerr << "ThreadController: failed to allocate memory - " << error.what() << endl;
+    cerr << "ThreadController: failed to allocate memory - " << error.what()
+        << endl;
 }
 
 ThreadController::~ThreadController()
@@ -87,6 +98,7 @@ void ThreadController::notify(const Command &command)
                     {
                         (*thread)->stop();
                     }
+                    _next_file = _input_files.end();
 
                     _keyboard_thread->stop();
 
@@ -98,6 +110,10 @@ void ThreadController::notify(const Command &command)
 
         case STATUS:    // Print status
                         //
+                        cout << "Finished " << distance(Files::const_iterator(_input_files.begin()),
+                                                        _next_file)
+                            << "/" << _input_files.size() << " files" << endl;
+
                         break;
 
         default:    // Unknown command
@@ -120,8 +136,13 @@ bool ThreadController::init(const Files &input_files)
     _input_files = input_files;
     _next_file = _input_files.begin();
 
+    cout << "Create " << _max_threads << " threads" << endl;
     createThreads();
+ 
+    cout << "Threads are created" << endl;
+    cout << "Start Threads" << endl;
     startThreads();
+    cout << "Threads are started" << endl;
 
     return true;
 }
@@ -170,9 +191,13 @@ void ThreadController::startThreads()
     {
         AnalyzerThreadPtr thread_ptr = *thread;
 
+        cout << "init thread" << endl;
+
         // Pass input file to thread
         //
         thread_ptr->init(*_next_file);
+
+        cout << "init complete" << endl;
 
         if (!thread_ptr->start())
             continue;
@@ -197,7 +222,6 @@ void ThreadController::run()
 void ThreadController::wait()
 {
     Lock lock(condition());
-
     while(_complete_threads.empty())
         condition()->variable()->wait(lock());
 }
@@ -216,6 +240,7 @@ void ThreadController::onThreadComplete()
 
 void ThreadController::continueThread()
 {
+    cout << "Continue thread" << endl;
     AnalyzerThread *thread = _complete_threads.front();
     _complete_threads.pop();
 
@@ -229,6 +254,7 @@ void ThreadController::continueThread()
 
 void ThreadController::stopThread()
 {
+    cout << "Stop thread" << endl;
     Thread *thread = _complete_threads.front();
     _complete_threads.pop();
 
@@ -266,19 +292,17 @@ ConditionPtr Thread::condition() const
 
 bool Thread::start()
 {
-    if (boost::thread() != *_thread)
+    if (boost::thread() != _thread)
         return false;
 
-    _thread.reset(new boost::thread(&Thread::run, this));
+    _thread = boost::thread(&Thread::run, this);
 
     return true;
 }
 
 void Thread::join()
 {
-    Lock lock(condition());
-
-    _thread->join();
+    _thread.join();
 }
 
 // Protected
@@ -293,7 +317,9 @@ ThreadController *Thread::controller() const
 // Analyzer Thread
 //
 AnalyzerThread::AnalyzerThread(ThreadController *controller):
-    Thread(controller)
+    Thread(controller),
+    _events_read(0),
+    _events_processed(0)
 {
 }
 
@@ -301,7 +327,11 @@ void AnalyzerThread::init(const std::string &file_name)
 {
     Lock lock(condition());
 
-    cout << "Init with file: " << file_name << endl;
+    _reader.reset(new Reader(file_name));
+    cout << "Init with file: " << file_name << " e: "
+        << _reader->input()->events() << endl;
+
+    _events_read = 0;
 
     _continue = true;
     _wait_for_instructions = false;
@@ -313,18 +343,30 @@ void AnalyzerThread::stop()
 
     _continue = false;
     _wait_for_instructions = false;
+
+    cout << "Thread is asked to stop" << endl;
 }
 
 // Protected
 //
 void AnalyzerThread::run()
 {
+    cout << "Here" << endl;
     for(_wait_for_instructions = true;
             _continue;
             _wait_for_instructions = true)
     {
         // Process file
         //
+        if (_reader)
+        {
+            for(boost::shared_ptr<Event> event(new Event());
+                    _continue && _reader->read(*event);
+                    ++_events_read)
+            {
+                event->Clear();
+            }
+        }
 
         // Notify Controller that Thread has finished the analysis
         //
@@ -334,6 +376,8 @@ void AnalyzerThread::run()
         //
         wait();
     }
+
+    cout << "Thread finished" << endl;
 }
 
 // Private
@@ -342,6 +386,7 @@ void AnalyzerThread::wait()
 {
     Lock lock(condition());
 
+    controller()->condition()->variable()->notify_all();
     while(_wait_for_instructions)
     {
         controller()->condition()->variable()->notify_all();
@@ -384,9 +429,16 @@ void KeyboardThread::run()
 
                       continue;
 
+            case 's': // status
+                      //
+                      controller()->notify(ThreadController::STATUS);
+
+                      continue;
+
             case 'q': // quit
                       //
                       controller()->notify(ThreadController::QUIT);
+
                       break;
 
             default: continue;

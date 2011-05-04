@@ -25,7 +25,7 @@ namespace bsm
 
                 virtual void process(const Event *) = 0;
 
-                // Each analyzer should define to print it on screen
+                // Each analyzer should know how to print itself on screen
                 //
                 virtual void print(std::ostream &) const = 0;
         };
