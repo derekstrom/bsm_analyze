@@ -6,15 +6,414 @@
 // Copyright 2011, All rights reserved
 
 #include <iostream>
+#include <stdexcept>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+#include "bsm_keyboard/interface/KeyboardController.h"
 
 #include "interface/Thread.h"
 
 using std::cerr;
+using std::cout;
 using std::endl;
+using std::bad_alloc;
 
+using bsm::core::AnalyzerThread;
 using bsm::core::Condition;
+using bsm::core::ConditionPtr;
+using bsm::core::KeyboardThread;
+using bsm::core::Lock;
+using bsm::core::Thread;
+using bsm::core::ThreadController;
 
-// Condition class
+// ThreadController class
+//
+ThreadController::ThreadController(const uint32_t &max_threads) throw()
+try
+    : _max_threads(boost::thread::hardware_concurrency())
+{
+    if (max_threads
+            && max_threads < _max_threads)
+
+        _max_threads = max_threads;
+
+    _condition.reset(new Condition());
+}
+catch(const bad_alloc &error)
+{
+    cerr << "ThreadController: failed to allocate memory - " << error.what() << endl;
+}
+
+ThreadController::~ThreadController()
+{
+}
+
+ConditionPtr ThreadController::condition() const
+{
+    return _condition;
+}
+
+void ThreadController::process(const Files &input_files)
+{
+    if (!condition())
+        return;
+
+    if (!init(input_files))
+        return;
+
+    run();
+    reset();
+}
+
+void ThreadController::notify(AnalyzerThread *thread)
+{
+    Lock lock(condition());
+
+    _complete_threads.push(thread);
+}
+
+void ThreadController::notify(const Command &command)
+{
+    Lock lock(condition());
+
+    switch(command)
+    {
+        case QUIT:  // quit application
+                    //
+                    for(Threads::iterator thread = _threads.begin();
+                            _threads.end() != thread;
+                            ++thread)
+                    {
+                        (*thread)->stop();
+                    }
+
+                    _keyboard_thread->stop();
+
+                    break;
+
+        case HELP:  // Print help
+                    //
+                    break;
+
+        case STATUS:    // Print status
+                        //
+                        break;
+
+        default:    // Unknown command
+                    //
+                    break;
+    }
+}
+
+// Privates
+//
+bool ThreadController::init(const Files &input_files)
+{
+    Lock lock(condition());
+
+    if (_running_threads
+            || input_files.empty())
+
+        return false;
+
+    _input_files = input_files;
+    _next_file = _input_files.begin();
+
+    createThreads();
+    startThreads();
+
+    return true;
+}
+
+void ThreadController::reset()
+{
+    Lock lock(condition());
+
+    _keyboard_thread->stop();
+    _keyboard_thread->join();
+
+    _keyboard_thread.reset();
+
+    // Reset object
+    //
+    _running_threads = 0;
+    _complete_threads = ThreadsFIFO();
+    _threads.clear();
+
+    _input_files.clear();
+    _next_file = _input_files.begin();
+}
+
+void ThreadController::createThreads()
+{
+    uint32_t max_threads = _max_threads;
+
+    if (_input_files.size() < _max_threads)
+        max_threads = _input_files.size();
+
+    for(uint32_t i = 0; max_threads > i; ++i)
+    {
+        AnalyzerThreadPtr thread(new AnalyzerThread(this));
+
+        _threads.push_back(thread);
+    }
+
+    _keyboard_thread.reset(new KeyboardThread(this));
+}
+
+void ThreadController::startThreads()
+{
+    for(Threads::iterator thread = _threads.begin();
+            _threads.end() != thread;
+            ++thread)
+    {
+        AnalyzerThreadPtr thread_ptr = *thread;
+
+        // Pass input file to thread
+        //
+        thread_ptr->init(*_next_file);
+
+        if (!thread_ptr->start())
+            continue;
+
+        ++_next_file;
+        ++_running_threads;
+    }
+
+    _keyboard_thread->start();
+}
+
+void ThreadController::run()
+{
+    while(_running_threads)
+    {
+        wait();
+
+        onThreadComplete();
+    }
+} 
+
+void ThreadController::wait()
+{
+    Lock lock(condition());
+
+    while(_complete_threads.empty())
+        condition()->variable()->wait(lock());
+}
+
+void ThreadController::onThreadComplete()
+{
+    Lock lock(condition());
+    while(!_complete_threads.empty())
+    {
+        if (_input_files.end() != _next_file)
+            continueThread();
+        else
+            stopThread();
+    }
+}
+
+void ThreadController::continueThread()
+{
+    AnalyzerThread *thread = _complete_threads.front();
+    _complete_threads.pop();
+
+    // Pass input file to thread
+    //
+    thread->init(*_next_file);
+    ++_next_file;
+
+    thread->condition()->variable()->notify_all();
+}
+
+void ThreadController::stopThread()
+{
+    Thread *thread = _complete_threads.front();
+    _complete_threads.pop();
+
+    thread->stop();
+    thread->condition()->variable()->notify_all();
+
+    thread->join();
+
+    --_running_threads;
+}
+
+
+
+// Thread class
+//
+Thread::Thread(ThreadController *controller) throw()
+try
+    : _controller(controller)
+{
+    _condition.reset(new Condition());
+}
+catch(const bad_alloc &error)
+{
+    cerr << "Thread: failed to allocate memory - " << error.what() << endl;
+}
+
+Thread::~Thread()
+{
+}
+
+ConditionPtr Thread::condition() const
+{
+    return _condition;
+}
+
+bool Thread::start()
+{
+    if (boost::thread() != *_thread)
+        return false;
+
+    _thread.reset(new boost::thread(&Thread::run, this));
+
+    return true;
+}
+
+void Thread::join()
+{
+    Lock lock(condition());
+
+    _thread->join();
+}
+
+// Protected
+//
+ThreadController *Thread::controller() const
+{
+    return _controller;
+}
+
+
+
+// Analyzer Thread
+//
+AnalyzerThread::AnalyzerThread(ThreadController *controller):
+    Thread(controller)
+{
+}
+
+void AnalyzerThread::init(const std::string &file_name)
+{
+    Lock lock(condition());
+
+    cout << "Init with file: " << file_name << endl;
+
+    _continue = true;
+    _wait_for_instructions = false;
+}
+
+void AnalyzerThread::stop()
+{
+    Lock lock(condition());
+
+    _continue = false;
+    _wait_for_instructions = false;
+}
+
+// Protected
+//
+void AnalyzerThread::run()
+{
+    for(_wait_for_instructions = true;
+            _continue;
+            _wait_for_instructions = true)
+    {
+        // Process file
+        //
+
+        // Notify Controller that Thread has finished the analysis
+        //
+        controller()->notify(this);
+
+        // Wait for new instructions
+        //
+        wait();
+    }
+}
+
+// Private
+//
+void AnalyzerThread::wait()
+{
+    Lock lock(condition());
+
+    while(_wait_for_instructions)
+    {
+        controller()->condition()->variable()->notify_all();
+        condition()->variable()->wait(lock());
+    }
+}
+
+
+
+// Keyboard Thread
+//
+KeyboardThread::KeyboardThread(ThreadController *controller) throw():
+    Thread(controller),
+    _continue(true)
+{
+    _controller.reset(new KeyboardController());
+}
+
+void KeyboardThread::stop()
+{
+    Lock lock(condition());
+
+    _continue = false;
+}
+
+void KeyboardThread::run()
+{
+    // Update frequency: every 100 ms
+    //
+    boost::posix_time::milliseconds delay(100);
+    for(char key = 0; _continue; boost::this_thread::sleep(delay))
+    {
+        key = _controller->get();
+
+        switch(key)
+        {
+            case 'h': // help
+                      //
+                      controller()->notify(ThreadController::HELP);
+
+                      continue;
+
+            case 'q': // quit
+                      //
+                      controller()->notify(ThreadController::QUIT);
+                      break;
+
+            default: continue;
+        }
+
+        break;
+    }
+}
+
+
+
+// Lock
+//
+Lock::Lock(const ConditionPtr &condition):
+    _lock(*condition->mutex())
+{
+}
+
+Lock::UniqueLock &Lock::operator()()
+{
+    return _lock;
+}
+
+
+
+
+// Condition
 //
 Condition::Condition() throw()
 try
@@ -24,7 +423,7 @@ try
 }
 catch(const std::bad_alloc &error)
 {
-    cerr << "Condition: failed to allocate memory" << endl;
+    cerr << "Condition: failed to allocate memory - " << error.what() << endl;
 
     _mutex.reset();
     _variable.reset();
