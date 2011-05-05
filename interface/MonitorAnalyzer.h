@@ -20,7 +20,13 @@ namespace bsm
     {
         public:
             typedef Analyzer::AnalyzerPtr AnalyzerPtr;
+            typedef boost::shared_ptr<ElectronMonitor> ElectronMonitorPtr;
             typedef boost::shared_ptr<JetMonitor> JetMonitorPtr;
+            typedef boost::shared_ptr<MissingEnergyMonitor>
+                MissingEnergyMonitorPtr;
+            typedef boost::shared_ptr<MuonMonitor> MuonMonitorPtr;
+            typedef boost::shared_ptr<PrimaryVertexMonitor>
+                PrimaryVertexMonitorPtr;
 
             MonitorAnalyzer();
             virtual ~MonitorAnalyzer();
@@ -35,14 +41,26 @@ namespace bsm
 
             virtual void print(std::ostream &) const;
 
+            virtual operator bool() const;
+
+            // Getter
+            //
+            const ElectronMonitorPtr monitorElectrons() const;
             const JetMonitorPtr monitorJets() const;
+            const MissingEnergyMonitorPtr monitorMissingEnergy() const;
+            const MuonMonitorPtr monitorMuons() const;
+            const PrimaryVertexMonitorPtr monitorPrimaryVertices() const;
 
         private:
             // Prevent copying
             //
             MonitorAnalyzer &operator =(const MonitorAnalyzer &);
 
+            ElectronMonitorPtr _monitor_electrons;
             JetMonitorPtr _monitor_jets;
+            MissingEnergyMonitorPtr _monitor_missing_energy;
+            MuonMonitorPtr _monitor_muons;
+            PrimaryVertexMonitorPtr _monitor_primary_vertices;
     };
 }
 

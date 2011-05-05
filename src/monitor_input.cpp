@@ -126,61 +126,75 @@ void plot(const MonitorAnalyzerPtr &analyzer)
 
     gen_particle_canvas->cd(3);
     gen_particles->pt()->Draw();
+    */
 
     shared_ptr<TCanvas> muon_canvas(new TCanvas("muons", "Muons", 800, 320));
     muon_canvas->Divide(3);
 
     muon_canvas->cd(1);
-    muons->multiplicity()->Draw();
+    TH1Ptr muon_multiplicity = convert(*analyzer->monitorMuons()->multiplicity());
+    muon_multiplicity->Draw();
 
     muon_canvas->cd(2);
-    muons->leading_muon_pt()->Draw();
+    TH1Ptr muon_leading_pt = convert(*analyzer->monitorMuons()->leading_pt());
+    muon_leading_pt->Draw();
 
     muon_canvas->cd(3);
-    muons->pt()->Draw();
+    TH1Ptr muon_pt = convert(*analyzer->monitorMuons()->pt());
+    muon_pt->Draw();
 
     shared_ptr<TCanvas> electron_canvas(new TCanvas("electrons", "Electrons", 800, 320));
     electron_canvas->Divide(3);
 
     electron_canvas->cd(1);
-    electrons->multiplicity()->Draw();
+    TH1Ptr electron_multiplicity = convert(*analyzer->monitorElectrons()->multiplicity());
+    electron_multiplicity->Draw();
 
     electron_canvas->cd(2);
-    electrons->leading_electron_pt()->Draw();
+    TH1Ptr electron_leading_pt = convert(*analyzer->monitorElectrons()->leading_pt());
+    electron_leading_pt->Draw();
 
     electron_canvas->cd(3);
-    electrons->pt()->Draw();
+    TH1Ptr electron_pt = convert(*analyzer->monitorElectrons()->pt());
+    electron_pt->Draw();
 
     shared_ptr<TCanvas> primary_vertex_canvas(new TCanvas("primary_vertices", "Priamary Vertices", 640, 480));
     primary_vertex_canvas->Divide(2, 2);
 
     primary_vertex_canvas->cd(1);
-    primary_vertices->multiplicity()->Draw();
+    TH1Ptr pv_multiplicity = convert(*analyzer->monitorPrimaryVertices()->multiplicity());
+    pv_multiplicity->Draw();
 
     primary_vertex_canvas->cd(2);
-    primary_vertices->x()->Draw();
+    TH1Ptr pv_x = convert(*analyzer->monitorPrimaryVertices()->x());
+    pv_x->Draw();
 
     primary_vertex_canvas->cd(3);
-    primary_vertices->y()->Draw();
+    TH1Ptr pv_y = convert(*analyzer->monitorPrimaryVertices()->y());
+    pv_y->Draw();
 
     primary_vertex_canvas->cd(4);
-    primary_vertices->z()->Draw();
+    TH1Ptr pv_z = convert(*analyzer->monitorPrimaryVertices()->z());
+    pv_z->Draw();
 
     shared_ptr<TCanvas> missing_energy_canvas(new TCanvas("missing_energy", "Missing Energy", 640, 480));
     missing_energy_canvas->Divide(2, 2);
 
     missing_energy_canvas->cd(1);
-    missing_energy->pt()->Draw();
+    TH1Ptr missing_energy_pt = convert(*analyzer->monitorMissingEnergy()->pt());
+    missing_energy_pt->Draw();
 
     missing_energy_canvas->cd(2);
-    missing_energy->x()->Draw();
+    TH1Ptr missing_energy_x = convert(*analyzer->monitorMissingEnergy()->x());
+    missing_energy_x->Draw();
 
     missing_energy_canvas->cd(3);
-    missing_energy->y()->Draw();
+    TH1Ptr missing_energy_y = convert(*analyzer->monitorMissingEnergy()->y());
+    missing_energy_y->Draw();
 
     missing_energy_canvas->cd(4);
-    missing_energy->z()->Draw();
-    */
+    TH1Ptr missing_energy_z = convert(*analyzer->monitorMissingEnergy()->z());
+    missing_energy_z->Draw();
 
     app->Run();
 }

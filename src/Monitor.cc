@@ -577,6 +577,22 @@ std::ostream &bsm::operator<<(std::ostream &out,
     return out;
 }
 
+void bsm::merge(ElectronMonitor &m1, const ElectronMonitor &m2)
+{
+}
+
 void bsm::merge(JetMonitor &m1, const JetMonitor &m2)
+{
+}
+
+void bsm::merge(MissingEnergyMonitor &m1, const MissingEnergyMonitor &m2)
+{
+}
+
+void bsm::merge(MuonMonitor &m1, const MuonMonitor &m2)
+{
+}
+
+void bsm::merge(PrimaryVertexMonitor &m1, const PrimaryVertexMonitor &m2)
 {
 }

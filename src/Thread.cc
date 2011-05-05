@@ -143,9 +143,16 @@ bool ThreadController::init(const AnalyzerPtr &analyzer, const Files &input_file
 {
     Lock lock(condition());
 
+    // Skip if:
+    //  there are any threads running
+    //  no input files supplied
+    //  analyzer is not defined
+    //  analyzer is in invalid state
+    //
     if (_running_threads
             || input_files.empty()
-            || !analyzer)
+            || !analyzer
+            || !*analyzer)
 
         return false;
 

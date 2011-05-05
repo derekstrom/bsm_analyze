@@ -83,102 +83,12 @@ try
         cout << "Events Read: " << events_read << endl;
     }
 
-    {
-        /*
-        int empty_argc = 1;
-        char *empty_argv[] = { argv[0] };
-        shared_ptr<TRint> app(new TRint("app", &empty_argc, empty_argv));
-
-        shared_ptr<TCanvas> jet_canvas(new TCanvas("jets", "Jets", 800, 320));
-        jet_canvas->Divide(3);
-
-        jet_canvas->cd(1);
-        jets->multiplicity()->Draw();
-
-        jet_canvas->cd(2);
-        jets->leading_jet_pt()->Draw();
-
-        jet_canvas->cd(3);
-        jets->pt()->Draw();
-
-        shared_ptr<TCanvas> gen_particle_canvas(new TCanvas("gen_particles", "GenParticles", 800, 320));
-        gen_particle_canvas->Divide(3);
-
-        gen_particle_canvas->cd(1);
-        gen_particles->id()->Draw();
-
-        gen_particle_canvas->cd(2);
-        gen_particles->status()->Draw();
-
-        gen_particle_canvas->cd(3);
-        gen_particles->pt()->Draw();
-
-        shared_ptr<TCanvas> muon_canvas(new TCanvas("muons", "Muons", 800, 320));
-        muon_canvas->Divide(3);
-
-        muon_canvas->cd(1);
-        muons->multiplicity()->Draw();
-
-        muon_canvas->cd(2);
-        muons->leading_muon_pt()->Draw();
-
-        muon_canvas->cd(3);
-        muons->pt()->Draw();
-
-        shared_ptr<TCanvas> electron_canvas(new TCanvas("electrons", "Electrons", 800, 320));
-        electron_canvas->Divide(3);
-
-        electron_canvas->cd(1);
-        electrons->multiplicity()->Draw();
-
-        electron_canvas->cd(2);
-        electrons->leading_electron_pt()->Draw();
-
-        electron_canvas->cd(3);
-        electrons->pt()->Draw();
-
-        shared_ptr<TCanvas> primary_vertex_canvas(new TCanvas("primary_vertices", "Priamary Vertices", 640, 480));
-        primary_vertex_canvas->Divide(2, 2);
-
-        primary_vertex_canvas->cd(1);
-        primary_vertices->multiplicity()->Draw();
-
-        primary_vertex_canvas->cd(2);
-        primary_vertices->x()->Draw();
-
-        primary_vertex_canvas->cd(3);
-        primary_vertices->y()->Draw();
-
-        primary_vertex_canvas->cd(4);
-        primary_vertices->z()->Draw();
-
-        shared_ptr<TCanvas> missing_energy_canvas(new TCanvas("missing_energy", "Missing Energy", 640, 480));
-        missing_energy_canvas->Divide(2, 2);
-
-        missing_energy_canvas->cd(1);
-        missing_energy->pt()->Draw();
-
-        missing_energy_canvas->cd(2);
-        missing_energy->x()->Draw();
-
-        missing_energy_canvas->cd(3);
-        missing_energy->y()->Draw();
-
-        missing_energy_canvas->cd(4);
-        missing_energy->z()->Draw();
-
-        app->Run();
-        */
-    }
-
     cout << *jets << endl;
     cout << *gen_particles << endl;
     cout << *muons << endl;
     cout << *electrons << endl;
     cout << *primary_vertices << endl;
     cout << *missing_energy << endl;
-
-    jets.reset();
 
     // Clean Up any memory allocated by libprotobuf
     //

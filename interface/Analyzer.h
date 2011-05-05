@@ -41,6 +41,10 @@ namespace bsm
                 //
                 virtual void print(std::ostream &) const = 0;
 
+                // Check if analyzer was initialized and is in a valid state
+                //
+                virtual operator bool() const = 0;
+
             private:
                 // Prevent Copying: clone() should be used instead
                 //
