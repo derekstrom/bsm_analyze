@@ -9,7 +9,7 @@
 #include <stdexcept>
 
 #include "bsm_input/interface/Event.pb.h"
-#include "interface/JetMonitor.h"
+#include "interface/Monitor.h"
 #include "interface/MonitorAnalyzer.h"
 
 using std::cerr;

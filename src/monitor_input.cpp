@@ -17,7 +17,7 @@
 #include "bsm_input/interface/Event.pb.h"
 #include "interface/ElectronMonitor.h"
 #include "interface/GenParticleMonitor.h"
-#include "interface/JetMonitor.h"
+#include "interface/Monitor.h"
 #include "interface/MissingEnergyMonitor.h"
 #include "interface/MuonMonitor.h"
 #include "interface/PrimaryVertexMonitor.h"
@@ -93,6 +93,7 @@ try
         char *empty_argv[] = { argv[0] };
         shared_ptr<TRint> app(new TRint("app", &empty_argc, empty_argv));
 
+        /*
         shared_ptr<TCanvas> jet_canvas(new TCanvas("jets", "Jets", 800, 320));
         jet_canvas->Divide(3);
 
@@ -104,6 +105,8 @@ try
 
         jet_canvas->cd(3);
         jets->pt()->Draw();
+        */
+        cout << *jets << endl;
 
         shared_ptr<TCanvas> gen_particle_canvas(new TCanvas("gen_particles", "GenParticles", 800, 320));
         gen_particle_canvas->Divide(3);

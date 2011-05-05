@@ -12,7 +12,7 @@
 
 #include "bsm_stat/interface/H1.h"
 
-#include "interface/JetMonitor.h"
+#include "interface/Monitor.h"
 #include "interface/Utility.h"
 
 using std::endl;

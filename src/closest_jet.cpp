@@ -17,7 +17,7 @@
 #include "bsm_input/interface/Event.pb.h"
 #include "interface/LorentzVectorMonitor.h"
 #include "interface/DeltaMonitor.h"
-#include "interface/JetMonitor.h"
+#include "interface/Monitor.h"
 #include "interface/Algorithm.h"
 
 using std::cerr;
