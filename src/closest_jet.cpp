@@ -15,8 +15,6 @@
 
 #include "bsm_input/interface/Reader.h"
 #include "bsm_input/interface/Event.pb.h"
-#include "interface/LorentzVectorMonitor.h"
-#include "interface/DeltaMonitor.h"
 #include "interface/Monitor.h"
 #include "interface/Algorithm.h"
 
@@ -80,6 +78,7 @@ try
     }
 
     {
+        /*
         int empty_argc = 1;
         char *empty_argv[] = { argv[0] };
         shared_ptr<TRint> app(new TRint("app", &empty_argc, empty_argv));
@@ -127,7 +126,11 @@ try
         delta_monitor->phi()->Draw();
 
         app->Run();
+        */
     }
+
+    cout << *jet_monitor << endl;
+    cout << *delta_monitor << endl;
 
     delta_monitor.reset();
     jet_monitor.reset();
