@@ -8,11 +8,13 @@
 #ifndef BSM_MONITOR_JET
 #define BSM_MONITOR_JET
 
+#include <iosfwd>
+
 #include <boost/shared_ptr.hpp>
 
 #include "bsm_input/interface/Jet.pb.h"
+#include "bsm_stat/interface/statfwd.h"
 
-class TH1;
 class TLorentzVector;
 
 namespace bsm
@@ -21,7 +23,7 @@ namespace bsm
     {
         public:
             typedef ::google::protobuf::RepeatedPtrField<Jet> Jets;
-            typedef boost::shared_ptr<TH1> H1Ptr;
+            typedef boost::shared_ptr<stat::H1> H1Ptr;
 
             JetMonitor();
             ~JetMonitor();
@@ -31,6 +33,8 @@ namespace bsm
             const H1Ptr multiplicity() const;
             const H1Ptr pt() const;
             const H1Ptr leading_jet_pt() const;
+
+            void print(std::ostream &) const;
 
         private:
             typedef boost::shared_ptr<TLorentzVector> P4;
@@ -42,6 +46,10 @@ namespace bsm
             // Convert bsm::LorentzVector to TLorentzVector
             P4 _p4;
     };
+
+    // Helpers
+    //
+    std::ostream &operator<<(std::ostream &, const JetMonitor &);
 }
 
 #endif
