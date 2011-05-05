@@ -11,6 +11,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "bsm_input/interface/Reader.h"
+#include "bsm_stat/interface/Utility.h"
 
 #include "interface/Thread.h"
 
@@ -19,6 +20,7 @@ using namespace std;
 using boost::lexical_cast;
 using boost::shared_ptr;
 
+using bsm::core::AnalyzerPtr;
 using bsm::core::AnalyzerThread;
 using bsm::core::Files;
 using bsm::core::ThreadController;
@@ -77,7 +79,12 @@ try
         cout << " [+] " << *input << endl;
     }
 
-    controller->process(input_files);
+    // Nothing will be processed since analyzer is empty. One could instantiate
+    // a real analyzer, say MonitorAnalyzer and test if the code would work fine
+    //
+    AnalyzerPtr analyzer;
+
+    controller->process(analyzer, input_files);
 }
 catch(...)
 {
