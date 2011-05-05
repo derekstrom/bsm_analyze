@@ -8,12 +8,16 @@
 #include <ostream>
 #include <stdexcept>
 
+#include <boost/pointer_cast.hpp>
+
 #include "bsm_input/interface/Event.pb.h"
 #include "interface/Monitor.h"
 #include "interface/MonitorAnalyzer.h"
 
 using std::cerr;
 using std::endl;
+
+using boost::dynamic_pointer_cast;
 
 using bsm::MonitorAnalyzer;
 
@@ -43,6 +47,17 @@ MonitorAnalyzer::AnalyzerPtr MonitorAnalyzer::clone() const
     return AnalyzerPtr(analyzer);
 }
 
+void MonitorAnalyzer::merge(const AnalyzerPtr &analyzer)
+{
+    boost::shared_ptr<MonitorAnalyzer> analyzer_ptr =
+        dynamic_pointer_cast<MonitorAnalyzer>(analyzer);
+
+    if (!analyzer_ptr)
+        return;
+
+    bsm::merge(*_monitor_jets, *analyzer_ptr->_monitor_jets);
+}
+
 void MonitorAnalyzer::process(const Event *event)
 {
     _monitor_jets->fill(event->jets());
@@ -52,4 +67,9 @@ void MonitorAnalyzer::print(std::ostream &out) const
 {
     out << "MonitorAnalyzer" << endl;
     out << *_monitor_jets << endl;
+}
+
+const MonitorAnalyzer::JetMonitorPtr MonitorAnalyzer::monitorJets() const
+{
+    return _monitor_jets;
 }

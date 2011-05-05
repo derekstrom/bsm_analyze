@@ -20,6 +20,7 @@ namespace bsm
     {
         public:
             typedef Analyzer::AnalyzerPtr AnalyzerPtr;
+            typedef boost::shared_ptr<JetMonitor> JetMonitorPtr;
 
             MonitorAnalyzer();
             virtual ~MonitorAnalyzer();
@@ -28,16 +29,20 @@ namespace bsm
             //
             virtual AnalyzerPtr clone() const;
 
+            virtual void merge(const AnalyzerPtr &);
+
             virtual void process(const Event *);
 
             virtual void print(std::ostream &) const;
+
+            const JetMonitorPtr monitorJets() const;
 
         private:
             // Prevent copying
             //
             MonitorAnalyzer &operator =(const MonitorAnalyzer &);
 
-            boost::shared_ptr<JetMonitor> _monitor_jets;
+            JetMonitorPtr _monitor_jets;
     };
 }
 

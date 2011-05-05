@@ -250,6 +250,8 @@ namespace bsm
     std::ostream &operator<<(std::ostream &, const MissingEnergyMonitor &);
     std::ostream &operator<<(std::ostream &, const MuonMonitor &);
     std::ostream &operator<<(std::ostream &, const PrimaryVertexMonitor &);
+
+    void merge(JetMonitor &, const JetMonitor &);
 }
 
 #endif

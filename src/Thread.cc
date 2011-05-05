@@ -16,6 +16,7 @@
 #include "bsm_input/interface/Reader.h"
 #include "bsm_keyboard/interface/KeyboardController.h"
 
+#include "interface/Analyzer.h"
 #include "interface/Thread.h"
 
 using std::bad_alloc;
@@ -24,6 +25,7 @@ using std::cout;
 using std::distance;
 using std::endl;
 
+using bsm::core::AnalyzerPtr;
 using bsm::core::AnalyzerThread;
 using bsm::core::Condition;
 using bsm::core::ConditionPtr;
@@ -65,13 +67,16 @@ ConditionPtr ThreadController::condition() const
     return _condition;
 }
 
-void ThreadController::process(const Files &input_files)
+void ThreadController::process(const AnalyzerPtr &analyzer,
+        const Files &input_files)
 {
     if (!condition())
         return;
 
-    if (!init(input_files))
+    if (!init(analyzer, input_files))
         return;
+
+    _analyzer = analyzer;
 
     run();
     reset();
@@ -106,6 +111,10 @@ void ThreadController::notify(const Command &command)
 
         case HELP:  // Print help
                     //
+                    cout << "Help Key Map" << endl;
+                    cout << " h     help" << endl;
+                    cout << " q     quit application" << endl;
+                    cout << " s     job status" << endl;
                     break;
 
         case STATUS:    // Print status
@@ -113,6 +122,12 @@ void ThreadController::notify(const Command &command)
                         cout << "Finished " << distance(Files::const_iterator(_input_files.begin()),
                                                         _next_file)
                             << "/" << _input_files.size() << " files" << endl;
+                    for(Threads::iterator thread = _threads.begin();
+                            _threads.end() != thread;
+                            ++thread)
+                    {
+                        cout << *((*thread)->analyzer()) << endl;
+                    }
 
                         break;
 
@@ -124,19 +139,20 @@ void ThreadController::notify(const Command &command)
 
 // Privates
 //
-bool ThreadController::init(const Files &input_files)
+bool ThreadController::init(const AnalyzerPtr &analyzer, const Files &input_files)
 {
     Lock lock(condition());
 
     if (_running_threads
-            || input_files.empty())
+            || input_files.empty()
+            || !analyzer)
 
         return false;
 
     _input_files = input_files;
     _next_file = _input_files.begin();
 
-    createThreads();
+    createThreads(analyzer);
     startThreads();
 
     return true;
@@ -160,9 +176,11 @@ void ThreadController::reset()
 
     _input_files.clear();
     _next_file = _input_files.begin();
+
+    _analyzer.reset();
 }
 
-void ThreadController::createThreads()
+void ThreadController::createThreads(const AnalyzerPtr &analyzer)
 {
     uint32_t max_threads = _max_threads;
 
@@ -171,7 +189,7 @@ void ThreadController::createThreads()
 
     for(uint32_t i = 0; max_threads > i; ++i)
     {
-        AnalyzerThreadPtr thread(new AnalyzerThread(this));
+        AnalyzerThreadPtr thread(new AnalyzerThread(this, analyzer));
 
         _threads.push_back(thread);
     }
@@ -245,12 +263,14 @@ void ThreadController::continueThread()
 
 void ThreadController::stopThread()
 {
-    Thread *thread = _complete_threads.front();
+    AnalyzerThread *thread = _complete_threads.front();
     _complete_threads.pop();
 
     thread->stop();
     thread->condition()->variable()->notify_all();
     thread->join();
+
+    _analyzer->merge(thread->analyzer());
 
     --_running_threads;
 }
@@ -306,16 +326,28 @@ ThreadController *Thread::controller() const
 
 // Analyzer Thread
 //
-AnalyzerThread::AnalyzerThread(ThreadController *controller):
+AnalyzerThread::AnalyzerThread(ThreadController *controller,
+        const AnalyzerPtr &analyzer)
+try:
     Thread(controller),
     _events_read(0),
     _events_processed(0)
 {
+    _analyzer = analyzer->clone();
+}
+catch(const std::bad_alloc &)
+{
+    cerr << "failed to allocate memory for Analyzer Thread" << endl;
+
+    _analyzer.reset();
 }
 
 void AnalyzerThread::init(const std::string &file_name)
 {
     Lock lock(condition());
+
+    if (!_analyzer)
+        return;
 
     _reader.reset(new Reader(file_name));
 
@@ -333,10 +365,18 @@ void AnalyzerThread::stop()
     _wait_for_instructions = false;
 }
 
+const AnalyzerPtr &AnalyzerThread::analyzer() const
+{
+    return _analyzer;
+}
+
 // Protected
 //
 void AnalyzerThread::run()
 {
+    if (!_analyzer)
+        return;
+
     for(_wait_for_instructions = true;
             _continue;
             _wait_for_instructions = true)
@@ -349,6 +389,8 @@ void AnalyzerThread::run()
                     _continue && _reader->read(*event);
                     ++_events_read)
             {
+                _analyzer->process(event.get());
+
                 event->Clear();
             }
         }

@@ -21,13 +21,15 @@ namespace bsm
 
     namespace core
     {
+        class Analyzer;
+        class AnalyzerThread;
         class Condition;
         class KeyboardController;
-        class AnalyzerThread;
         class Thread;
 
         typedef boost::shared_ptr<Condition> ConditionPtr;
         typedef std::vector<std::string> Files;
+        typedef boost::shared_ptr<Analyzer> AnalyzerPtr;
 
         class ThreadController
         {
@@ -44,16 +46,16 @@ namespace bsm
 
                 ConditionPtr condition() const;
 
-                void process(const Files &input_files);
+                void process(const AnalyzerPtr &, const Files &input_files);
 
                 void notify(AnalyzerThread *thread);
                 void notify(const Command &command);
 
             private:
-                bool init(const Files &);
+                bool init(const AnalyzerPtr &, const Files &);
                 void reset();
 
-                void createThreads();
+                void createThreads(const AnalyzerPtr &);
                 void startThreads();
                 void run();
                 void wait();
@@ -78,6 +80,8 @@ namespace bsm
                 ThreadPtr _keyboard_thread;
 
                 uint32_t _running_threads;
+
+                AnalyzerPtr _analyzer;
         };
 
         class Thread
@@ -108,17 +112,22 @@ namespace bsm
         class AnalyzerThread: public Thread
         {
             public:
-                AnalyzerThread(ThreadController *controller);
+                AnalyzerThread(ThreadController *controller,
+                        const AnalyzerPtr &analyzer);
 
                 void init(const std::string &file_name);
 
                 virtual void stop();
+
+                const AnalyzerPtr &analyzer() const;
 
             protected:
                 virtual void run();
 
             private:
                 void wait();
+
+                AnalyzerPtr _analyzer;
 
                 bool _continue;
                 bool _wait_for_instructions;

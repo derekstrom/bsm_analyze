@@ -31,6 +31,10 @@ namespace bsm
                 //
                 virtual AnalyzerPtr clone() const = 0;
 
+                // Merge external analyzer results with current analyzer
+                //
+                virtual void merge(const AnalyzerPtr &) = 0;
+
                 virtual void process(const Event *) = 0;
 
                 // Each analyzer should know how to print itself on screen

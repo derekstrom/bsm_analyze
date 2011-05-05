@@ -576,3 +576,7 @@ std::ostream &bsm::operator<<(std::ostream &out,
 
     return out;
 }
+
+void bsm::merge(JetMonitor &m1, const JetMonitor &m2)
+{
+}
