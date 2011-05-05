@@ -100,7 +100,7 @@ void ThreadController::notify(const Command &command)
                     }
                     _next_file = _input_files.end();
 
-                    _keyboard_thread->stop();
+                    //_keyboard_thread->stop();
 
                     break;
 
@@ -136,13 +136,8 @@ bool ThreadController::init(const Files &input_files)
     _input_files = input_files;
     _next_file = _input_files.begin();
 
-    cout << "Create " << _max_threads << " threads" << endl;
     createThreads();
- 
-    cout << "Threads are created" << endl;
-    cout << "Start Threads" << endl;
     startThreads();
-    cout << "Threads are started" << endl;
 
     return true;
 }
@@ -152,6 +147,7 @@ void ThreadController::reset()
     Lock lock(condition());
 
     _keyboard_thread->stop();
+    _keyboard_thread->condition()->variable()->notify_all();
     _keyboard_thread->join();
 
     _keyboard_thread.reset();
@@ -191,13 +187,9 @@ void ThreadController::startThreads()
     {
         AnalyzerThreadPtr thread_ptr = *thread;
 
-        cout << "init thread" << endl;
-
         // Pass input file to thread
         //
         thread_ptr->init(*_next_file);
-
-        cout << "init complete" << endl;
 
         if (!thread_ptr->start())
             continue;
@@ -240,7 +232,6 @@ void ThreadController::onThreadComplete()
 
 void ThreadController::continueThread()
 {
-    cout << "Continue thread" << endl;
     AnalyzerThread *thread = _complete_threads.front();
     _complete_threads.pop();
 
@@ -254,13 +245,11 @@ void ThreadController::continueThread()
 
 void ThreadController::stopThread()
 {
-    cout << "Stop thread" << endl;
     Thread *thread = _complete_threads.front();
     _complete_threads.pop();
 
     thread->stop();
     thread->condition()->variable()->notify_all();
-
     thread->join();
 
     --_running_threads;
@@ -302,7 +291,8 @@ bool Thread::start()
 
 void Thread::join()
 {
-    _thread.join();
+    if (boost::thread() != _thread)
+        _thread.join();
 }
 
 // Protected
@@ -328,8 +318,6 @@ void AnalyzerThread::init(const std::string &file_name)
     Lock lock(condition());
 
     _reader.reset(new Reader(file_name));
-    cout << "Init with file: " << file_name << " e: "
-        << _reader->input()->events() << endl;
 
     _events_read = 0;
 
@@ -343,15 +331,12 @@ void AnalyzerThread::stop()
 
     _continue = false;
     _wait_for_instructions = false;
-
-    cout << "Thread is asked to stop" << endl;
 }
 
 // Protected
 //
 void AnalyzerThread::run()
 {
-    cout << "Here" << endl;
     for(_wait_for_instructions = true;
             _continue;
             _wait_for_instructions = true)
@@ -376,8 +361,6 @@ void AnalyzerThread::run()
         //
         wait();
     }
-
-    cout << "Thread finished" << endl;
 }
 
 // Private
