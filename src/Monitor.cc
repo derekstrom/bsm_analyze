@@ -15,6 +15,7 @@
 #include "bsm_input/interface/MissingEnergy.pb.h"
 #include "bsm_input/interface/Physics.pb.h"
 #include "bsm_stat/interface/H1.h"
+#include "bsm_stat/interface/Utility.h"
 
 #include "interface/Monitor.h"
 #include "interface/Utility.h"
@@ -43,8 +44,13 @@ JetMonitor::JetMonitor()
     _p4.reset(new TLorentzVector());
 }
 
-JetMonitor::~JetMonitor()
+JetMonitor &JetMonitor::operator =(const JetMonitor &monitor)
 {
+    *multiplicity() = *monitor.multiplicity();
+    *pt() = *monitor.pt();
+    *leading_pt() = *monitor.leading_pt();
+
+    return *this;
 }
 
 void JetMonitor::fill(const Jets &jets)
@@ -103,6 +109,15 @@ DeltaMonitor::DeltaMonitor()
     _p4_2.reset(new TLorentzVector());
 }
 
+DeltaMonitor &DeltaMonitor::operator =(const DeltaMonitor &monitor)
+{
+    *r() = *monitor.r();
+    *eta() = *monitor.eta();
+    *phi() = *monitor.phi();
+
+    return *this;
+}
+
 void DeltaMonitor::fill(const LorentzVector &p4_1, const LorentzVector &p4_2)
 {
     utility::set(_p4_1.get(), &p4_1);
@@ -140,8 +155,13 @@ ElectronMonitor::ElectronMonitor()
     _p4.reset(new TLorentzVector());
 }
 
-ElectronMonitor::~ElectronMonitor()
+ElectronMonitor &ElectronMonitor::operator =(const ElectronMonitor &monitor)
 {
+    *multiplicity() = *monitor.multiplicity();
+    *pt() = *monitor.pt();
+    *leading_pt() = *monitor.leading_pt();
+
+    return *this;
 }
 
 void ElectronMonitor::fill(const Electrons &electrons)
@@ -199,8 +219,14 @@ GenParticleMonitor::GenParticleMonitor()
     _p4.reset(new TLorentzVector());
 }
 
-GenParticleMonitor::~GenParticleMonitor()
+GenParticleMonitor
+    &GenParticleMonitor::operator =(const GenParticleMonitor &monitor)
 {
+    *id() = *monitor.id();
+    *status() = *monitor.status();
+    *pt() = *monitor.pt();
+
+    return *this;
 }
 
 void GenParticleMonitor::fill(const GenParticle &particle)
@@ -246,6 +272,21 @@ LorentzVectorMonitor::LorentzVectorMonitor()
     _phi.reset(new H1(80, -4, 4));
 
     _p4.reset(new TLorentzVector());
+}
+
+LorentzVectorMonitor
+    &LorentzVectorMonitor::operator =(const LorentzVectorMonitor &monitor)
+{
+    *energy() = *monitor.energy();
+    *px() = *monitor.px();
+    *py() = *monitor.py();
+    *pz() = *monitor.pz();
+
+    *pt() = *monitor.pt();
+    *eta() = *monitor.eta();
+    *phi() = *monitor.phi();
+
+    return *this;
 }
 
 void LorentzVectorMonitor::fill(const LorentzVector &p4)
@@ -310,8 +351,15 @@ MissingEnergyMonitor::MissingEnergyMonitor()
     _p4.reset(new TLorentzVector());
 }
 
-MissingEnergyMonitor::~MissingEnergyMonitor()
+MissingEnergyMonitor
+    &MissingEnergyMonitor::operator =(const MissingEnergyMonitor &monitor)
 {
+    *pt() = *monitor.pt();
+    *x() = *monitor.x();
+    *y() = *monitor.y();
+    *z() = *monitor.z();
+
+    return *this;
 }
 
 void MissingEnergyMonitor::fill(const MissingEnergy &missing_energy)
@@ -360,8 +408,13 @@ MuonMonitor::MuonMonitor()
     _p4.reset(new TLorentzVector());
 }
 
-MuonMonitor::~MuonMonitor()
+MuonMonitor &MuonMonitor::operator =(const MuonMonitor &monitor)
 {
+    *multiplicity() = *monitor.multiplicity();
+    *pt() = *monitor.pt();
+    *leading_pt() = *monitor.leading_pt();
+
+    return *this;
 }
 
 void MuonMonitor::fill(const Muons &muons)
@@ -418,8 +471,15 @@ PrimaryVertexMonitor::PrimaryVertexMonitor()
     _z.reset(new H1(100, -50, 50));
 }
 
-PrimaryVertexMonitor::~PrimaryVertexMonitor()
+PrimaryVertexMonitor
+    &PrimaryVertexMonitor::operator =(const PrimaryVertexMonitor &monitor)
 {
+    *multiplicity() = *monitor.multiplicity();
+    *x() = *monitor.x();
+    *y() = *monitor.y();
+    *z() = *monitor.z();
+
+    return *this;
 }
 
 void PrimaryVertexMonitor::fill(const PrimaryVertices &primary_vertices)
@@ -577,22 +637,60 @@ std::ostream &bsm::operator<<(std::ostream &out,
     return out;
 }
 
+
+
 void bsm::merge(ElectronMonitor &m1, const ElectronMonitor &m2)
 {
+    bsm::stat::merge(*m1.multiplicity(), *m2.multiplicity());
+    bsm::stat::merge(*m1.pt(), *m2.pt());
+    bsm::stat::merge(*m1.leading_pt(), *m2.leading_pt());
 }
 
 void bsm::merge(JetMonitor &m1, const JetMonitor &m2)
 {
+    bsm::stat::merge(*m1.multiplicity(), *m2.multiplicity());
+    bsm::stat::merge(*m1.pt(), *m2.pt());
+    bsm::stat::merge(*m1.leading_pt(), *m2.leading_pt());
+}
+
+void bsm::merge(DeltaMonitor &m1, const DeltaMonitor &m2)
+{
+    bsm::stat::merge(*m1.r(), *m2.r());
+    bsm::stat::merge(*m1.eta(), *m2.eta());
+    bsm::stat::merge(*m1.phi(), *m2.phi());
+}
+
+void bsm::merge(LorentzVectorMonitor &m1, const LorentzVectorMonitor &m2)
+{
+    bsm::stat::merge(*m1.energy(), *m2.energy());
+    bsm::stat::merge(*m1.px(), *m2.px());
+    bsm::stat::merge(*m1.py(), *m2.py());
+    bsm::stat::merge(*m1.pz(), *m2.pz());
+
+    bsm::stat::merge(*m1.pt(), *m2.pt());
+    bsm::stat::merge(*m1.eta(), *m2.eta());
+    bsm::stat::merge(*m1.phi(), *m2.phi());
 }
 
 void bsm::merge(MissingEnergyMonitor &m1, const MissingEnergyMonitor &m2)
 {
+    bsm::stat::merge(*m1.pt(), *m2.pt());
+    bsm::stat::merge(*m1.x(), *m2.x());
+    bsm::stat::merge(*m1.y(), *m2.y());
+    bsm::stat::merge(*m1.z(), *m2.z());
 }
 
 void bsm::merge(MuonMonitor &m1, const MuonMonitor &m2)
 {
+    bsm::stat::merge(*m1.multiplicity(), *m2.multiplicity());
+    bsm::stat::merge(*m1.pt(), *m2.pt());
+    bsm::stat::merge(*m1.leading_pt(), *m2.leading_pt());
 }
 
 void bsm::merge(PrimaryVertexMonitor &m1, const PrimaryVertexMonitor &m2)
 {
+    bsm::stat::merge(*m1.multiplicity(), *m2.multiplicity());
+    bsm::stat::merge(*m1.x(), *m2.x());
+    bsm::stat::merge(*m1.y(), *m2.y());
+    bsm::stat::merge(*m1.z(), *m2.z());
 }

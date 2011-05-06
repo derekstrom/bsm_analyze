@@ -27,6 +27,35 @@ namespace bsm
     class LorentzVector;
     class MissingEnergy;
 
+    class ElectronMonitor
+    {
+        public:
+            typedef ::google::protobuf::RepeatedPtrField<Electron> Electrons;
+            typedef boost::shared_ptr<stat::H1> H1Ptr;
+
+            ElectronMonitor();
+
+            ElectronMonitor &operator =(const ElectronMonitor &monitor);
+            
+            void fill(const Electrons &);
+
+            const H1Ptr multiplicity() const;
+            const H1Ptr pt() const;
+            const H1Ptr leading_pt() const;
+
+        private:
+            ElectronMonitor(const ElectronMonitor &);
+
+            typedef boost::shared_ptr<TLorentzVector> P4;
+
+            H1Ptr _multiplicity;
+            H1Ptr _pt;
+            H1Ptr _leading_pt;
+
+            // Convert bsm::LorentzVector to TLorentzVector
+            P4 _p4;
+    };
+
     class JetMonitor
     {
         public:
@@ -34,7 +63,8 @@ namespace bsm
             typedef boost::shared_ptr<stat::H1> H1Ptr;
 
             JetMonitor();
-            ~JetMonitor();
+
+            JetMonitor &operator =(const JetMonitor &);
             
             void fill(const Jets &);
 
@@ -43,6 +73,8 @@ namespace bsm
             const H1Ptr leading_pt() const;
 
         private:
+            JetMonitor(const JetMonitor &);
+
             typedef boost::shared_ptr<TLorentzVector> P4;
 
             H1Ptr _multiplicity;
@@ -60,6 +92,8 @@ namespace bsm
 
             DeltaMonitor();
 
+            DeltaMonitor &operator =(const DeltaMonitor &);
+
             void fill(const LorentzVector &, const LorentzVector &);
 
             const H1Ptr r() const;
@@ -67,6 +101,8 @@ namespace bsm
             const H1Ptr phi() const;
 
         private:
+            DeltaMonitor(const DeltaMonitor &);
+
             typedef boost::shared_ptr<TLorentzVector> P4;
 
             H1Ptr _r;
@@ -78,39 +114,14 @@ namespace bsm
             P4 _p4_2;
     };
 
-    class ElectronMonitor
-    {
-        public:
-            typedef ::google::protobuf::RepeatedPtrField<Electron> Electrons;
-            typedef boost::shared_ptr<stat::H1> H1Ptr;
-
-            ElectronMonitor();
-            ~ElectronMonitor();
-            
-            void fill(const Electrons &);
-
-            const H1Ptr multiplicity() const;
-            const H1Ptr pt() const;
-            const H1Ptr leading_pt() const;
-
-        private:
-            typedef boost::shared_ptr<TLorentzVector> P4;
-
-            H1Ptr _multiplicity;
-            H1Ptr _pt;
-            H1Ptr _leading_pt;
-
-            // Convert bsm::LorentzVector to TLorentzVector
-            P4 _p4;
-    };
-
     class GenParticleMonitor
     {
         public:
             typedef boost::shared_ptr<stat::H1> H1Ptr;
 
             GenParticleMonitor();
-            ~GenParticleMonitor();
+
+            GenParticleMonitor &operator =(const GenParticleMonitor &);
             
             void fill(const GenParticle &);
 
@@ -119,6 +130,8 @@ namespace bsm
             const H1Ptr pt() const;
 
         private:
+            GenParticleMonitor(const GenParticleMonitor &);
+
             typedef boost::shared_ptr<TLorentzVector> P4;
 
             H1Ptr _id;
@@ -136,6 +149,8 @@ namespace bsm
 
             LorentzVectorMonitor();
 
+            LorentzVectorMonitor &operator =(const LorentzVectorMonitor &);
+
             void fill(const LorentzVector &);
 
             const H1Ptr energy() const;
@@ -148,6 +163,8 @@ namespace bsm
             const H1Ptr phi() const;
 
         private:
+            LorentzVectorMonitor(const LorentzVectorMonitor &);
+
             typedef boost::shared_ptr<TLorentzVector> P4;
 
             H1Ptr _energy;
@@ -169,7 +186,8 @@ namespace bsm
             typedef boost::shared_ptr<stat::H1> H1Ptr;
 
             MissingEnergyMonitor();
-            ~MissingEnergyMonitor();
+
+            MissingEnergyMonitor &operator =(const MissingEnergyMonitor &);
             
             void fill(const MissingEnergy &);
 
@@ -179,6 +197,8 @@ namespace bsm
             const H1Ptr z() const;
 
         private:
+            MissingEnergyMonitor(const MissingEnergyMonitor &);
+
             typedef boost::shared_ptr<TLorentzVector> P4;
 
             H1Ptr _pt;
@@ -197,7 +217,8 @@ namespace bsm
             typedef boost::shared_ptr<stat::H1> H1Ptr;
 
             MuonMonitor();
-            ~MuonMonitor();
+
+            MuonMonitor &operator =(const MuonMonitor &);
             
             void fill(const Muons &);
 
@@ -206,6 +227,8 @@ namespace bsm
             const H1Ptr leading_pt() const;
 
         private:
+            MuonMonitor(const MuonMonitor &);
+
             typedef boost::shared_ptr<TLorentzVector> P4;
 
             H1Ptr _multiplicity;
@@ -224,7 +247,8 @@ namespace bsm
             typedef boost::shared_ptr<stat::H1> H1Ptr;
 
             PrimaryVertexMonitor();
-            ~PrimaryVertexMonitor();
+
+            PrimaryVertexMonitor &operator =(const PrimaryVertexMonitor &);
             
             void fill(const PrimaryVertices &);
 
@@ -234,6 +258,8 @@ namespace bsm
             const H1Ptr z() const;
 
         private:
+            PrimaryVertexMonitor(const PrimaryVertexMonitor &);
+
             H1Ptr _multiplicity;
             H1Ptr _x;
             H1Ptr _y;
@@ -253,6 +279,8 @@ namespace bsm
 
     void merge(ElectronMonitor &, const ElectronMonitor &);
     void merge(JetMonitor &, const JetMonitor &);
+    void merge(DeltaMonitor &, const DeltaMonitor &);
+    void merge(LorentzVectorMonitor &, const LorentzVectorMonitor &);
     void merge(MissingEnergyMonitor &, const MissingEnergyMonitor &);
     void merge(MuonMonitor &, const MuonMonitor &);
     void merge(PrimaryVertexMonitor &, const PrimaryVertexMonitor &);
