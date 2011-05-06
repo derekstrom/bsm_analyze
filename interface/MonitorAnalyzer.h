@@ -14,12 +14,17 @@
 
 namespace bsm
 {
+    class ElectronMonitor;
     class JetMonitor;
+    class MissingEnergyMonitor;
+    class MuonMonitor;
+    class PrimaryVertexMonitor;
 
     class MonitorAnalyzer : public core::Analyzer
     {
         public:
             typedef Analyzer::AnalyzerPtr AnalyzerPtr;
+
             typedef boost::shared_ptr<ElectronMonitor> ElectronMonitorPtr;
             typedef boost::shared_ptr<JetMonitor> JetMonitorPtr;
             typedef boost::shared_ptr<MissingEnergyMonitor>
