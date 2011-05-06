@@ -5,6 +5,7 @@
 // Created by Samvel Khalatyan, May 05, 2011
 // Copyright 2011, All rights reserved
 
+#include <iostream>
 #include <ostream>
 #include <stdexcept>
 
