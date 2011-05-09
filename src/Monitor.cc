@@ -641,56 +641,56 @@ std::ostream &bsm::operator<<(std::ostream &out,
 
 void bsm::merge(ElectronMonitor &m1, const ElectronMonitor &m2)
 {
-    bsm::stat::merge(*m1.multiplicity(), *m2.multiplicity());
-    bsm::stat::merge(*m1.pt(), *m2.pt());
-    bsm::stat::merge(*m1.leading_pt(), *m2.leading_pt());
+    *m1.multiplicity() += *m2.multiplicity();
+    *m1.pt() += *m2.pt();
+    *m1.leading_pt() += *m2.leading_pt();
 }
 
 void bsm::merge(JetMonitor &m1, const JetMonitor &m2)
 {
-    bsm::stat::merge(*m1.multiplicity(), *m2.multiplicity());
-    bsm::stat::merge(*m1.pt(), *m2.pt());
-    bsm::stat::merge(*m1.leading_pt(), *m2.leading_pt());
+    *m1.multiplicity() += *m2.multiplicity();
+    *m1.pt() += *m2.pt();
+    *m1.leading_pt() += *m2.leading_pt();
 }
 
 void bsm::merge(DeltaMonitor &m1, const DeltaMonitor &m2)
 {
-    bsm::stat::merge(*m1.r(), *m2.r());
-    bsm::stat::merge(*m1.eta(), *m2.eta());
-    bsm::stat::merge(*m1.phi(), *m2.phi());
+    *m1.r() += *m2.r();
+    *m1.eta() += *m2.eta();
+    *m1.phi() += *m2.phi();
 }
 
 void bsm::merge(LorentzVectorMonitor &m1, const LorentzVectorMonitor &m2)
 {
-    bsm::stat::merge(*m1.energy(), *m2.energy());
-    bsm::stat::merge(*m1.px(), *m2.px());
-    bsm::stat::merge(*m1.py(), *m2.py());
-    bsm::stat::merge(*m1.pz(), *m2.pz());
+    *m1.energy() += *m2.energy();
+    *m1.px() += *m2.px();
+    *m1.py() += *m2.py();
+    *m1.pz() += *m2.pz();
 
-    bsm::stat::merge(*m1.pt(), *m2.pt());
-    bsm::stat::merge(*m1.eta(), *m2.eta());
-    bsm::stat::merge(*m1.phi(), *m2.phi());
+    *m1.pt() += *m2.pt();
+    *m1.eta() += *m2.eta();
+    *m1.phi() += *m2.phi();
 }
 
 void bsm::merge(MissingEnergyMonitor &m1, const MissingEnergyMonitor &m2)
 {
-    bsm::stat::merge(*m1.pt(), *m2.pt());
-    bsm::stat::merge(*m1.x(), *m2.x());
-    bsm::stat::merge(*m1.y(), *m2.y());
-    bsm::stat::merge(*m1.z(), *m2.z());
+    *m1.pt() += *m2.pt();
+    *m1.x() += *m2.x();
+    *m1.y() += *m2.y();
+    *m1.z() += *m2.z();
 }
 
 void bsm::merge(MuonMonitor &m1, const MuonMonitor &m2)
 {
-    bsm::stat::merge(*m1.multiplicity(), *m2.multiplicity());
-    bsm::stat::merge(*m1.pt(), *m2.pt());
-    bsm::stat::merge(*m1.leading_pt(), *m2.leading_pt());
+    *m1.multiplicity() += *m2.multiplicity();
+    *m1.pt() += *m2.pt();
+    *m1.leading_pt() += *m2.leading_pt();
 }
 
 void bsm::merge(PrimaryVertexMonitor &m1, const PrimaryVertexMonitor &m2)
 {
-    bsm::stat::merge(*m1.multiplicity(), *m2.multiplicity());
-    bsm::stat::merge(*m1.x(), *m2.x());
-    bsm::stat::merge(*m1.y(), *m2.y());
-    bsm::stat::merge(*m1.z(), *m2.z());
+    *m1.multiplicity() += *m2.multiplicity();
+    *m1.x() += *m2.x();
+    *m1.y() += *m2.y();
+    *m1.z() += *m2.z();
 }
