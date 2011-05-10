@@ -104,6 +104,7 @@ DeltaMonitor::DeltaMonitor()
     _r.reset(new H1(50, 0, 5));
     _eta.reset(new H1(200, -5, 5));
     _phi.reset(new H1(160, -4, 4));
+    _ptrel.reset(new H1(50, 0, 10));
 
     _p4_1.reset(new TLorentzVector());
     _p4_2.reset(new TLorentzVector());
@@ -114,6 +115,7 @@ DeltaMonitor &DeltaMonitor::operator =(const DeltaMonitor &monitor)
     *r() = *monitor.r();
     *eta() = *monitor.eta();
     *phi() = *monitor.phi();
+    *ptrel() = *monitor.ptrel();
 
     return *this;
 }
@@ -126,6 +128,7 @@ void DeltaMonitor::fill(const LorentzVector &p4_1, const LorentzVector &p4_2)
     _r->fill(_p4_1->DeltaR(*_p4_2));
     _eta->fill(_p4_1->Eta() - _p4_2->Eta());
     _phi->fill(_p4_1->Phi() - _p4_2->Phi());
+    _ptrel->fill(_p4_1->Vect().Perp(_p4_2->Vect()));
 }
 
 const DeltaMonitor::H1Ptr DeltaMonitor::r() const
@@ -141,6 +144,11 @@ const DeltaMonitor::H1Ptr DeltaMonitor::eta() const
 const DeltaMonitor::H1Ptr DeltaMonitor::phi() const
 {
     return _phi;
+}
+
+const DeltaMonitor::H1Ptr DeltaMonitor::ptrel() const
+{
+    return _ptrel;
 }
 
 
@@ -658,6 +666,7 @@ void bsm::merge(DeltaMonitor &m1, const DeltaMonitor &m2)
     *m1.r() += *m2.r();
     *m1.eta() += *m2.eta();
     *m1.phi() += *m2.phi();
+    *m1.ptrel() += *m2.ptrel();
 }
 
 void bsm::merge(LorentzVectorMonitor &m1, const LorentzVectorMonitor &m2)

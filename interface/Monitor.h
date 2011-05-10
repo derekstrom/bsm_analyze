@@ -99,6 +99,7 @@ namespace bsm
             const H1Ptr r() const;
             const H1Ptr eta() const;
             const H1Ptr phi() const;
+            const H1Ptr ptrel() const;
 
         private:
             DeltaMonitor(const DeltaMonitor &);
@@ -108,6 +109,7 @@ namespace bsm
             H1Ptr _r;
             H1Ptr _eta;
             H1Ptr _phi;
+            H1Ptr _ptrel;
 
             // Convert bsm::LorentzVector to TLorentzVector
             P4 _p4_1;
