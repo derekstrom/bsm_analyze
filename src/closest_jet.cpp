@@ -13,10 +13,12 @@
 #include <TH1.h>
 #include <TRint.h>
 
-#include "bsm_input/interface/Reader.h"
+#include "bsm_stat/interface/Utility.h"
+
 #include "bsm_input/interface/Event.pb.h"
+#include "interface/ClosestJetAnalyzer.h"
 #include "interface/Monitor.h"
-#include "interface/Algorithm.h"
+#include "interface/Thread.h"
 
 using std::cerr;
 using std::cout;
@@ -24,17 +26,18 @@ using std::endl;
 
 using boost::shared_ptr;
 
-using bsm::DeltaMonitor;
-using bsm::Event;
-using bsm::Electron;
-using bsm::Jet;
-using bsm::JetMonitor;
-using bsm::Reader;
-using bsm::LorentzVectorMonitor;
-using bsm::algorithm::ClosestJet;
+using bsm::ClosestJetAnalyzer;
+using bsm::core::Files;
+using bsm::core::ThreadController;
+using bsm::stat::convert;
+using bsm::stat::TH1Ptr;
+
+typedef shared_ptr<ClosestJetAnalyzer> ClosestJetAnalyzerPtr;
+
+void run(const Files &);
+void plot(const ClosestJetAnalyzerPtr &);
 
 int main(int argc, char *argv[])
-try
 {
     if (2 > argc)
     {
@@ -45,109 +48,177 @@ try
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    shared_ptr<LorentzVectorMonitor> jet_monitor(new LorentzVectorMonitor());
-    shared_ptr<DeltaMonitor> delta_monitor(new DeltaMonitor());
-
+    int result = 0;
+    try
     {
-        shared_ptr<ClosestJet> closest_jet(new ClosestJet());
-        shared_ptr<Reader> reader(new Reader(argv[1]));
+        Files input_files;
+        for(int i = 2; argc > i; ++i)
+            input_files.push_back(argv[i]);
 
-        uint32_t events_read = 0;
-        for(shared_ptr<Event> event(new Event());
-                reader->read(*event);
-                ++events_read)
-        {
-            if (!event->electrons().size()
-                    || !event->jets().size())
-                continue;
-
-            const Electron &electron = *event->electrons().begin();
-            const Jet *jet = closest_jet->operator()(event->jets(), electron);
-
-            if (!jet)
-                continue;
-
-            jet_monitor->fill(jet->physics_object().p4());
-            delta_monitor->fill(jet->physics_object().p4(),
-                    electron.physics_object().p4());
-
-            event->Clear();
-        }
-
-        cout << "Events Read: " << events_read << endl;
+        run(input_files);
     }
-
+    catch(...)
     {
-        /*
-        int empty_argc = 1;
-        char *empty_argv[] = { argv[0] };
-        shared_ptr<TRint> app(new TRint("app", &empty_argc, empty_argv));
+        cerr << "Unknown error" << endl;
 
-        shared_ptr<TCanvas> jet_canvas_1(new TCanvas("ClosestJet_1",
-                    "Closest Jet: P4 (1)", 640, 480));
-        jet_canvas_1->Divide(2, 2);
-
-        jet_canvas_1->cd(1);
-        jet_monitor->energy()->Draw();
-
-        jet_canvas_1->cd(2);
-        jet_monitor->px()->Draw();
-
-        jet_canvas_1->cd(3);
-        jet_monitor->py()->Draw();
-
-        jet_canvas_1->cd(4);
-        jet_monitor->pz()->Draw();
-
-        shared_ptr<TCanvas> jet_canvas_2(new TCanvas("ClosestJet_2",
-                    "Closest Jet: P4 (2)", 800, 320));
-        jet_canvas_2->Divide(3);
-
-        jet_canvas_2->cd(1);
-        jet_monitor->pt()->Draw();
-
-        jet_canvas_2->cd(2);
-        jet_monitor->eta()->Draw();
-
-        jet_canvas_2->cd(3);
-        jet_monitor->phi()->Draw();
-
-        shared_ptr<TCanvas> delta_canvas(new TCanvas("Delta",
-                    "Delta", 800, 320));
-        delta_canvas->Divide(3);
-
-        delta_canvas->cd(1);
-        delta_monitor->r()->Draw();
-
-        delta_canvas->cd(2);
-        delta_monitor->eta()->Draw();
-
-        delta_canvas->cd(3);
-        delta_monitor->phi()->Draw();
-
-        app->Run();
-        */
+        result = 1;
     }
-
-    cout << *jet_monitor << endl;
-    cout << *delta_monitor << endl;
-
-    delta_monitor.reset();
-    jet_monitor.reset();
 
     // Clean Up any memory allocated by libprotobuf
     //
     google::protobuf::ShutdownProtobufLibrary();
 
-    return 0;
+    return result;
+}
+
+void run(const Files &input_files)
+try
+{
+    // Prepare Analysis
+    //
+    shared_ptr<ThreadController> controller(new ThreadController());
+    ClosestJetAnalyzerPtr analyzer(new ClosestJetAnalyzer());
+
+    // Process inputs
+    //
+    controller->process(analyzer, input_files);
+
+    // Plot results
+    //
+    plot(analyzer);
+
 }
 catch(...)
 {
-    // Clean Up any memory allocated by libprotobuf
+}
+
+void plot(const ClosestJetAnalyzerPtr &analyzer)
+{
+    // Cheat ROOT with empty args
     //
-    google::protobuf::ShutdownProtobufLibrary();
+    int empty_argc = 1;
+    char *empty_argv[] = { "root" };
+    shared_ptr<TRint> app(new TRint("app", &empty_argc, empty_argv));
 
-    cerr << "Unknown error" << endl;
+    shared_ptr<TCanvas> el_canvas(new TCanvas("electrons", "Electrons", 800, 320));
+    el_canvas->Divide(3);
 
-    return 1;
+    el_canvas->cd(1);
+    TH1Ptr el_pt = convert(*analyzer->monitorElectrons()->pt());
+    el_pt->GetXaxis()->SetTitle("p_{T} [GeV/c]");
+    el_pt->SetNdivisions(6);
+    el_pt->Draw();
+
+    el_canvas->cd(2);
+    TH1Ptr el_phi = convert(*analyzer->monitorElectrons()->phi());
+    el_phi->GetXaxis()->SetTitle("#phi [rad]");
+    el_phi->Draw();
+
+    el_canvas->cd(3);
+    TH1Ptr el_eta = convert(*analyzer->monitorElectrons()->eta());
+    el_eta->GetXaxis()->SetTitle("#eta");
+    el_eta->Draw();
+
+    shared_ptr<TCanvas>
+        el_closest_jet_canvas(new TCanvas("electron_closest_jet",
+                    "Electron Closest Jet", 800, 320));
+    el_closest_jet_canvas->Divide(3);
+
+    el_closest_jet_canvas->cd(1);
+    TH1Ptr el_closest_jet_pt = convert(*analyzer->monitorElectronJets()->pt());
+    el_closest_jet_pt->GetXaxis()->SetTitle("p_{T} [GeV/c]");
+    el_closest_jet_pt->SetNdivisions(6);
+    el_closest_jet_pt->Draw();
+
+    el_closest_jet_canvas->cd(2);
+    TH1Ptr el_closest_jet_phi = convert(*analyzer->monitorElectronJets()->phi());
+    el_closest_jet_phi->GetXaxis()->SetTitle("#phi [rad]");
+    el_closest_jet_phi->Draw();
+
+    el_closest_jet_canvas->cd(3);
+    TH1Ptr el_closest_jet_eta = convert(*analyzer->monitorElectronJets()->eta());
+    el_closest_jet_eta->GetXaxis()->SetTitle("#eta");
+    el_closest_jet_eta->Draw();
+
+    shared_ptr<TCanvas>
+        el_delta_canvas(new TCanvas("electron_delta",
+                    "Electron Closest Jet Delta", 800, 320));
+    el_delta_canvas->Divide(3);
+
+    el_delta_canvas->cd(1);
+    TH1Ptr el_delta_r = convert(*analyzer->monitorElectronDelta()->r());
+    el_delta_r->GetXaxis()->SetTitle("#Delta R");
+    el_delta_r->Draw();
+
+    el_delta_canvas->cd(2);
+    TH1Ptr el_delta_phi = convert(*analyzer->monitorElectronDelta()->phi());
+    el_delta_phi->GetXaxis()->SetTitle("#Delta #phi [rad]");
+    el_delta_phi->Draw();
+
+    el_delta_canvas->cd(3);
+    TH1Ptr el_delta_eta = convert(*analyzer->monitorElectronDelta()->eta());
+    el_delta_eta->GetXaxis()->SetTitle("#Delta #eta");
+    el_delta_eta->Draw();
+
+    shared_ptr<TCanvas> mu_canvas(new TCanvas("muons", "Muons", 800, 320));
+    mu_canvas->Divide(3);
+
+    mu_canvas->cd(1);
+    TH1Ptr mu_pt = convert(*analyzer->monitorMuons()->pt());
+    mu_pt->GetXaxis()->SetTitle("p_{T} [GeV/c]");
+    mu_pt->SetNdivisions(6);
+    mu_pt->Draw();
+
+    mu_canvas->cd(2);
+    TH1Ptr mu_phi = convert(*analyzer->monitorMuons()->phi());
+    mu_phi->GetXaxis()->SetTitle("#phi [rad]");
+    mu_phi->Draw();
+
+    mu_canvas->cd(3);
+    TH1Ptr mu_eta = convert(*analyzer->monitorMuons()->eta());
+    mu_eta->GetXaxis()->SetTitle("#eta");
+    mu_eta->Draw();
+
+    shared_ptr<TCanvas>
+        mu_closest_jet_canvas(new TCanvas("muon_closest_jet",
+                    "Muon Closest Jet", 800, 320));
+    mu_closest_jet_canvas->Divide(3);
+
+    mu_closest_jet_canvas->cd(1);
+    TH1Ptr mu_closest_jet_pt = convert(*analyzer->monitorMuonJets()->pt());
+    mu_closest_jet_pt->GetXaxis()->SetTitle("p_{T} [GeV/c]");
+    mu_closest_jet_pt->SetNdivisions(6);
+    mu_closest_jet_pt->Draw();
+
+    mu_closest_jet_canvas->cd(2);
+    TH1Ptr mu_closest_jet_phi = convert(*analyzer->monitorMuonJets()->phi());
+    mu_closest_jet_phi->GetXaxis()->SetTitle("#phi [rad]");
+    mu_closest_jet_phi->Draw();
+
+    mu_closest_jet_canvas->cd(3);
+    TH1Ptr mu_closest_jet_eta = convert(*analyzer->monitorMuonJets()->eta());
+    mu_closest_jet_eta->GetXaxis()->SetTitle("#eta");
+    mu_closest_jet_eta->Draw();
+
+    shared_ptr<TCanvas>
+        mu_delta_canvas(new TCanvas("muon_delta",
+                    "Muon Closest Jet Delta", 800, 320));
+    mu_delta_canvas->Divide(3);
+
+    mu_delta_canvas->cd(1);
+    TH1Ptr mu_delta_r = convert(*analyzer->monitorMuonDelta()->r());
+    mu_delta_r->GetXaxis()->SetTitle("#Delta R");
+    mu_delta_r->Draw();
+
+    mu_delta_canvas->cd(2);
+    TH1Ptr mu_delta_phi = convert(*analyzer->monitorMuonDelta()->phi());
+    mu_delta_phi->GetXaxis()->SetTitle("#Delta #phi [rad]");
+    mu_delta_phi->Draw();
+
+    mu_delta_canvas->cd(3);
+    TH1Ptr mu_delta_eta = convert(*analyzer->monitorMuonDelta()->eta());
+    mu_delta_eta->GetXaxis()->SetTitle("#Delta #eta");
+    mu_delta_eta->Draw();
+
+    app->Run();
 }
