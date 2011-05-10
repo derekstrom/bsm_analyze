@@ -11,9 +11,13 @@
 
 #include <TCanvas.h>
 #include <TH1.h>
+#include <TH2.h>
 #include <TRint.h>
 
 #include "bsm_stat/interface/Utility.h"
+#include "bsm_stat/interface/Axis.h"
+#include "bsm_stat/interface/H1.h"
+#include "bsm_stat/interface/H2.h"
 
 #include "bsm_input/interface/Event.pb.h"
 #include "interface/ClosestJetAnalyzer.h"
@@ -31,6 +35,7 @@ using bsm::core::Files;
 using bsm::core::ThreadController;
 using bsm::stat::convert;
 using bsm::stat::TH1Ptr;
+using bsm::stat::TH2Ptr;
 
 typedef shared_ptr<ClosestJetAnalyzer> ClosestJetAnalyzerPtr;
 
@@ -78,6 +83,10 @@ try
     //
     shared_ptr<ThreadController> controller(new ThreadController());
     ClosestJetAnalyzerPtr analyzer(new ClosestJetAnalyzer());
+    analyzer->monitorElectronDelta()->ptrel()->mutable_axis()->init(50, 0, 50);
+    analyzer->electronDelta()->mutable_xAxis()->init(50, 0, 50);
+
+    analyzer->monitorMuonDelta()->ptrel()->mutable_axis()->init(200, 0, 200);
 
     // Process inputs
     //
@@ -142,8 +151,8 @@ void plot(const ClosestJetAnalyzerPtr &analyzer)
 
     shared_ptr<TCanvas>
         el_delta_canvas(new TCanvas("electron_delta",
-                    "Electron Closest Jet Delta", 800, 320));
-    el_delta_canvas->Divide(3);
+                    "Electron Closest Jet Delta", 1024, 480));
+    el_delta_canvas->Divide(3, 2);
 
     el_delta_canvas->cd(1);
     TH1Ptr el_delta_r = convert(*analyzer->monitorElectronDelta()->r());
@@ -151,11 +160,22 @@ void plot(const ClosestJetAnalyzerPtr &analyzer)
     el_delta_r->Draw();
 
     el_delta_canvas->cd(2);
+    TH1Ptr el_delta_ptrel = convert(*analyzer->monitorElectronDelta()->ptrel());
+    el_delta_ptrel->GetXaxis()->SetTitle("p_{T}^{rel} [GeV/c]");
+    el_delta_ptrel->Draw();
+
+    el_delta_canvas->cd(3);
+    TH2Ptr el_delta = convert(*analyzer->electronDelta());
+    el_delta->GetYaxis()->SetTitle("#Delta R");
+    el_delta->GetXaxis()->SetTitle("p_{T}^{rel} [GeV/c]");
+    el_delta->Draw("colz");
+
+    el_delta_canvas->cd(4);
     TH1Ptr el_delta_phi = convert(*analyzer->monitorElectronDelta()->phi());
     el_delta_phi->GetXaxis()->SetTitle("#Delta #phi [rad]");
     el_delta_phi->Draw();
 
-    el_delta_canvas->cd(3);
+    el_delta_canvas->cd(5);
     TH1Ptr el_delta_eta = convert(*analyzer->monitorElectronDelta()->eta());
     el_delta_eta->GetXaxis()->SetTitle("#Delta #eta");
     el_delta_eta->Draw();
@@ -202,8 +222,8 @@ void plot(const ClosestJetAnalyzerPtr &analyzer)
 
     shared_ptr<TCanvas>
         mu_delta_canvas(new TCanvas("muon_delta",
-                    "Muon Closest Jet Delta", 800, 320));
-    mu_delta_canvas->Divide(3);
+                    "Muon Closest Jet Delta", 1024, 480));
+    mu_delta_canvas->Divide(3, 2);
 
     mu_delta_canvas->cd(1);
     TH1Ptr mu_delta_r = convert(*analyzer->monitorMuonDelta()->r());
@@ -211,11 +231,22 @@ void plot(const ClosestJetAnalyzerPtr &analyzer)
     mu_delta_r->Draw();
 
     mu_delta_canvas->cd(2);
+    TH1Ptr mu_delta_ptrel = convert(*analyzer->monitorMuonDelta()->ptrel());
+    mu_delta_ptrel->GetXaxis()->SetTitle("p_{T}^{rel} [GeV/c]");
+    mu_delta_ptrel->Draw();
+
+    mu_delta_canvas->cd(3);
+    TH2Ptr mu_delta = convert(*analyzer->muonDelta());
+    mu_delta->GetYaxis()->SetTitle("#Delta R");
+    mu_delta->GetXaxis()->SetTitle("p_{T}^{rel} [GeV/c]");
+    mu_delta->Draw("colz");
+
+    mu_delta_canvas->cd(4);
     TH1Ptr mu_delta_phi = convert(*analyzer->monitorMuonDelta()->phi());
     mu_delta_phi->GetXaxis()->SetTitle("#Delta #phi [rad]");
     mu_delta_phi->Draw();
 
-    mu_delta_canvas->cd(3);
+    mu_delta_canvas->cd(5);
     TH1Ptr mu_delta_eta = convert(*analyzer->monitorMuonDelta()->eta());
     mu_delta_eta->GetXaxis()->SetTitle("#Delta #eta");
     mu_delta_eta->Draw();
