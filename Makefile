@@ -1,7 +1,7 @@
 CCC      = g++
 
 # Subsystems that have compilable libraries
-SUBMOD   = bsm_input bsm_keyboard bsm_stat
+SUBMOD   = bsm_core bsm_input bsm_keyboard bsm_stat
 LIB		 = libbsm_analyze.so.1.0
 
 # Get list of all heads, sources and objects. Each source (%.cc) whould have

@@ -7,3 +7,6 @@
 [submodule "bsm_stat"]
 	path = bsm_stat
 	url = git://github.com/ksamdev/bsm_stat.git
+[submodule "bsm_core"]
+	path = bsm_core
+	url = git://github.com/ksamdev/bsm_core.git
