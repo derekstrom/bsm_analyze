@@ -61,6 +61,8 @@ namespace bsm
             void use(ThreadController *controller);
             void use(const AnalyzerPtr &analyzer);
 
+            AnalyzerPtr analyzer() const;
+
             // Scheule file for processing. Method does nothing is file
             // is already set but processing didn't start
             bool init(const std::string &file_name);

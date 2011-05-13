@@ -103,6 +103,11 @@ void AnalyzerOperation::use(const AnalyzerPtr &analyzer)
     _analyzer = analyzer;
 }
 
+AnalyzerPtr AnalyzerOperation::analyzer() const
+{
+    return _analyzer;
+}
+
 bool AnalyzerOperation::init(const std::string &file_name)
 {
     if (file_name.empty())
@@ -420,6 +425,12 @@ void ThreadController::onThreadWait()
         // Let thread finish
         //
         thread->join();
+
+        AnalyzerOperationPtr operation =
+            dynamic_pointer_cast<AnalyzerOperation>(thread->operation());
+
+        if (operation)
+            _analyzer->merge(operation->analyzer());
 
         // Remove thread form the list of running threads
         //
