@@ -93,11 +93,11 @@ try
     controller->use(analyzer);
     controller->start();
 
-    /*
+    cout << *analyzer << endl;
+
     // Plot results
     //
     plot(analyzer);
-    */
 }
 catch(...)
 {
@@ -105,7 +105,6 @@ catch(...)
 
 void plot(const ClosestJetAnalyzerPtr &analyzer)
 {
-    /*
     // Cheat ROOT with empty args
     //
     int empty_argc = 1;
@@ -255,5 +254,4 @@ void plot(const ClosestJetAnalyzerPtr &analyzer)
     mu_delta_eta->Draw();
 
     app->Run();
-    */
 }
