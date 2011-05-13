@@ -26,14 +26,13 @@ using std::endl;
 using boost::shared_ptr;
 
 using bsm::MonitorAnalyzer;
-using bsm::core::Files;
-using bsm::core::ThreadController;
+using bsm::ThreadController;
 using bsm::stat::convert;
 using bsm::stat::TH1Ptr;
 
 typedef shared_ptr<MonitorAnalyzer> MonitorAnalyzerPtr;
 
-void run(const Files &);
+void run();
 void plot(const MonitorAnalyzerPtr &);
 
 int main(int argc, char *argv[])
@@ -50,11 +49,13 @@ int main(int argc, char *argv[])
     int result = 0;
     try
     {
+        /*
         Files input_files;
         for(int i = 2; argc > i; ++i)
             input_files.push_back(argv[i]);
 
         run(input_files);
+        */
     }
     catch(...)
     {
@@ -70,9 +71,10 @@ int main(int argc, char *argv[])
     return result;
 }
 
-void run(const Files &input_files)
+void run()
 try
 {
+    /*
     // Prepare Analysis
     //
     shared_ptr<ThreadController> controller(new ThreadController());
@@ -85,7 +87,7 @@ try
     // Plot results
     //
     plot(analyzer);
-
+    */
 }
 catch(...)
 {
@@ -93,6 +95,7 @@ catch(...)
 
 void plot(const MonitorAnalyzerPtr &analyzer)
 {
+    /*
     // Cheat ROOT with empty args
     //
     int empty_argc = 1;
@@ -113,20 +116,6 @@ void plot(const MonitorAnalyzerPtr &analyzer)
     jet_canvas->cd(3);
     TH1Ptr jet_pt = convert(*analyzer->monitorJets()->pt());
     jet_pt->Draw();
-
-    /*
-    shared_ptr<TCanvas> gen_particle_canvas(new TCanvas("gen_particles", "GenParticles", 800, 320));
-    gen_particle_canvas->Divide(3);
-
-    gen_particle_canvas->cd(1);
-    gen_particles->id()->Draw();
-
-    gen_particle_canvas->cd(2);
-    gen_particles->status()->Draw();
-
-    gen_particle_canvas->cd(3);
-    gen_particles->pt()->Draw();
-    */
 
     shared_ptr<TCanvas> muon_canvas(new TCanvas("muons", "Muons", 800, 320));
     muon_canvas->Divide(3);
@@ -197,4 +186,5 @@ void plot(const MonitorAnalyzerPtr &analyzer)
     missing_energy_z->Draw();
 
     app->Run();
+    */
 }

@@ -12,7 +12,7 @@
 
 #include "bsm_stat/interface/statfwd.h"
 #include "interface/Analyzer.h"
-#include "interface/bsmfwd.h"
+#include "interface/bsm_fwd.h"
 
 class TLorentzVector;
 

@@ -5,189 +5,182 @@
 // Created by Samvel Khalatyan, Apr 30, 2011
 // Copyright 2011, All rights reserved
 
-#ifndef BSM_CORE_THREAD
-#define BSM_CORE_THREAD
+#ifndef BSM_THREAD
+#define BSM_THREAD
 
 #include <queue>
+#include <stack>
 #include <string>
-#include <vector>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
+
+#include "interface/bsm_fwd.h"
+#include "bsm_core/interface/bsm_core_fwd.h"
+#include "bsm_core/interface/Thread.h"
 
 namespace bsm
 {
     class Reader;
+    class ThreadController;
 
-    namespace core
+    // Keyaboard Thread: watch for keyboard input and report to the controller
+    //
+    class KeyboardOperation : public core::Operation
     {
-        class Analyzer;
-        class AnalyzerThread;
-        class Condition;
-        class KeyboardController;
-        class Thread;
+        public:
+            KeyboardOperation();
 
-        typedef boost::shared_ptr<Condition> ConditionPtr;
-        typedef std::vector<std::string> Files;
-        typedef boost::shared_ptr<Analyzer> AnalyzerPtr;
+            // Operation interface
+            //
+            virtual void run();
+            virtual void stop();
 
-        class ThreadController
-        {
-            public:
-                enum Command
-                {
-                    QUIT = 0,
-                    HELP = 1,
-                    STATUS = 2
-                };
+            virtual void onThreadInit(core::Thread *);
 
-                ThreadController(const uint32_t &max_threads = 0) throw();
-                ~ThreadController();
+        private:
+            bool isContinue() const;
 
-                ConditionPtr condition() const;
+            core::Thread *_thread;
 
-                void process(const AnalyzerPtr &, const Files &input_files);
+            bool _continue;
 
-                void notify(AnalyzerThread *thread);
-                void notify(const Command &command);
+            boost::shared_ptr<core::Keyboard> _keyboard_controller;
+    };
 
-            private:
-                bool init(const AnalyzerPtr &, const Files &);
-                void reset();
+    // Analyzer Thread: perform the analysis
+    //
+    class AnalyzerOperation : public core::Operation
+    {
+        public:
+            AnalyzerOperation();
+            virtual ~AnalyzerOperation();
 
-                void createThreads(const AnalyzerPtr &);
-                void startThreads();
-                void run();
-                void wait();
-                void onThreadComplete();
-                void continueThread();
-                void stopThread();
+            // Controller and Analyzer can only be set when thread
+            // is not running
+            //
+            void use(ThreadController *controller);
+            void use(const AnalyzerPtr &analyzer);
 
-                uint32_t _max_threads;
-                boost::shared_ptr<Condition> _condition;
+            // Scheule file for processing. Method does nothing is file
+            // is already set but processing didn't start
+            bool init(const std::string &file_name);
 
-                Files _input_files;
-                Files::const_iterator _next_file;
+            // Operation interface
+            //
+            virtual void run();
+            virtual void stop();
 
-                typedef boost::shared_ptr<Thread> ThreadPtr;
-                typedef boost::shared_ptr<AnalyzerThread> AnalyzerThreadPtr;
-                typedef std::vector<AnalyzerThreadPtr> Threads;
-                typedef std::queue<AnalyzerThread *> ThreadsFIFO;
+            virtual void onThreadInit(core::Thread *);
 
-                Threads _threads;
-                ThreadsFIFO _complete_threads;
+        private:
+            typedef boost::shared_ptr<Reader> ReaderPtr;
 
-                ThreadPtr _keyboard_thread;
+            core::Thread *thread() const;
 
-                uint32_t _running_threads;
+            bool isRunning() const;
+            // isContinue is called only when thread is running and therefore
+            // uses lock
+            //
+            bool isContinue() const;
+            bool isFileEmpty() const;
 
-                AnalyzerPtr _analyzer;
-        };
+            // hasAnalyzer/Controller are only called when thread is running.
+            // Therefore lock is safe for use
+            //
+            bool hasAnalyzer() const;
+            bool hasController() const;
 
-        class Thread
-        {
-            public:
-                Thread(ThreadController *controller) throw();
-                virtual ~Thread();
+            // Create input file reader and reset input_file
+            //
+            ReaderPtr createReader();
 
-                ConditionPtr condition() const;
+            // Create input file reader and apply analyzer to events
+            //
+            void processFile();
 
-                bool start();
-                void join();
+            // Wait for new instructions from Controller
+            //
+            void waitForInstructions();
 
-                virtual void stop() = 0;
+            core::Thread *_thread;
+            ThreadController *_controller;
 
-            protected:
-                virtual void run() = 0;
+            bool _continue;
 
-                 ThreadController *controller() const;
+            AnalyzerPtr _analyzer;
+            std::string _file_name;
+    };
 
-            private:
-                boost::shared_ptr<Condition> _condition;
-                boost::thread _thread;
+    class ThreadController
+    {
+        public:
+            ThreadController();
+            ~ThreadController();
 
-                ThreadController *_controller;
-        };
+            core::ConditionPtr condition() const;
 
-        class AnalyzerThread: public Thread
-        {
-            public:
-                AnalyzerThread(ThreadController *controller,
-                        const AnalyzerPtr &analyzer);
+            void use(const AnalyzerPtr &analyzer);
 
-                void init(const std::string &file_name);
+            // Schedule file for processing
+            //
+            void push(const std::string &file_name);
 
-                virtual void stop();
+            // Start processing scheduled files
+            //
+            void start();
 
-                const AnalyzerPtr &analyzer() const;
+            void threadIsWaiting(core::Thread *);
 
-            protected:
-                virtual void run();
+        private:
+            typedef boost::shared_ptr<AnalyzerOperation> AnalyzerOperationPtr;
 
-            private:
-                void wait();
+            // Test if any input files left for processing
+            //
+            bool hasInputFiles() const;
+            bool hasAnalyzer() const;
 
-                AnalyzerPtr _analyzer;
+            // Return maximum number of threads to be created:
+            //  min(CORES, Input FILES)
+            //
+            uint32_t countMaxThreads();
 
-                bool _continue;
-                bool _wait_for_instructions;
+            // Create new thread, instruct and start
+            //
+            void addThread();
 
-                typedef boost::shared_ptr<Reader> ReaderPtr;
-                ReaderPtr _reader;
+            void instruct(AnalyzerOperation *operation);
 
-                uint32_t _events_read; // read events in last file
-                uint32_t _events_processed;
-        };
+            void run();
+            void wait();
 
-        class KeyboardThread: public Thread
-        {
-            public:
-                KeyboardThread(ThreadController *controller) throw();
+            bool isRunning() const;
 
-                virtual void stop();
+            void onThreadWait();
+            core::Thread *waitingThread();
 
-            protected:
-                virtual void run();
+            // Typedefs
+            //
+            typedef std::queue<std::string> InputFiles; // FIFO
 
-            private:
-                boost::shared_ptr<KeyboardController> _controller;
+            typedef boost::shared_ptr<core::Thread> ThreadPtr;
 
-                bool _continue;
+            typedef std::map<core::Thread *, ThreadPtr> Threads;
+            typedef std::queue<core::Thread *> ThreadsFIFO;
 
-        };
+            typedef boost::shared_ptr<ThreadsFIFO> ThreadsFIFOPtr;
 
-        class Lock
-        {
-            public:
-                typedef boost::unique_lock<boost::mutex> UniqueLock;
+            // Properties
+            //
+            const uint32_t _max_threads;
 
-                Lock(const ConditionPtr &);
+            core::ConditionPtr _condition;
+            boost::shared_ptr<InputFiles> _input_files;
 
-                UniqueLock &operator()();
+            Threads _threads;
+            ThreadsFIFOPtr _threads_waiting;
 
-            private:
-                UniqueLock _lock;
-        };
-
-        class Condition
-        {
-            public:
-                typedef boost::shared_ptr<boost::mutex> MutexPtr;
-                typedef boost::shared_ptr<boost::condition_variable> VariablePtr;
-
-                Condition() throw();
-
-                MutexPtr mutex() const;
-                VariablePtr variable() const;
-
-            private:
-                typedef boost::shared_ptr<boost::mutex> SharedMutexPtr;
-                typedef boost::shared_ptr<boost::condition_variable> SharedVariablePtr;
-
-                SharedMutexPtr _mutex;
-                SharedVariablePtr _variable;
-        };
-    }
+            AnalyzerPtr _analyzer;
+    };
 }
 
 #endif

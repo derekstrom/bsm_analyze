@@ -1,7 +1,7 @@
 CCC      = g++
 
 # Subsystems that have compilable libraries
-SUBMOD   = bsm_core bsm_input bsm_keyboard bsm_stat
+SUBMOD   = bsm_core bsm_input bsm_stat
 LIB		 = libbsm_analyze.so.1.0
 
 # Get list of all heads, sources and objects. Each source (%.cc) whould have
@@ -24,7 +24,7 @@ else
 	DEBUG = -O0 -g
 endif
 
-CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -I./ -I/opt/local/include -I${ROOTSYS}/include -I${BOOST_ROOT}/include  -I./input/interface $(foreach subsys,$(SUBMOD),$(addprefix -I./,$(subsys)))
+CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -I./ -I/opt/local/include -I${ROOTSYS}/include -I${BOOST_ROOT}/include -I./bsm_input/message
 
 ifeq ($(shell uname),Linux)
 	LIBS     = -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -L./lib $(foreach mod,$(SUBMOD),$(addprefix -l,$(mod))) -lboost_thread

@@ -6,519 +6,432 @@
 // Copyright 2011, All rights reserved
 
 #include <iostream>
-#include <iterator>
-#include <stdexcept>
 
+#include <boost/pointer_cast.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "bsm_input/interface/Event.pb.h"
-#include "bsm_input/interface/Input.pb.h"
 #include "bsm_input/interface/Reader.h"
-#include "bsm_keyboard/interface/KeyboardController.h"
+#include "bsm_core/interface/Keyboard.h"
 
 #include "interface/Analyzer.h"
 #include "interface/Thread.h"
 
-using std::bad_alloc;
-using std::cerr;
-using std::cout;
-using std::distance;
-using std::endl;
+using namespace std;
 
-using bsm::core::AnalyzerPtr;
-using bsm::core::AnalyzerThread;
-using bsm::core::Condition;
-using bsm::core::ConditionPtr;
-using bsm::core::KeyboardThread;
+using boost::shared_ptr;
+
+using bsm::AnalyzerPtr;
+using bsm::KeyboardOperation;
+using bsm::AnalyzerOperation;
+using bsm::ThreadController;
+
 using bsm::core::Lock;
 using bsm::core::Thread;
-using bsm::core::ThreadController;
 
-// ThreadController class
+// Keyboard Thread
 //
-ThreadController::ThreadController(const uint32_t &max_threads) throw()
-try:
-    _max_threads(boost::thread::hardware_concurrency()),
-    _running_threads(0)
+KeyboardOperation::KeyboardOperation():
+    _continue(true)
 {
-    // Max threads are limited by hardware Core(s)
-    //
-    if (max_threads
-            && max_threads < _max_threads)
-
-        _max_threads = max_threads;
-
-    _condition.reset(new Condition());
-
-    _next_file = _input_files.begin();
-}
-catch(const bad_alloc &error)
-{
-    cerr << "ThreadController: failed to allocate memory - " << error.what()
-        << endl;
+    _thread = 0;
+    _keyboard_controller.reset(new core::Keyboard());
 }
 
-ThreadController::~ThreadController()
+void KeyboardOperation::run()
 {
-}
-
-ConditionPtr ThreadController::condition() const
-{
-    return _condition;
-}
-
-void ThreadController::process(const AnalyzerPtr &analyzer,
-        const Files &input_files)
-{
-    if (!condition())
+    if (!_thread)
         return;
 
-    if (!init(analyzer, input_files))
-        return;
-
-    _analyzer = analyzer;
-
-    run();
-    reset();
-}
-
-void ThreadController::notify(AnalyzerThread *thread)
-{
-    Lock lock(condition());
-
-    _complete_threads.push(thread);
-}
-
-void ThreadController::notify(const Command &command)
-{
-    Lock lock(condition());
-
-    switch(command)
+    for(boost::posix_time::milliseconds delay(100);
+            isContinue();
+            boost::this_thread::sleep(delay))
     {
-        case QUIT:  // quit application
-                    //
-                    for(Threads::iterator thread = _threads.begin();
-                            _threads.end() != thread;
-                            ++thread)
-                    {
-                        (*thread)->stop();
-                    }
-                    _next_file = _input_files.end();
-
-                    //_keyboard_thread->stop();
-
-                    break;
-
-        case HELP:  // Print help
-                    //
-                    cout << "Help Key Map" << endl;
-                    cout << " h     help" << endl;
-                    cout << " q     quit application" << endl;
-                    cout << " s     job status" << endl;
-                    break;
-
-        case STATUS:    // Print status
-                        //
-                        cout << "Finished " << distance(Files::const_iterator(_input_files.begin()),
-                                                        _next_file)
-                            << "/" << _input_files.size() << " files" << endl;
-                    for(Threads::iterator thread = _threads.begin();
-                            _threads.end() != thread;
-                            ++thread)
-                    {
-                        cout << *((*thread)->analyzer()) << endl;
-                    }
-
-                        break;
-
-        default:    // Unknown command
-                    //
-                    break;
     }
 }
 
-// Privates
+void KeyboardOperation::stop()
+{
+    Lock lock(_thread->condition());
+
+    _continue = false;
+}
+
+void KeyboardOperation::onThreadInit(Thread *thread)
+{
+    _thread = thread;
+}
+
+// Private
 //
-bool ThreadController::init(const AnalyzerPtr &analyzer, const Files &input_files)
+bool KeyboardOperation::isContinue() const
 {
-    Lock lock(condition());
+    Lock lock(_thread->condition());
 
-    // Skip if:
-    //  there are any threads running
-    //  no input files supplied
-    //  analyzer is not defined
-    //  analyzer is in invalid state
-    //
-    if (_running_threads
-            || input_files.empty()
-            || !analyzer
-            || !*analyzer)
-
-        return false;
-
-    _input_files = input_files;
-    _next_file = _input_files.begin();
-
-    createThreads(analyzer);
-    startThreads();
-
-    return true;
-}
-
-void ThreadController::reset()
-{
-    Lock lock(condition());
-
-    _keyboard_thread->stop();
-    _keyboard_thread->condition()->variable()->notify_all();
-    _keyboard_thread->join();
-
-    _keyboard_thread.reset();
-
-    // Reset object
-    //
-    _running_threads = 0;
-    _complete_threads = ThreadsFIFO();
-    _threads.clear();
-
-    _input_files.clear();
-    _next_file = _input_files.begin();
-
-    _analyzer.reset();
-}
-
-void ThreadController::createThreads(const AnalyzerPtr &analyzer)
-{
-    uint32_t max_threads = _max_threads;
-
-    if (_input_files.size() < _max_threads)
-        max_threads = _input_files.size();
-
-    for(uint32_t i = 0; max_threads > i; ++i)
-    {
-        AnalyzerThreadPtr thread(new AnalyzerThread(this, analyzer));
-
-        _threads.push_back(thread);
-    }
-
-    _keyboard_thread.reset(new KeyboardThread(this));
-}
-
-void ThreadController::startThreads()
-{
-    for(Threads::iterator thread = _threads.begin();
-            _threads.end() != thread;
-            ++thread)
-    {
-        AnalyzerThreadPtr thread_ptr = *thread;
-
-        // Pass input file to thread
-        //
-        thread_ptr->init(*_next_file);
-
-        if (!thread_ptr->start())
-            continue;
-
-        ++_next_file;
-        ++_running_threads;
-    }
-
-    _keyboard_thread->start();
-}
-
-void ThreadController::run()
-{
-    while(_running_threads)
-    {
-        wait();
-
-        onThreadComplete();
-    }
-} 
-
-void ThreadController::wait()
-{
-    Lock lock(condition());
-    while(_complete_threads.empty())
-        condition()->variable()->wait(lock());
-}
-
-void ThreadController::onThreadComplete()
-{
-    Lock lock(condition());
-    while(!_complete_threads.empty())
-    {
-        if (_input_files.end() != _next_file)
-            continueThread();
-        else
-            stopThread();
-    }
-}
-
-void ThreadController::continueThread()
-{
-    AnalyzerThread *thread = _complete_threads.front();
-    _complete_threads.pop();
-
-    // Pass input file to thread
-    //
-    thread->init(*_next_file);
-    ++_next_file;
-
-    thread->condition()->variable()->notify_all();
-}
-
-void ThreadController::stopThread()
-{
-    AnalyzerThread *thread = _complete_threads.front();
-    _complete_threads.pop();
-
-    thread->stop();
-    thread->condition()->variable()->notify_all();
-    thread->join();
-
-    _analyzer->merge(thread->analyzer());
-
-    --_running_threads;
-}
-
-
-
-// Thread class
-//
-Thread::Thread(ThreadController *controller) throw()
-try
-    : _controller(controller)
-{
-    _condition.reset(new Condition());
-}
-catch(const bad_alloc &error)
-{
-    cerr << "Thread: failed to allocate memory - " << error.what() << endl;
-}
-
-Thread::~Thread()
-{
-}
-
-ConditionPtr Thread::condition() const
-{
-    return _condition;
-}
-
-bool Thread::start()
-{
-    if (boost::thread() != _thread)
-        return false;
-
-    _thread = boost::thread(&Thread::run, this);
-
-    return true;
-}
-
-void Thread::join()
-{
-    if (boost::thread() != _thread)
-        _thread.join();
-}
-
-// Protected
-//
-ThreadController *Thread::controller() const
-{
-    return _controller;
+    return _continue;
 }
 
 
 
 // Analyzer Thread
 //
-AnalyzerThread::AnalyzerThread(ThreadController *controller,
-        const AnalyzerPtr &analyzer)
-try:
-    Thread(controller),
-    _events_read(0),
-    _events_processed(0)
+AnalyzerOperation::AnalyzerOperation():
+    _continue(true)
 {
-    _analyzer = analyzer->clone();
-}
-catch(const std::bad_alloc &)
-{
-    cerr << "failed to allocate memory for Analyzer Thread" << endl;
-
-    _analyzer.reset();
+    _thread = 0;
+    _controller = 0;
 }
 
-void AnalyzerThread::init(const std::string &file_name)
+AnalyzerOperation::~AnalyzerOperation()
 {
-    Lock lock(condition());
+    // Check if thread is still working
+}
 
-    if (!_analyzer)
+void AnalyzerOperation::use(ThreadController *controller)
+{
+    if (isRunning())
         return;
 
-    _reader.reset(new Reader(file_name));
-
-    _events_read = 0;
-
-    _continue = true;
-    _wait_for_instructions = false;
+    _controller = controller;
 }
 
-void AnalyzerThread::stop()
+void AnalyzerOperation::use(const AnalyzerPtr &analyzer)
 {
-    Lock lock(condition());
-
-    _continue = false;
-    _wait_for_instructions = false;
-}
-
-const AnalyzerPtr &AnalyzerThread::analyzer() const
-{
-    return _analyzer;
-}
-
-// Protected
-//
-void AnalyzerThread::run()
-{
-    if (!_analyzer)
+    if (isRunning())
         return;
 
-    for(_wait_for_instructions = true;
-            _continue;
-            _wait_for_instructions = true)
+    _analyzer = analyzer;
+}
+
+bool AnalyzerOperation::init(const std::string &file_name)
+{
+    if (file_name.empty())
+        return false;
+
+    if (thread())
+    {
+        if (!isFileEmpty())
+            return false;
+
+        Lock lock(thread()->condition());
+        _file_name = file_name;
+    }
+    else
+    {
+        if (!_file_name.empty())
+            return false;
+
+        _file_name = file_name;
+    }
+
+    return true;
+}
+
+void AnalyzerOperation::run()
+{
+    if (!thread()
+            || !hasAnalyzer()
+            || !hasController())
+        return;
+
+    for(; isContinue();)
     {
         // Process file
         //
-        if (_reader)
-        {
-            for(boost::shared_ptr<Event> event(new Event());
-                    _continue && _reader->read(*event);
-                    ++_events_read)
-            {
-                _analyzer->process(event.get());
+        processFile();
 
-                event->Clear();
-            }
-        }
-
-        // Notify Controller that Thread has finished the analysis
+        // Wait for instructions
         //
-        controller()->notify(this);
-
-        // Wait for new instructions
-        //
-        wait();
+        waitForInstructions();
     }
+}
+
+void AnalyzerOperation::stop()
+{
+    Lock lock(thread()->condition());
+
+    _continue = false;
+}
+
+void AnalyzerOperation::onThreadInit(Thread *thread)
+{
+    _thread = thread;
+}
+
+Thread *AnalyzerOperation::thread() const
+{
+    return _thread;
+}
+
+// Privates
+//
+bool AnalyzerOperation::isRunning() const
+{
+    return thread()
+        && thread()->isRunning();
+}
+
+bool AnalyzerOperation::isContinue() const
+{
+    Lock lock(thread()->condition());
+    
+    return _continue;
+}
+
+bool AnalyzerOperation::isFileEmpty() const
+{
+    Lock lock(thread()->condition());
+
+    return _file_name.empty();
+}
+
+bool AnalyzerOperation::hasAnalyzer() const
+{
+    Lock lock(thread()->condition());
+
+    return _analyzer;
+}
+
+bool AnalyzerOperation::hasController() const
+{
+    Lock lock(thread()->condition());
+
+    return _controller;
+}
+
+AnalyzerOperation::ReaderPtr AnalyzerOperation::createReader()
+{
+    Lock lock(thread()->condition());
+
+    ReaderPtr reader(new Reader(_file_name));
+    _file_name.clear();
+
+    return reader;
+}
+
+void AnalyzerOperation::processFile()
+{
+    if (isFileEmpty())
+        return;
+
+    ReaderPtr reader = createReader();
+    for(shared_ptr<Event> event(new Event());
+            isContinue()
+            && reader->read(*event);
+            event->Clear())
+    {
+        Lock lock(thread()->condition());
+
+        _analyzer->process(event.get());
+    }
+}
+
+void AnalyzerOperation::waitForInstructions()
+{
+    Lock lock(thread()->condition());
+
+    // Inform the Controller that thread finished analyzing the  input file 
+    //
+    _controller->threadIsWaiting(thread());
+    _controller->condition()->variable()->notify_all();
+
+    // isContinue() and isFileEmpty() methods can not be used. Otherwise
+    // interlock will occure. Controller will try to accquire mutex and then
+    // notify this thread. Notification should come only after wait on
+    // lock (lines below) is issued
+    //
+    while(_file_name.empty()
+            && _continue)
+    {
+        thread()->condition()->variable()->wait(lock());
+    }
+}
+
+
+
+// Thread controller
+//
+ThreadController::ThreadController():
+    _max_threads(boost::thread::hardware_concurrency())
+{
+    _condition.reset(new core::Condition());
+    _input_files.reset(new InputFiles());
+
+    _threads_waiting.reset(new ThreadsFIFO());
+}
+
+ThreadController::~ThreadController()
+{
+    // Check if any threads are still running and let them finish
+    // before quit application
+}
+
+bsm::core::ConditionPtr ThreadController::condition() const
+{
+    return _condition;
+}
+
+void ThreadController::use(const AnalyzerPtr &analyzer)
+{
+    _analyzer = analyzer;
+}
+
+void ThreadController::push(const std::string &file_name)
+{
+    Lock lock(condition());
+
+    _input_files->push(file_name);
+}
+
+void ThreadController::start()
+{
+    if (!hasInputFiles()
+            || !hasAnalyzer())
+        return;
+
+    for(uint32_t threads_to_create = countMaxThreads();
+            threads_to_create;
+            --threads_to_create)
+    {
+        addThread();
+    }
+
+    run();
+}
+
+void 
+ThreadController::threadIsWaiting(Thread *thread)
+{
+    _threads_waiting->push(thread);
 }
 
 // Private
 //
-void AnalyzerThread::wait()
+bool ThreadController::hasInputFiles() const
 {
     Lock lock(condition());
 
-    controller()->condition()->variable()->notify_all();
-    while(_wait_for_instructions)
+    return !_input_files->empty();
+}
+
+bool ThreadController::hasAnalyzer() const
+{
+    Lock lock(condition());
+
+    return _analyzer;
+}
+
+uint32_t ThreadController::countMaxThreads()
+{
+    Lock lock(condition());
+
+    if (_max_threads > _input_files->size())
+        return _input_files->size();
+
+    return _max_threads;
+}
+
+void ThreadController::addThread()
+{
+    ThreadPtr thread(new Thread());
+    AnalyzerOperationPtr operation(new AnalyzerOperation());
+    thread->init(operation);
+
+    operation->use(this);
+
+    instruct(operation.get());
+
     {
-        controller()->condition()->variable()->notify_all();
+        Lock lock(condition());
+        operation->use(_analyzer->clone());
+        _threads[thread.get()] = thread;
+    }
+
+    thread->start();
+}
+
+void ThreadController::instruct(AnalyzerOperation *operation)
+{
+    Lock lock(condition());
+
+    const std::string input_file(_input_files->front());
+    _input_files->pop();
+
+    operation->init(input_file);
+}
+
+void ThreadController::run()
+{
+    for(; isRunning();)
+    {
+        // Wait for any thread to finish
+        //
+        wait();
+
+        // Process waiting threads
+        //
+        onThreadWait();
+    }
+}
+
+void ThreadController::wait()
+{
+    Lock lock(condition());
+
+    while(_threads_waiting->empty())
+    {
         condition()->variable()->wait(lock());
     }
 }
 
-
-
-// Keyboard Thread
-//
-KeyboardThread::KeyboardThread(ThreadController *controller) throw():
-    Thread(controller),
-    _continue(true)
-{
-    _controller.reset(new KeyboardController());
-}
-
-void KeyboardThread::stop()
+bool ThreadController::isRunning() const
 {
     Lock lock(condition());
 
-    _continue = false;
+    return !_threads.empty();
 }
 
-void KeyboardThread::run()
+void ThreadController::onThreadWait()
 {
-    // Update frequency: every 100 ms
-    //
-    boost::posix_time::milliseconds delay(100);
-    for(char key = 0; _continue; boost::this_thread::sleep(delay))
+    using boost::dynamic_pointer_cast;
+
+    if (hasInputFiles())
     {
-        key = _controller->get();
+        // More input files left
+        //
+        Thread *thread = waitingThread();
+        AnalyzerOperationPtr operation = 
+            dynamic_pointer_cast<AnalyzerOperation>(thread->operation());
+        
+        if (operation)
+            instruct(operation.get());
 
-        switch(key)
-        {
-            case 'h': // help
-                      //
-                      controller()->notify(ThreadController::HELP);
+        thread->condition()->variable()->notify_all();
+    }
+    else
+    {
+        // Stop thread
+        //
+        Thread *thread = waitingThread();
 
-                      continue;
+        thread->stop();
+        thread->condition()->variable()->notify_all();
 
-            case 's': // status
-                      //
-                      controller()->notify(ThreadController::STATUS);
+        // Let thread finish
+        //
+        thread->join();
 
-                      continue;
-
-            case 'q': // quit
-                      //
-                      controller()->notify(ThreadController::QUIT);
-
-                      break;
-
-            default: continue;
-        }
-
-        break;
+        // Remove thread form the list of running threads
+        //
+        _threads.erase(thread);
     }
 }
 
-
-
-// Lock
-//
-Lock::Lock(const ConditionPtr &condition):
-    _lock(*condition->mutex())
+Thread *ThreadController::waitingThread()
 {
-}
-
-Lock::UniqueLock &Lock::operator()()
-{
-    return _lock;
-}
-
-
-
-
-// Condition
-//
-Condition::Condition() throw()
-try
-{
-    _mutex.reset(new boost::mutex());
-    _variable.reset(new boost::condition_variable());
-}
-catch(const std::bad_alloc &error)
-{
-    cerr << "Condition: failed to allocate memory - " << error.what() << endl;
-
-    _mutex.reset();
-    _variable.reset();
-}
-
-Condition::MutexPtr Condition::mutex() const
-{
-    return _mutex;
-}
-
-Condition::VariablePtr Condition::variable() const
-{
-    return _variable;
+    Lock lock(condition());
+    Thread *thread = _threads_waiting->front();
+    _threads_waiting->pop();
+    
+    return thread;
 }

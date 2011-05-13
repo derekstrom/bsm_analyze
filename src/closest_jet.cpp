@@ -31,15 +31,15 @@ using std::endl;
 using boost::shared_ptr;
 
 using bsm::ClosestJetAnalyzer;
-using bsm::core::Files;
-using bsm::core::ThreadController;
+using bsm::ThreadController;
 using bsm::stat::convert;
 using bsm::stat::TH1Ptr;
 using bsm::stat::TH2Ptr;
 
 typedef shared_ptr<ClosestJetAnalyzer> ClosestJetAnalyzerPtr;
+typedef shared_ptr<ThreadController> ControllerPtr;
 
-void run(const Files &);
+void run(ControllerPtr &);
 void plot(const ClosestJetAnalyzerPtr &);
 
 int main(int argc, char *argv[])
@@ -56,11 +56,11 @@ int main(int argc, char *argv[])
     int result = 0;
     try
     {
-        Files input_files;
+        ControllerPtr controller(new ThreadController());
         for(int i = 2; argc > i; ++i)
-            input_files.push_back(argv[i]);
+            controller->push(argv[i]);
 
-        run(input_files);
+        run(controller);
     }
     catch(...)
     {
@@ -76,13 +76,13 @@ int main(int argc, char *argv[])
     return result;
 }
 
-void run(const Files &input_files)
+void run(ControllerPtr &controller)
 try
 {
     // Prepare Analysis
     //
-    shared_ptr<ThreadController> controller(new ThreadController());
     ClosestJetAnalyzerPtr analyzer(new ClosestJetAnalyzer());
+
     analyzer->monitorElectronDelta()->ptrel()->mutable_axis()->init(50, 0, 50);
     analyzer->electronDelta()->mutable_xAxis()->init(50, 0, 50);
 
@@ -90,12 +90,14 @@ try
 
     // Process inputs
     //
-    controller->process(analyzer, input_files);
+    controller->use(analyzer);
+    controller->start();
 
+    /*
     // Plot results
     //
     plot(analyzer);
-
+    */
 }
 catch(...)
 {
@@ -103,6 +105,7 @@ catch(...)
 
 void plot(const ClosestJetAnalyzerPtr &analyzer)
 {
+    /*
     // Cheat ROOT with empty args
     //
     int empty_argc = 1;
@@ -252,4 +255,5 @@ void plot(const ClosestJetAnalyzerPtr &analyzer)
     mu_delta_eta->Draw();
 
     app->Run();
+    */
 }

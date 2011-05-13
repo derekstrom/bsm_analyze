@@ -1,6 +1,6 @@
 CCC      = g++
 
-SUBMOD   = bsm_input bsm_keyboard bsm_analyze bsm_stat
+SUBMOD   = bsm_input bsm_analyze bsm_stat
 
 # List of programs with main functions to be filtered out of objects
 PROGS    = $(patsubst ./src/%.cpp,%,$(wildcard ./src/*.cpp))
@@ -12,7 +12,7 @@ else
 	DEBUG = -O0 -g
 endif
 
-CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -I../ -I/opt/local/include -I${ROOTSYS}/include -I${BOOST_ROOT}/include $(foreach subsys,$(SUBMOD),$(addprefix -I../,$(subsys)))
+CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -I../ -I/opt/local/include -I${ROOTSYS}/include -I${BOOST_ROOT}/include -I./bsm_input/message 
 
 ifeq ($(shell uname),Linux)
 	LIBS = -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -L../lib $(foreach mod,$(SUBMOD),$(addprefix -l,$(mod))) -lboost_thread

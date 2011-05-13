@@ -13,6 +13,7 @@
 #include "bsm_input/interface/Reader.h"
 #include "bsm_stat/interface/Utility.h"
 
+#include "interface/MonitorAnalyzer.h"
 #include "interface/Thread.h"
 
 using namespace std;
@@ -20,22 +21,21 @@ using namespace std;
 using boost::lexical_cast;
 using boost::shared_ptr;
 
-using bsm::core::AnalyzerPtr;
-using bsm::core::AnalyzerThread;
-using bsm::core::Files;
-using bsm::core::ThreadController;
+using bsm::AnalyzerOperation;
+using bsm::MonitorAnalyzer;
+using bsm::ThreadController;
 
-void run(const uint32_t &max_threads, const Files &input_files);
+typedef shared_ptr<ThreadController> ControllerPtr;
+
+void run(ControllerPtr &controller);
 
 int main(int argc, char *argv[])
 try
 {
-    if (3 > argc)
+    if (2 > argc)
     {
-        cerr << "Usage: " << argv[0] << " threads input.pb" << endl;
+        cerr << "Usage: " << argv[0] << " input.pb" << endl;
         cerr << endl;
-        cerr << " threads is the maximum number of threads to use. 0 - auto"
-            << endl;
 
         return 0;
     }
@@ -43,11 +43,11 @@ try
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     {
-        Files input_files;
-        for(int i = 2; argc > i; ++i)
-            input_files.push_back(argv[i]);
+        ControllerPtr controller(new ThreadController());
+        for(int i = 1; argc > i; ++i)
+            controller->push(argv[i]);
 
-        run(lexical_cast<uint32_t>(argv[1]), input_files);
+        run(controller);
     }
 
     // Clean Up any memory allocated by libprotobuf
@@ -67,24 +67,29 @@ catch(...)
     return 1;
 }
 
-void run(const uint32_t &max_threads, const Files &input_files)
+void run(ControllerPtr &controller)
 try
 {
-    shared_ptr<ThreadController> controller(new ThreadController(max_threads));
-
-    for(Files::const_iterator input = input_files.begin();
-            input_files.end() != input;
-            ++input)
-    {
-        cout << " [+] " << *input << endl;
-    }
-
     // Nothing will be processed since analyzer is empty. One could instantiate
     // a real analyzer, say MonitorAnalyzer and test if the code would work fine
     //
-    AnalyzerPtr analyzer;
+    bsm::AnalyzerPtr analyzer;
 
-    controller->process(analyzer, input_files);
+    controller->use(analyzer);
+
+    cout << "Start Controller: empty analyzer" << endl;
+
+    controller->start();
+
+    cout << "Controller has finished job" << endl;
+
+    analyzer.reset(new MonitorAnalyzer());
+    controller->use(analyzer);
+
+    cout << "Start Controller: non-empty analyzer" << endl;
+    controller->start();
+
+    cout << "Controller has finished job" << endl;
 }
 catch(...)
 {
