@@ -31,8 +31,9 @@ using bsm::stat::convert;
 using bsm::stat::TH1Ptr;
 
 typedef shared_ptr<MonitorAnalyzer> MonitorAnalyzerPtr;
+typedef shared_ptr<ThreadController> ControllerPtr;
 
-void run();
+void run(ControllerPtr &);
 void plot(const MonitorAnalyzerPtr &);
 
 int main(int argc, char *argv[])
@@ -49,13 +50,11 @@ int main(int argc, char *argv[])
     int result = 0;
     try
     {
-        /*
-        Files input_files;
-        for(int i = 2; argc > i; ++i)
-            input_files.push_back(argv[i]);
+        ControllerPtr controller(new ThreadController());
+        for(int i = 1; argc > i; ++i)
+            controller->push(argv[i]);
 
-        run(input_files);
-        */
+        run(controller);
     }
     catch(...)
     {
@@ -71,23 +70,23 @@ int main(int argc, char *argv[])
     return result;
 }
 
-void run()
+void run(ControllerPtr &controller)
 try
 {
-    /*
     // Prepare Analysis
     //
-    shared_ptr<ThreadController> controller(new ThreadController());
     MonitorAnalyzerPtr analyzer(new MonitorAnalyzer());
 
     // Process inputs
     //
-    controller->process(analyzer, input_files);
+    controller->use(analyzer);
+    controller->start();
+
+    cout << *analyzer << endl;
 
     // Plot results
     //
     plot(analyzer);
-    */
 }
 catch(...)
 {
@@ -95,7 +94,6 @@ catch(...)
 
 void plot(const MonitorAnalyzerPtr &analyzer)
 {
-    /*
     // Cheat ROOT with empty args
     //
     int empty_argc = 1;
@@ -186,5 +184,4 @@ void plot(const MonitorAnalyzerPtr &analyzer)
     missing_energy_z->Draw();
 
     app->Run();
-    */
 }

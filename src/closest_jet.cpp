@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     try
     {
         ControllerPtr controller(new ThreadController());
-        for(int i = 2; argc > i; ++i)
+        for(int i = 1; argc > i; ++i)
             controller->push(argv[i]);
 
         run(controller);
