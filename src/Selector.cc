@@ -59,8 +59,8 @@ ElectronSelector::CutPtr ElectronSelector::eta() const
 
 void ElectronSelector::print(std::ostream &out) const
 {
-    out << " [+] Et (> " << _et->value() << ") " << *_et << endl;
-    out << " [+] |eta| (< " << _eta->value() << ") " << *_eta << endl;
+    out << " [+]    Et > " << _et->value() << " " << *_et << endl;
+    out << " [+] |eta| < " << _eta->value() << " " << *_eta << endl;
 }
 
 Selector::SelectorPtr ElectronSelector::clone() const
@@ -119,4 +119,15 @@ bool Cut::operator()(const double &value)
     return isPass(value)
         ? (++_count, true)
         : false;
+}
+
+
+
+// Helpers
+//
+std::ostream &bsm::selector::operator <<(std::ostream &out, const Selector &s)
+{
+    s.print(out);
+
+    return out;
 }

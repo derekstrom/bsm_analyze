@@ -145,6 +145,10 @@ namespace bsm
                 private:
                     Compare _functor;
             };
+
+        // Helpers
+        //
+        std::ostream &operator <<(std::ostream &, const Selector &);
     }
 }
 
