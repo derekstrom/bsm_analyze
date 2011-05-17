@@ -10,7 +10,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "bsm_stat/interface/statfwd.h"
+#include "bsm_stat/interface/bsm_stat_fwd.h"
 #include "interface/Analyzer.h"
 #include "interface/bsm_fwd.h"
 

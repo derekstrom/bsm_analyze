@@ -17,7 +17,7 @@
 #include "bsm_input/interface/Jet.pb.h"
 #include "bsm_input/interface/Muon.pb.h"
 #include "bsm_input/interface/PrimaryVertex.pb.h"
-#include "bsm_stat/interface/statfwd.h"
+#include "bsm_stat/interface/bsm_stat_fwd.h"
 
 class TLorentzVector;
 
