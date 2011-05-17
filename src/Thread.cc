@@ -29,24 +29,42 @@ using bsm::ThreadController;
 using bsm::core::Lock;
 using bsm::core::Thread;
 
+typedef boost::shared_ptr<AnalyzerOperation> AnalyzerOperationPtr;
+typedef boost::shared_ptr<KeyboardOperation> KeyboardOperationPtr;
+
 // Keyboard Thread
 //
 KeyboardOperation::KeyboardOperation():
     _continue(true)
 {
     _thread = 0;
+    _thread_controller = 0;
     _keyboard_controller.reset(new core::Keyboard());
+}
+
+void KeyboardOperation::init(ThreadController *thread_controller)
+{
+    _thread_controller = thread_controller;
 }
 
 void KeyboardOperation::run()
 {
-    if (!_thread)
+    if (!_thread
+            || !_thread_controller)
         return;
 
     for(boost::posix_time::milliseconds delay(100);
             isContinue();
             boost::this_thread::sleep(delay))
     {
+        switch(_keyboard_controller->keyPressed())
+        {
+            case 'q': _thread_controller->quit();
+                      break;
+
+            case 'i': _thread_controller->info();
+                      break;
+        }
     }
 }
 
@@ -145,6 +163,10 @@ void AnalyzerOperation::run()
         //
         processFile();
 
+        // Start run loop
+        //
+        _thread->runLoop()->run();
+
         // Wait for instructions
         //
         waitForInstructions();
@@ -166,6 +188,17 @@ void AnalyzerOperation::onThreadInit(Thread *thread)
 Thread *AnalyzerOperation::thread() const
 {
     return _thread;
+}
+
+void AnalyzerOperation::onRunLoopCommand(const uint32_t &command)
+{
+    switch(command)
+    {
+        case KeyboardOperation::QUIT: _thread->stop();
+                   break;
+
+        default: break;
+    }
 }
 
 // Privates
@@ -257,7 +290,8 @@ void AnalyzerOperation::waitForInstructions()
 // Thread controller
 //
 ThreadController::ThreadController():
-    _max_threads(boost::thread::hardware_concurrency())
+    _max_threads(boost::thread::hardware_concurrency()),
+    _processed_files(0)
 {
     _condition.reset(new core::Condition());
     _input_files.reset(new InputFiles());
@@ -294,6 +328,13 @@ void ThreadController::start()
             || !hasAnalyzer())
         return;
 
+    _keyboard_thread.reset(new Thread());
+    KeyboardOperationPtr operation(new KeyboardOperation());
+    _keyboard_thread->init(operation);
+
+    operation->init(this);
+    _keyboard_thread->start();
+
     for(uint32_t threads_to_create = countMaxThreads();
             threads_to_create;
             --threads_to_create)
@@ -302,12 +343,44 @@ void ThreadController::start()
     }
 
     run();
+
+    _keyboard_thread->stop();
+    _keyboard_thread->join();
 }
 
 void 
 ThreadController::threadIsWaiting(Thread *thread)
 {
     _threads_waiting->push(thread);
+}
+
+void ThreadController::quit()
+{
+    Lock lock(condition());
+
+    _keyboard_thread->stop();
+
+    while(!_input_files->empty())
+    {
+        _input_files->pop();
+    }
+
+    for(Threads::iterator thread = _threads.begin();
+            _threads.end() != thread;
+            ++thread)
+    {
+        thread->first->stop();
+    }
+}
+
+void ThreadController::info()
+{
+    Lock lock(condition());
+
+    cout << "INFO" << endl;
+    cout << "Inputs p: " << _processed_files << " l: "
+        << _input_files->size() << endl;
+    cout << endl;
 }
 
 // Private
@@ -399,6 +472,8 @@ bool ThreadController::isRunning() const
 void ThreadController::onThreadWait()
 {
     using boost::dynamic_pointer_cast;
+
+    ++_processed_files;
 
     if (hasInputFiles())
     {

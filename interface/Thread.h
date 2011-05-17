@@ -28,7 +28,16 @@ namespace bsm
     class KeyboardOperation : public core::Operation
     {
         public:
+            enum Command
+            {
+                QUIT = 0,
+                INFO = 1,
+                HELP = 2
+            };
+
             KeyboardOperation();
+
+            void init(ThreadController *);
 
             // Operation interface
             //
@@ -41,6 +50,7 @@ namespace bsm
             bool isContinue() const;
 
             core::Thread *_thread;
+            ThreadController *_thread_controller;
 
             bool _continue;
 
@@ -49,7 +59,8 @@ namespace bsm
 
     // Analyzer Thread: perform the analysis
     //
-    class AnalyzerOperation : public core::Operation
+    class AnalyzerOperation : public core::Operation,
+                                public core::RunLoopDelegate
     {
         public:
             AnalyzerOperation();
@@ -73,6 +84,10 @@ namespace bsm
             virtual void stop();
 
             virtual void onThreadInit(core::Thread *);
+
+            // RunLoop Delegate interface
+            //
+            virtual void onRunLoopCommand(const uint32_t &);
 
         private:
             typedef boost::shared_ptr<Reader> ReaderPtr;
@@ -133,9 +148,10 @@ namespace bsm
 
             void threadIsWaiting(core::Thread *);
 
-        private:
-            typedef boost::shared_ptr<AnalyzerOperation> AnalyzerOperationPtr;
+            void quit();
+            void info();
 
+        private:
             // Test if any input files left for processing
             //
             bool hasInputFiles() const;
@@ -178,8 +194,11 @@ namespace bsm
             core::ConditionPtr _condition;
             boost::shared_ptr<InputFiles> _input_files;
 
+            uint32_t _processed_files;
+
             Threads _threads;
             ThreadsFIFOPtr _threads_waiting;
+            ThreadPtr _keyboard_thread;
 
             AnalyzerPtr _analyzer;
     };
