@@ -18,6 +18,7 @@ class TLorentzVector;
 namespace bsm
 {
     class Electron;
+    class Muon;
     class PrimaryVertex;
 
     namespace selector
@@ -76,6 +77,60 @@ namespace bsm
                 CutPtr _et;
                 CutPtr _eta;
                 CutPtr _primary_vertex;
+
+                // Temporary variable that is used to convert
+                // bsm::LorentzVector to TLorentzVector
+                //
+                P4 _p4;
+        };
+
+        class MuonSelector : public Selector
+        {
+            public:
+                typedef boost::shared_ptr<Cut> CutPtr;
+
+                MuonSelector();
+                virtual ~MuonSelector();
+
+                // Test if muon passes the selector
+                //
+                virtual bool operator()(const Muon &, const PrimaryVertex &);
+
+                // Cuts accessors
+                //
+                CutPtr is_global() const;
+                CutPtr is_tracker() const;
+                CutPtr muon_segments() const;
+                CutPtr muon_hits() const;
+                CutPtr muon_normalized_chi2() const;
+                CutPtr tracker_hits() const;
+                CutPtr pixel_hits() const;
+                CutPtr d0_bsp() const;
+                CutPtr primary_vertex() const;
+                CutPtr pt() const;
+                CutPtr eta() const;
+
+                // Selector interface
+                //
+                virtual void print(std::ostream &) const;
+
+                virtual SelectorPtr clone() const;
+                virtual void merge(const SelectorPtr &);
+
+            private:
+                typedef boost::shared_ptr<TLorentzVector> P4;
+
+                CutPtr _is_global;
+                CutPtr _is_tracker;
+                CutPtr _muon_segments;
+                CutPtr _muon_hits;
+                CutPtr _muon_normalized_chi2;
+                CutPtr _tracker_hits;
+                CutPtr _pixel_hits;
+                CutPtr _d0_bsp;
+                CutPtr _primary_vertex;
+                CutPtr _pt;
+                CutPtr _eta;
 
                 // Temporary variable that is used to convert
                 // bsm::LorentzVector to TLorentzVector
