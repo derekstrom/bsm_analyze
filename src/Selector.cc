@@ -14,6 +14,7 @@
 
 #include "bsm_input/interface/Electron.pb.h"
 #include "bsm_input/interface/Physics.pb.h"
+#include "bsm_input/interface/PrimaryVertex.pb.h"
 #include "interface/Selector.h"
 #include "interface/Utility.h"
 
@@ -30,7 +31,8 @@ using bsm::selector::Selector;
 ElectronSelector::ElectronSelector()
 {
     _et.reset(new Comparator<>(30));
-    _eta.reset(new Comparator<std::less<double> >(2.1));
+    _eta.reset(new Comparator<std::less<double> >(2.5));
+    _primary_vertex.reset(new Comparator<std::less<double> >(1));
 
     _p4.reset(new TLorentzVector());
 }
@@ -39,12 +41,14 @@ ElectronSelector::~ElectronSelector()
 {
 }
 
-bool ElectronSelector::operator()(const Electron &electron)
+bool ElectronSelector::operator()(const Electron &electron,
+        const PrimaryVertex &pv)
 {
     utility::set(_p4.get(), &electron.physics_object().p4());
 
     return _et->operator()(_p4->Et())
-        && _eta->operator()(fabs(_p4->Eta()));
+        && _eta->operator()(fabs(_p4->Eta()))
+        && _primary_vertex->operator()(fabs(electron.physics_object().vertex().z() - pv.vertex().z()));
 }
 
 ElectronSelector::CutPtr ElectronSelector::et() const
@@ -57,10 +61,17 @@ ElectronSelector::CutPtr ElectronSelector::eta() const
     return _eta;
 }
 
+ElectronSelector::CutPtr ElectronSelector::primary_vertex() const
+{
+    return _primary_vertex;
+}
+
 void ElectronSelector::print(std::ostream &out) const
 {
-    out << " [+]    Et > " << _et->value() << " " << *_et << endl;
-    out << " [+] |eta| < " << _eta->value() << " " << *_eta << endl;
+    out << " [+]                Et > " << _et->value() << " " << *_et << endl;
+    out << " [+]             |eta| < " << _eta->value() << " " << *_eta << endl;
+    out << " [+] |el.z() - pv.z()| < " << _primary_vertex->value()
+        << " " << *_primary_vertex << endl;
 }
 
 Selector::SelectorPtr ElectronSelector::clone() const
@@ -70,6 +81,7 @@ Selector::SelectorPtr ElectronSelector::clone() const
 
     *selector->et() = *et();
     *selector->eta() = *eta();
+    *selector->primary_vertex() = *primary_vertex();
 
     return selector;
 }
@@ -86,6 +98,7 @@ void ElectronSelector::merge(const SelectorPtr &selector)
 
     *et() += *el_selector->et();
     *eta() += *el_selector->eta();
+    *primary_vertex() += *el_selector->primary_vertex();
 }
 
 

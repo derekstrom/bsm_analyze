@@ -68,17 +68,26 @@ try
                     reader->read(*event);
                     ++events_read)
             {
+                if (!event->primary_vertices().size()
+                        || !event->pf_electrons().size())
+                    continue;
+
                 all_pf_electrons->fill(event->pf_electrons());
+
+                const PrimaryVertex &pv = *event->primary_vertices().begin();
 
                 Electrons selected_electrons;
                 for(Electrons::const_iterator electron = event->pf_electrons().begin();
                         event->pf_electrons().end() != electron;
                         ++electron)
                 {
-                    per_file_selector->operator()(*electron);
-                    if (selector->operator()(*electron))
+                    per_file_selector->operator()(*electron, pv);
+                    if (selector->operator()(*electron, pv))
                         *selected_electrons.Add() = *electron;
                 }
+
+                if (!selected_electrons.size())
+                    continue;
 
                 selected_pf_electrons->fill(selected_electrons);
 

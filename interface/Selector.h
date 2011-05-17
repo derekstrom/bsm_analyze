@@ -18,6 +18,7 @@ class TLorentzVector;
 namespace bsm
 {
     class Electron;
+    class PrimaryVertex;
 
     namespace selector
     {
@@ -54,12 +55,13 @@ namespace bsm
 
                 // Test if electron passes the selector
                 //
-                virtual bool operator()(const Electron &);
+                virtual bool operator()(const Electron &, const PrimaryVertex &);
 
                 // Cuts accessors
                 //
                 CutPtr et() const;
                 CutPtr eta() const;
+                CutPtr primary_vertex() const;
 
                 // Selector interface
                 //
@@ -73,6 +75,7 @@ namespace bsm
 
                 CutPtr _et;
                 CutPtr _eta;
+                CutPtr _primary_vertex;
 
                 // Temporary variable that is used to convert
                 // bsm::LorentzVector to TLorentzVector
