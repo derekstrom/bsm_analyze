@@ -89,6 +89,7 @@ namespace bsm
     {
         public:
             typedef boost::shared_ptr<stat::H1> H1Ptr;
+            typedef boost::shared_ptr<stat::H2> H2Ptr;
 
             DeltaMonitor();
 
@@ -100,6 +101,7 @@ namespace bsm
             const H1Ptr eta() const;
             const H1Ptr phi() const;
             const H1Ptr ptrel() const;
+            const H2Ptr ptrel_vs_r() const;
 
         private:
             DeltaMonitor(const DeltaMonitor &);
@@ -110,6 +112,7 @@ namespace bsm
             H1Ptr _eta;
             H1Ptr _phi;
             H1Ptr _ptrel;
+            H2Ptr _ptrel_vs_r;
 
             // Convert bsm::LorentzVector to TLorentzVector
             P4 _p4_1;

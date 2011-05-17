@@ -15,6 +15,7 @@
 #include "bsm_input/interface/MissingEnergy.pb.h"
 #include "bsm_input/interface/Physics.pb.h"
 #include "bsm_stat/interface/H1.h"
+#include "bsm_stat/interface/H2.h"
 #include "bsm_stat/interface/Utility.h"
 
 #include "interface/Monitor.h"
@@ -32,6 +33,7 @@ using bsm::MuonMonitor;
 using bsm::PrimaryVertexMonitor;
 
 using bsm::stat::H1;
+using bsm::stat::H2;
 
 // Jet Monitor
 //
@@ -105,6 +107,7 @@ DeltaMonitor::DeltaMonitor()
     _eta.reset(new H1(200, -5, 5));
     _phi.reset(new H1(160, -4, 4));
     _ptrel.reset(new H1(50, 0, 10));
+    _ptrel_vs_r.reset(new H2(50, 0, 10, 50, 0, 5));
 
     _p4_1.reset(new TLorentzVector());
     _p4_2.reset(new TLorentzVector());
@@ -116,6 +119,7 @@ DeltaMonitor &DeltaMonitor::operator =(const DeltaMonitor &monitor)
     *eta() = *monitor.eta();
     *phi() = *monitor.phi();
     *ptrel() = *monitor.ptrel();
+    *ptrel_vs_r() = *monitor.ptrel_vs_r();
 
     return *this;
 }
@@ -129,6 +133,9 @@ void DeltaMonitor::fill(const LorentzVector &p4_1, const LorentzVector &p4_2)
     _eta->fill(_p4_1->Eta() - _p4_2->Eta());
     _phi->fill(_p4_1->Phi() - _p4_2->Phi());
     _ptrel->fill(_p4_1->Vect().Perp(_p4_2->Vect()));
+
+    _ptrel_vs_r->fill(_p4_1->Vect().Perp(_p4_2->Vect()),
+            _p4_1->DeltaR(*_p4_2));
 }
 
 const DeltaMonitor::H1Ptr DeltaMonitor::r() const
@@ -149,6 +156,11 @@ const DeltaMonitor::H1Ptr DeltaMonitor::phi() const
 const DeltaMonitor::H1Ptr DeltaMonitor::ptrel() const
 {
     return _ptrel;
+}
+
+const DeltaMonitor::H2Ptr DeltaMonitor::ptrel_vs_r() const
+{
+    return _ptrel_vs_r;
 }
 
 
@@ -667,6 +679,7 @@ void bsm::merge(DeltaMonitor &m1, const DeltaMonitor &m2)
     *m1.eta() += *m2.eta();
     *m1.phi() += *m2.phi();
     *m1.ptrel() += *m2.ptrel();
+    *m1.ptrel_vs_r() += *m2.ptrel_vs_r();
 }
 
 void bsm::merge(LorentzVectorMonitor &m1, const LorentzVectorMonitor &m2)
