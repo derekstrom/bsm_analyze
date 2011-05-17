@@ -92,9 +92,9 @@ void MonitorAnalyzer::process(const Event *event)
 {
     // It is assumed that analyzer is in valid state
     //
-    _monitor_electrons->fill(event->electrons());
+    _monitor_electrons->fill(event->pf_electrons());
     _monitor_jets->fill(event->jets());
-    _monitor_muons->fill(event->muons());
+    _monitor_muons->fill(event->pf_muons());
     _monitor_primary_vertices->fill(event->primary_vertices());
 
     if (event->has_missing_energy())

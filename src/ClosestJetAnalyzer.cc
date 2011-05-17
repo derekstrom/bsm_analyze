@@ -133,10 +133,10 @@ void ClosestJetAnalyzer::process(const Event *event)
 {
     // It is assumed that analyzer is in valid state
     //
-    if (event->electrons().size())
+    if (event->pf_electrons().size())
         processElectrons(event);
 
-    if (event->muons().size())
+    if (event->pf_muons().size())
         processMuons(event);
 }
 
@@ -228,7 +228,7 @@ void ClosestJetAnalyzer::processElectrons(const Event *event)
 {
     typedef ::google::protobuf::RepeatedPtrField<Electron> Electrons;
 
-    const Electrons &electrons = event->electrons();
+    const Electrons &electrons = event->pf_electrons();
     for(Electrons::const_iterator electron = electrons.begin();
             electrons.end() != electron;
             ++electron)
@@ -255,7 +255,7 @@ void ClosestJetAnalyzer::processMuons(const Event *event)
 {
     typedef ::google::protobuf::RepeatedPtrField<Muon> Muons;
 
-    const Muons &muons = event->muons();
+    const Muons &muons = event->pf_muons();
     for(Muons::const_iterator muon = muons.begin();
             muons.end() != muon;
             ++muon)
