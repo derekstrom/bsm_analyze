@@ -57,8 +57,11 @@ try
 
     {
         shared_ptr<ElectronSelector> selector(new ElectronSelector());
+        shared_ptr<ElectronSelector> test_selector(new ElectronSelector());
         for(int i = 1; argc > i; ++i)
         {
+            shared_ptr<ElectronSelector> per_file_selector(new ElectronSelector());
+
             shared_ptr<Reader> reader(new Reader(argv[i]));
             uint32_t events_read = 0;
             for(shared_ptr<Event> event(new Event());
@@ -72,6 +75,7 @@ try
                         event->pf_electrons().end() != electron;
                         ++electron)
                 {
+                    per_file_selector->operator()(*electron);
                     if (selector->operator()(*electron))
                         *selected_electrons.Add() = *electron;
                 }
@@ -81,8 +85,16 @@ try
                 event->Clear();
             }
 
+            test_selector->merge(per_file_selector);
+
             cout << "Events Read: " << events_read << endl;
         }
+
+        cout << "Original Selector" << endl;
+        cout << *selector << endl;
+
+        cout << "Test Selector" << endl;
+        cout << *test_selector << endl;
     }
 
     cout << "All PF Electrons" << endl;
