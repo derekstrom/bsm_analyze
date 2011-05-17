@@ -19,9 +19,11 @@ namespace bsm
 {
     class DeltaMonitor;
     class ElectronMonitor;
-    class LorentzVectorMonitor;
-    class MuonMonitor;
     class JetMonitor;
+    class LorentzVectorMonitor;
+    class MissingEnergyMonitor;
+    class MuonMonitor;
+    class PrimaryVertexMonitor;
 
     class DeltaCanvas
     {
@@ -57,51 +59,7 @@ namespace bsm
         private:
             typedef boost::shared_ptr<core::IDCounter> IDPtr;
             typedef boost::shared_ptr<TCanvas> CanvasPtr;
-            typedef stat::TH1Ptr TH1Ptr;
 
-            static IDPtr _id;
-            CanvasPtr _canvas;
-
-            TH1Ptr _multiplicity;
-            TH1Ptr _leading_pt;
-            TH1Ptr _pt;
-    };
-
-    class LorentzVectorCanvas
-    {
-        public:
-            LorentzVectorCanvas(const std::string &title = "");
-
-            void draw(const LorentzVectorMonitor &);
-
-        private:
-            typedef boost::shared_ptr<core::IDCounter> IDPtr;
-            typedef boost::shared_ptr<TCanvas> CanvasPtr;
-            typedef stat::TH1Ptr TH1Ptr;
-
-            static IDPtr _id;
-            CanvasPtr _canvas;
-
-            TH1Ptr _energy;
-            TH1Ptr _px;
-            TH1Ptr _py;
-            TH1Ptr _pz;
-
-            TH1Ptr _pt;
-            TH1Ptr _eta;
-            TH1Ptr _phi;
-    };
-
-    class MuonCanvas
-    {
-        public:
-            MuonCanvas(const std::string &title = "");
-
-            void draw(const MuonMonitor &);
-
-        private:
-            typedef boost::shared_ptr<core::IDCounter> IDPtr;
-            typedef boost::shared_ptr<TCanvas> CanvasPtr;
             typedef stat::TH1Ptr TH1Ptr;
 
             static IDPtr _id;
@@ -122,6 +80,7 @@ namespace bsm
         private:
             typedef boost::shared_ptr<core::IDCounter> IDPtr;
             typedef boost::shared_ptr<TCanvas> CanvasPtr;
+
             typedef stat::TH1Ptr TH1Ptr;
 
             static IDPtr _id;
@@ -130,6 +89,97 @@ namespace bsm
             TH1Ptr _multiplicity;
             TH1Ptr _leading_pt;
             TH1Ptr _pt;
+    };
+
+    class LorentzVectorCanvas
+    {
+        public:
+            LorentzVectorCanvas(const std::string &title = "");
+
+            void draw(const LorentzVectorMonitor &);
+
+        private:
+            typedef boost::shared_ptr<core::IDCounter> IDPtr;
+            typedef boost::shared_ptr<TCanvas> CanvasPtr;
+
+            typedef stat::TH1Ptr TH1Ptr;
+
+            static IDPtr _id;
+            CanvasPtr _canvas;
+
+            TH1Ptr _energy;
+            TH1Ptr _px;
+            TH1Ptr _py;
+            TH1Ptr _pz;
+
+            TH1Ptr _pt;
+            TH1Ptr _eta;
+            TH1Ptr _phi;
+    };
+
+    class MissingEnergyCanvas
+    {
+        public:
+            MissingEnergyCanvas(const std::string &title = "");
+
+            void draw(const MissingEnergyMonitor &);
+
+        private:
+            typedef boost::shared_ptr<core::IDCounter> IDPtr;
+            typedef boost::shared_ptr<TCanvas> CanvasPtr;
+
+            typedef stat::TH1Ptr TH1Ptr;
+
+            static IDPtr _id;
+            CanvasPtr _canvas;
+
+            TH1Ptr _pt;
+            TH1Ptr _x;
+            TH1Ptr _y;
+            TH1Ptr _z;
+    };
+
+    class MuonCanvas
+    {
+        public:
+            MuonCanvas(const std::string &title = "");
+
+            void draw(const MuonMonitor &);
+
+        private:
+            typedef boost::shared_ptr<core::IDCounter> IDPtr;
+            typedef boost::shared_ptr<TCanvas> CanvasPtr;
+
+            typedef stat::TH1Ptr TH1Ptr;
+
+            static IDPtr _id;
+            CanvasPtr _canvas;
+
+            TH1Ptr _multiplicity;
+            TH1Ptr _leading_pt;
+            TH1Ptr _pt;
+    };
+
+    class PrimaryVertexCanvas
+    {
+        public:
+            PrimaryVertexCanvas(const std::string &title = "");
+
+            void draw(const PrimaryVertexMonitor &);
+
+        private:
+            typedef boost::shared_ptr<core::IDCounter> IDPtr;
+            typedef boost::shared_ptr<TCanvas> CanvasPtr;
+
+            typedef stat::TH1Ptr TH1Ptr;
+
+            static IDPtr _id;
+            CanvasPtr _canvas;
+
+            TH1Ptr _multiplicity;
+            TH1Ptr _x;
+            TH1Ptr _y;
+            TH1Ptr _z;
     };
 }
 

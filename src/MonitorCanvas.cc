@@ -19,9 +19,11 @@
 
 using bsm::DeltaCanvas;
 using bsm::ElectronCanvas;
-using bsm::LorentzVectorCanvas;
-using bsm::MuonCanvas;
 using bsm::JetCanvas;
+using bsm::LorentzVectorCanvas;
+using bsm::MissingEnergyCanvas;
+using bsm::MuonCanvas;
+using bsm::PrimaryVertexCanvas;
 
 // Delta Canvas
 //
@@ -155,6 +157,44 @@ void LorentzVectorCanvas::draw(const LorentzVectorMonitor &monitor)
 
 
 
+// MissingEnergy Canvas
+//
+MissingEnergyCanvas::IDPtr MissingEnergyCanvas::_id(new core::IDCounter());
+
+MissingEnergyCanvas::MissingEnergyCanvas(const std::string &title)
+{
+    std::ostringstream name;
+    name << "missing_energy_canvas_" << MissingEnergyCanvas::_id->add();
+
+    _canvas.reset(new TCanvas(name.str().c_str(), title.c_str(), 640, 480));
+    _canvas->Divide(2, 2);
+}
+
+void MissingEnergyCanvas::draw(const MissingEnergyMonitor &monitor)
+{
+    _canvas->cd(1);
+    _pt = convert(*monitor.pt());
+    _pt->GetXaxis()->SetTitle("p^{MET}_{T} [GeV/c]");
+    _pt->Draw();
+
+    _canvas->cd(2);
+    _x = convert(*monitor.x());
+    _x->GetXaxis()->SetTitle("X^{MET} [cm]");
+    _x->Draw();
+
+    _canvas->cd(3);
+    _y = convert(*monitor.y());
+    _y->GetXaxis()->SetTitle("Y^{MET} [cm]");
+    _y->Draw();
+
+    _canvas->cd(4);
+    _z = convert(*monitor.z());
+    _z->GetXaxis()->SetTitle("Z^{MET} [cm]");
+    _z->Draw();
+}
+
+
+
 // Muon Canvas
 //
 MuonCanvas::IDPtr MuonCanvas::_id(new core::IDCounter());
@@ -222,4 +262,42 @@ void JetCanvas::draw(const JetMonitor &monitor)
     _pt = convert(*monitor.pt());
     _pt->GetXaxis()->SetTitle("p^{jet}_{T} [GeV/c]");
     _pt->Draw();
+}
+
+
+
+// PrimaryVertex Canvas
+//
+PrimaryVertexCanvas::IDPtr PrimaryVertexCanvas::_id(new core::IDCounter());
+
+PrimaryVertexCanvas::PrimaryVertexCanvas(const std::string &title)
+{
+    std::ostringstream name;
+    name << "primary_vertex_canvas_" << PrimaryVertexCanvas::_id->add();
+
+    _canvas.reset(new TCanvas(name.str().c_str(), title.c_str(), 640, 480));
+    _canvas->Divide(2, 2);
+}
+
+void PrimaryVertexCanvas::draw(const PrimaryVertexMonitor &monitor)
+{
+    _canvas->cd(1);
+    _multiplicity = convert(*monitor.multiplicity());
+    _multiplicity->GetXaxis()->SetTitle("N_{PV}");
+    _multiplicity->Draw();
+
+    _canvas->cd(2);
+    _x = convert(*monitor.x());
+    _x->GetXaxis()->SetTitle("X^{PV} [cm]");
+    _x->Draw();
+
+    _canvas->cd(3);
+    _y = convert(*monitor.y());
+    _y->GetXaxis()->SetTitle("Y^{PV} [cm]");
+    _y->Draw();
+
+    _canvas->cd(4);
+    _z = convert(*monitor.z());
+    _z->GetXaxis()->SetTitle("Z^{PV} [cm]");
+    _z->Draw();
 }

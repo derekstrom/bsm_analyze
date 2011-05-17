@@ -27,6 +27,40 @@ namespace bsm
     class LorentzVector;
     class MissingEnergy;
 
+    class DeltaMonitor
+    {
+        public:
+            typedef boost::shared_ptr<stat::H1> H1Ptr;
+            typedef boost::shared_ptr<stat::H2> H2Ptr;
+
+            DeltaMonitor();
+
+            DeltaMonitor &operator =(const DeltaMonitor &);
+
+            void fill(const LorentzVector &, const LorentzVector &);
+
+            const H1Ptr r() const;
+            const H1Ptr eta() const;
+            const H1Ptr phi() const;
+            const H1Ptr ptrel() const;
+            const H2Ptr ptrel_vs_r() const;
+
+        private:
+            DeltaMonitor(const DeltaMonitor &);
+
+            typedef boost::shared_ptr<TLorentzVector> P4;
+
+            H1Ptr _r;
+            H1Ptr _eta;
+            H1Ptr _phi;
+            H1Ptr _ptrel;
+            H2Ptr _ptrel_vs_r;
+
+            // Convert bsm::LorentzVector to TLorentzVector
+            P4 _p4_1;
+            P4 _p4_2;
+    };
+
     class ElectronMonitor
     {
         public:
@@ -83,40 +117,6 @@ namespace bsm
 
             // Convert bsm::LorentzVector to TLorentzVector
             P4 _p4;
-    };
-
-    class DeltaMonitor
-    {
-        public:
-            typedef boost::shared_ptr<stat::H1> H1Ptr;
-            typedef boost::shared_ptr<stat::H2> H2Ptr;
-
-            DeltaMonitor();
-
-            DeltaMonitor &operator =(const DeltaMonitor &);
-
-            void fill(const LorentzVector &, const LorentzVector &);
-
-            const H1Ptr r() const;
-            const H1Ptr eta() const;
-            const H1Ptr phi() const;
-            const H1Ptr ptrel() const;
-            const H2Ptr ptrel_vs_r() const;
-
-        private:
-            DeltaMonitor(const DeltaMonitor &);
-
-            typedef boost::shared_ptr<TLorentzVector> P4;
-
-            H1Ptr _r;
-            H1Ptr _eta;
-            H1Ptr _phi;
-            H1Ptr _ptrel;
-            H2Ptr _ptrel_vs_r;
-
-            // Convert bsm::LorentzVector to TLorentzVector
-            P4 _p4_1;
-            P4 _p4_2;
     };
 
     class GenParticleMonitor

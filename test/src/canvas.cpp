@@ -26,19 +26,10 @@ using std::endl;
 
 using boost::shared_ptr;
 
-using bsm::Reader;
-using bsm::Event;
-using bsm::ElectronCanvas;
-using bsm::ElectronMonitor;
-using bsm::GenParticleMonitor;
-using bsm::JetCanvas;
-using bsm::JetMonitor;
-using bsm::MissingEnergyMonitor;
-using bsm::MuonCanvas;
-using bsm::MuonMonitor;
-using bsm::PrimaryVertexMonitor;
 using bsm::stat::convert;
 using bsm::stat::TH1Ptr;
+
+using namespace bsm;
 
 shared_ptr<ElectronMonitor> electrons;
 shared_ptr<GenParticleMonitor> gen_particles;
@@ -146,43 +137,11 @@ void plot()
     shared_ptr<MuonCanvas> muon_canvas(new MuonCanvas("Muons"));
     muon_canvas->draw(*muons);
 
-    shared_ptr<TCanvas> primary_vertex_canvas(new TCanvas("primary_vertices", "Priamary Vertices", 640, 480));
-    primary_vertex_canvas->Divide(2, 2);
+    shared_ptr<PrimaryVertexCanvas> pv_canvas(new PrimaryVertexCanvas("Priamary Vertices"));
+    pv_canvas->draw(*primary_vertices);
 
-    primary_vertex_canvas->cd(1);
-    TH1Ptr pv_multiplicity = convert(*primary_vertices->multiplicity());
-    pv_multiplicity->Draw();
-
-    primary_vertex_canvas->cd(2);
-    TH1Ptr pv_x = convert(*primary_vertices->x());
-    pv_x->Draw();
-
-    primary_vertex_canvas->cd(3);
-    TH1Ptr pv_y = convert(*primary_vertices->y());
-    pv_y->Draw();
-
-    primary_vertex_canvas->cd(4);
-    TH1Ptr pv_z = convert(*primary_vertices->z());
-    pv_z->Draw();
-
-    shared_ptr<TCanvas> missing_energy_canvas(new TCanvas("missing_energy", "Missing Energy", 640, 480));
-    missing_energy_canvas->Divide(2, 2);
-
-    missing_energy_canvas->cd(1);
-    TH1Ptr missing_energy_pt = convert(*missing_energy->pt());
-    missing_energy_pt->Draw();
-
-    missing_energy_canvas->cd(2);
-    TH1Ptr missing_energy_x = convert(*missing_energy->x());
-    missing_energy_x->Draw();
-
-    missing_energy_canvas->cd(3);
-    TH1Ptr missing_energy_y = convert(*missing_energy->y());
-    missing_energy_y->Draw();
-
-    missing_energy_canvas->cd(4);
-    TH1Ptr missing_energy_z = convert(*missing_energy->z());
-    missing_energy_z->Draw();
+    shared_ptr<MissingEnergyCanvas> met_canvas(new MissingEnergyCanvas("Missing Energy"));
+    met_canvas->draw(*missing_energy);
 
     app->Run();
 }

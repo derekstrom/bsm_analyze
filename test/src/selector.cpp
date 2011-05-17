@@ -18,6 +18,7 @@
 #include "bsm_stat/interface/H1.h"
 #include "bsm_stat/interface/Utility.h"
 #include "interface/Monitor.h"
+#include "interface/MonitorCanvas.h"
 #include "interface/Selector.h"
 
 using std::cerr;
@@ -26,12 +27,11 @@ using std::endl;
 
 using boost::shared_ptr;
 
-using bsm::Reader;
-using bsm::Event;
-using bsm::ElectronMonitor;
 using bsm::stat::convert;
 using bsm::stat::TH1Ptr;
 using bsm::selector::ElectronSelector;
+
+using namespace bsm;
 
 shared_ptr<ElectronMonitor> all_pf_electrons;
 shared_ptr<ElectronMonitor> selected_pf_electrons;
@@ -130,105 +130,11 @@ void plot()
     char *empty_argv[] = { "root" };
     shared_ptr<TRint> app(new TRint("app", &empty_argc, empty_argv));
 
-    shared_ptr<TCanvas> all_pf_electron_canvas(new TCanvas("all_pf_electrons", "All PF Electrons", 800, 320));
-    all_pf_electron_canvas->Divide(3);
+    shared_ptr<ElectronCanvas> all_pf_electrons_canvas(new ElectronCanvas("All PF Electrons"));
+    all_pf_electrons_canvas->draw(*all_pf_electrons);
 
-    all_pf_electron_canvas->cd(1);
-    TH1Ptr all_pf_electron_multiplicity = convert(*all_pf_electrons->multiplicity());
-    all_pf_electron_multiplicity->Draw();
-
-    all_pf_electron_canvas->cd(2);
-    TH1Ptr all_pf_electron_leading_pt = convert(*all_pf_electrons->leading_pt());
-    all_pf_electron_leading_pt->Draw();
-
-    all_pf_electron_canvas->cd(3);
-    TH1Ptr all_pf_electron_pt = convert(*all_pf_electrons->pt());
-    all_pf_electron_pt->Draw();
-
-    shared_ptr<TCanvas> selected_pf_electron_canvas(new TCanvas("selected_pf_electrons", "Selected PF Electrons", 800, 320));
-    selected_pf_electron_canvas->Divide(3);
-
-    selected_pf_electron_canvas->cd(1);
-    TH1Ptr selected_pf_electron_multiplicity = convert(*selected_pf_electrons->multiplicity());
-    selected_pf_electron_multiplicity->Draw();
-
-    selected_pf_electron_canvas->cd(2);
-    TH1Ptr selected_pf_electron_leading_pt = convert(*selected_pf_electrons->leading_pt());
-    selected_pf_electron_leading_pt->Draw();
-
-    selected_pf_electron_canvas->cd(3);
-    TH1Ptr selected_pf_electron_pt = convert(*selected_pf_electrons->pt());
-    selected_pf_electron_pt->Draw();
-
-    /*
-    shared_ptr<TCanvas> jet_canvas(new TCanvas("jets", "Jets", 800, 320));
-    jet_canvas->Divide(3);
-
-    jet_canvas->cd(1);
-    TH1Ptr jet_multiplicity = convert(*jets->multiplicity());
-    jet_multiplicity->Draw();
-
-    jet_canvas->cd(2);
-    TH1Ptr jet_leading_pt = convert(*jets->leading_pt());
-    jet_leading_pt->Draw();
-
-    jet_canvas->cd(3);
-    TH1Ptr jet_pt = convert(*jets->pt());
-    jet_pt->Draw();
-
-    shared_ptr<TCanvas> muon_canvas(new TCanvas("muons", "Muons", 800, 320));
-    muon_canvas->Divide(3);
-
-    muon_canvas->cd(1);
-    TH1Ptr muon_multiplicity = convert(*muons->multiplicity());
-    muon_multiplicity->Draw();
-
-    muon_canvas->cd(2);
-    TH1Ptr muon_leading_pt = convert(*muons->leading_pt());
-    muon_leading_pt->Draw();
-
-    muon_canvas->cd(3);
-    TH1Ptr muon_pt = convert(*muons->pt());
-    muon_pt->Draw();
-
-    shared_ptr<TCanvas> primary_vertex_canvas(new TCanvas("primary_vertices", "Priamary Vertices", 640, 480));
-    primary_vertex_canvas->Divide(2, 2);
-
-    primary_vertex_canvas->cd(1);
-    TH1Ptr pv_multiplicity = convert(*primary_vertices->multiplicity());
-    pv_multiplicity->Draw();
-
-    primary_vertex_canvas->cd(2);
-    TH1Ptr pv_x = convert(*primary_vertices->x());
-    pv_x->Draw();
-
-    primary_vertex_canvas->cd(3);
-    TH1Ptr pv_y = convert(*primary_vertices->y());
-    pv_y->Draw();
-
-    primary_vertex_canvas->cd(4);
-    TH1Ptr pv_z = convert(*primary_vertices->z());
-    pv_z->Draw();
-
-    shared_ptr<TCanvas> missing_energy_canvas(new TCanvas("missing_energy", "Missing Energy", 640, 480));
-    missing_energy_canvas->Divide(2, 2);
-
-    missing_energy_canvas->cd(1);
-    TH1Ptr missing_energy_pt = convert(*missing_energy->pt());
-    missing_energy_pt->Draw();
-
-    missing_energy_canvas->cd(2);
-    TH1Ptr missing_energy_x = convert(*missing_energy->x());
-    missing_energy_x->Draw();
-
-    missing_energy_canvas->cd(3);
-    TH1Ptr missing_energy_y = convert(*missing_energy->y());
-    missing_energy_y->Draw();
-
-    missing_energy_canvas->cd(4);
-    TH1Ptr missing_energy_z = convert(*missing_energy->z());
-    missing_energy_z->Draw();
-    */
+    shared_ptr<ElectronCanvas> selected_pf_electron_canvas(new ElectronCanvas("Selected PF Electrons"));
+    selected_pf_electron_canvas->draw(*selected_pf_electrons);
 
     app->Run();
 }
