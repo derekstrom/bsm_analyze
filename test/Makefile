@@ -1,6 +1,6 @@
 CCC      = g++
 
-SUBMOD   = bsm_input bsm_analyze bsm_stat
+SUBMOD   = bsm_input bsm_analyze bsm_stat bsm_core
 
 # List of programs with main functions to be filtered out of objects
 PROGS    = $(patsubst ./src/%.cpp,%,$(wildcard ./src/*.cpp))

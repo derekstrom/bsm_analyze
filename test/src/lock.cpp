@@ -8,7 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "interface/Thread.h"
+#include "bsm_core/interface/Thread.h"
 
 using namespace std;
 

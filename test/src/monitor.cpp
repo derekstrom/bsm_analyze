@@ -85,8 +85,8 @@ try
                     gen_particles->fill(jet->gen_parton());
                 }
 
-                muons->fill(event->muons());
-                electrons->fill(event->electrons());
+                muons->fill(event->pf_muons());
+                electrons->fill(event->pf_electrons());
                 primary_vertices->fill(event->primary_vertices());
 
                 if (event->has_missing_energy())
