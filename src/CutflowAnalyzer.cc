@@ -26,7 +26,6 @@ CutflowAnalyzer::CutflowAnalyzer()
 {
     _el_selector.reset(new ElectronSelector());
     _mu_selector.reset(new MuonSelector());
-    _mu_selector->d0_bsp()->disable();
 }
 
 CutflowAnalyzer::~CutflowAnalyzer()
