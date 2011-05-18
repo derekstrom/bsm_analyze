@@ -27,7 +27,11 @@ using std::left;
 
 using bsm::selector::Cut;
 using bsm::selector::Comparator;
+using bsm::selector::Counter;
+using bsm::selector::CounterLock;
+using bsm::selector::CounterLockOnUpdate;
 using bsm::selector::ElectronSelector;
+using bsm::selector::LockSelectorEventCounterOnUpdate;
 using bsm::selector::MuonSelector;
 using bsm::selector::Selector;
 
@@ -261,24 +265,185 @@ void MuonSelector::merge(const SelectorPtr &selector)
 
 
 
+// Counter
+//
+Counter::Counter():
+    _count(0),
+    _is_locked(false),
+    _is_lock_on_update(false)
+{
+}
+
+Counter &Counter::operator +=(const Counter &counter)
+{
+    if (!isLocked())
+    {
+        _count = counter;
+
+        if (isLockOnUpdate())
+        {
+            lock();
+            _is_lock_on_update = false;
+        }
+    }
+
+    return *this;
+}
+
+Counter::operator uint32_t() const
+{
+    return _count;
+}
+
+bool Counter::isLocked() const
+{
+    return _is_locked;
+}
+
+bool Counter::isLockOnUpdate() const
+{
+    return _is_lock_on_update;
+}
+
+void Counter::lock()
+{
+    _is_locked = true;
+}
+
+void Counter::lockOnUpdate()
+{
+    _is_lock_on_update = true;
+}
+
+void Counter::unlock()
+{
+    _is_locked = false;
+    _is_lock_on_update = false;
+}
+
+Counter &Counter::operator ++()
+{
+    if (!isLocked())
+    {
+        ++_count;
+
+        if (isLockOnUpdate())
+        {
+            lock();
+            _is_lock_on_update = false;
+        }
+    }
+
+    return *this;
+}
+
+
+
+// Counter Lock
+//
+CounterLock::CounterLock(Counter &counter):
+    _counter(counter)
+{
+    _counter.lock();
+}
+
+CounterLock::~CounterLock()
+{
+    _counter.unlock();
+}
+
+
+
+// Counter Lock on Update
+//
+CounterLockOnUpdate::CounterLockOnUpdate(Counter &counter):
+    _counter(counter)
+{
+    _counter.lockOnUpdate();
+}
+
+CounterLockOnUpdate::~CounterLockOnUpdate()
+{
+    _counter.unlock();
+}
+
+
+
+// Lock Selector Event Counter on Update
+//
+LockSelectorEventCounterOnUpdate::LockSelectorEventCounterOnUpdate(
+        ElectronSelector &selector)
+{
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.et()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.eta()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.primary_vertex()->events())));
+}
+
+LockSelectorEventCounterOnUpdate::LockSelectorEventCounterOnUpdate(
+        MuonSelector &selector)
+{
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.is_global()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.is_tracker()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.muon_segments()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.muon_hits()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.muon_normalized_chi2()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.tracker_hits()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.pixel_hits()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.d0_bsp()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.primary_vertex()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.pt()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.eta()->events())));
+}
+
+
+
 // Cut
 //
 Cut::Cut(const double &value):
     _value(value),
-    _count(0),
     _is_disabled(false)
 {}
 
 Cut &Cut::operator +=(const Cut &cut)
 {
-    _count += cut;
+    _objects += cut.objects();
+    _events += cut.events();
 
     return *this;
 }
 
-Cut::operator uint32_t() const
+Counter &Cut::objects()
 {
-    return _count;
+    return _objects;
+}
+
+const Counter &Cut::objects() const
+{
+    return _objects;
+}
+
+Counter &Cut::events()
+{
+    return _events;
+}
+
+const Counter &Cut::events() const
+{
+    return _events;
 }
 
 double Cut::value() const
@@ -290,10 +455,14 @@ bool Cut::operator()(const double &value)
 {
     if (isDisabled())
         return true;
-    else
-        return isPass(value)
-            ? (++_count, true)
-            : false;
+
+    if (!isPass(value))
+        return false;
+
+    ++_objects;
+    ++_events;
+
+    return true;
 }
 
 bool Cut::isDisabled() const
@@ -320,7 +489,10 @@ std::ostream &bsm::selector::operator <<(std::ostream &out, const Cut &cut)
     out << setw(5) << left << cut.value() << " ";
    
     if (!cut.isDisabled())
-        out << static_cast<uint32_t>(cut);
+    {
+        out << setw(7) << left << cut.objects()
+            << " " << cut.events();
+    }
 
     return out;
 }

@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <iosfwd>
+#include <vector>
 
 #include <boost/shared_ptr.hpp>
 
@@ -138,6 +139,64 @@ namespace bsm
                 P4 _p4;
         };
 
+        class Counter
+        {
+            public:
+                Counter();
+
+                Counter &operator +=(const Counter &);
+
+                operator uint32_t() const;
+
+                bool isLocked() const;
+                bool isLockOnUpdate() const;
+
+                void lock();
+                void lockOnUpdate();
+
+                void unlock();
+
+                Counter &operator ++(); // prefix
+
+            private:
+                uint32_t _count;
+
+                bool _is_locked;
+                bool _is_lock_on_update;
+        };
+
+        class CounterLock
+        {
+            public:
+                CounterLock(Counter &);
+                ~CounterLock();
+
+            private:
+                Counter &_counter;
+        };
+
+        class CounterLockOnUpdate
+        {
+            public:
+                CounterLockOnUpdate(Counter &);
+                ~CounterLockOnUpdate();
+
+            private:
+                Counter &_counter;
+        };
+
+        class LockSelectorEventCounterOnUpdate
+        {
+            public:
+                LockSelectorEventCounterOnUpdate(ElectronSelector &);
+                LockSelectorEventCounterOnUpdate(MuonSelector &);
+
+            private:
+                typedef boost::shared_ptr<CounterLockOnUpdate> Locker;
+
+                std::vector<Locker> _lockers;
+        };
+
         // Cut Base: hold cut value and count success
         //
         class Cut
@@ -150,9 +209,11 @@ namespace bsm
                 //
                 Cut &operator +=(const Cut &cut);
 
-                // Return Cut counter
-                //
-                operator uint32_t() const;
+                const Counter &objects() const;
+                const Counter &events() const;
+
+                Counter &objects();
+                Counter &events();
 
                 // Get actual cut value
                 //
@@ -173,7 +234,8 @@ namespace bsm
                 virtual bool isPass(const double &) = 0;
 
                 double _value;
-                uint32_t _count;
+                Counter _objects;
+                Counter _events;
 
                 bool _is_disabled;
         };
