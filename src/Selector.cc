@@ -73,12 +73,9 @@ ElectronSelector::CutPtr ElectronSelector::primary_vertex() const
 
 void ElectronSelector::print(std::ostream &out) const
 {
-    out << " [+]                Et > " << setw(5) << left << _et->value()
-        << " " << *_et << endl;
-    out << " [+]             |eta| < " << setw(5) << left << _eta->value()
-        << " " << *_eta << endl;
-    out << " [+] |el.z() - pv.z()| < " << setw(5) << left
-        << _primary_vertex->value() << " " << *_primary_vertex << endl;
+    out << " [+]                Et > " << *_et << endl;
+    out << " [+]             |eta| < " << *_eta << endl;
+    out << " [+] |el.z() - pv.z()| < " << *_primary_vertex << endl;
 }
 
 Selector::SelectorPtr ElectronSelector::clone() const
@@ -207,29 +204,17 @@ MuonSelector::CutPtr MuonSelector::eta() const
 
 void MuonSelector::print(std::ostream &out) const
 {
-    out << " [+] is Global           " << setw(5) << left << " "
-        << " " << *_is_global << endl;
-    out << " [+] is Tracker          " << setw(5) << left << " "
-        << " " << *_is_tracker << endl;
-    out << " [+]     Muon Segments > " << setw(5) << left
-        << _muon_segments->value() << " " << *_muon_segments << endl;
-    out << " [+]         Muon Hits > " << setw(5) << left
-        << _muon_hits->value() << " " << *_muon_hits << endl;
-    out << " [+]  Muon Chi2 / ndof < " << setw(5) << left
-        << _muon_normalized_chi2->value()
-        << " " << *_muon_normalized_chi2 << endl;
-    out << " [+]      Tracker Hits > " << setw(5) << left
-        << _tracker_hits->value() << " " << *_tracker_hits << endl;
-    out << " [+]        Pixel Hits > " << setw(5) << left 
-        << _pixel_hits->value() << " " << *_pixel_hits << endl;
-    out << " [+]          |d0_bsp| < " << setw(5) << left
-        << _d0_bsp->value() << " " << *_d0_bsp << endl;
-    out << " [+] |mu.z() - pv.z()| < " << setw(5) << left
-        << _primary_vertex->value() << " " << *_primary_vertex << endl;
-    out << " [+]                pT > " << setw(5) << left
-        << _eta->value() << " " << *_pt << endl;
-    out << " [+]             |eta| < " << setw(5) << left
-        << _eta->value() << " " << *_eta << endl;
+    out << " [+] is Global           " << *_is_global << endl;
+    out << " [+] is Tracker          " << *_is_tracker << endl;
+    out << " [+]     Muon Segments > " << *_muon_segments << endl;
+    out << " [+]         Muon Hits > " << *_muon_hits << endl;
+    out << " [+]  Muon Chi2 / ndof < " << *_muon_normalized_chi2 << endl;
+    out << " [+]      Tracker Hits > " << *_tracker_hits << endl;
+    out << " [+]        Pixel Hits > " << *_pixel_hits << endl;
+    out << " [+]          |d0_bsp| < " << *_d0_bsp << endl;
+    out << " [+] |mu.z() - pv.z()| < " << *_primary_vertex << endl;
+    out << " [+]                pT > " << *_pt << endl;
+    out << " [+]             |eta| < " << *_eta << endl;
 }
 
 Selector::SelectorPtr MuonSelector::clone() const
@@ -280,7 +265,8 @@ void MuonSelector::merge(const SelectorPtr &selector)
 //
 Cut::Cut(const double &value):
     _value(value),
-    _count(0)
+    _count(0),
+    _is_disabled(false)
 {}
 
 Cut &Cut::operator +=(const Cut &cut)
@@ -302,15 +288,43 @@ double Cut::value() const
 
 bool Cut::operator()(const double &value)
 {
-    return isPass(value)
-        ? (++_count, true)
-        : false;
+    if (isDisabled())
+        return true;
+    else
+        return isPass(value)
+            ? (++_count, true)
+            : false;
+}
+
+bool Cut::isDisabled() const
+{
+    return _is_disabled;
+}
+
+void Cut::disable()
+{
+    _is_disabled = true;
+}
+
+void Cut::enable()
+{
+    _is_disabled = false;
 }
 
 
 
 // Helpers
 //
+std::ostream &bsm::selector::operator <<(std::ostream &out, const Cut &cut)
+{
+    out << setw(5) << left << cut.value() << " ";
+   
+    if (!cut.isDisabled())
+        out << static_cast<uint32_t>(cut);
+
+    return out;
+}
+
 std::ostream &bsm::selector::operator <<(std::ostream &out, const Selector &s)
 {
     s.print(out);

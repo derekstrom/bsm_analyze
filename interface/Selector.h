@@ -162,6 +162,11 @@ namespace bsm
                 //
                 bool operator()(const double &);
 
+                bool isDisabled() const;
+
+                void disable();
+                void enable();
+
             private:
                 // isPass is the actual application of the cut
                 //
@@ -169,6 +174,8 @@ namespace bsm
 
                 double _value;
                 uint32_t _count;
+
+                bool _is_disabled;
         };
 
         // Comparator has comparison policy defined with std functors:
@@ -206,6 +213,7 @@ namespace bsm
 
         // Helpers
         //
+        std::ostream &operator <<(std::ostream &, const Cut &);
         std::ostream &operator <<(std::ostream &, const Selector &);
     }
 
