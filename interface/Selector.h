@@ -208,6 +208,9 @@ namespace bsm
         //
         std::ostream &operator <<(std::ostream &, const Selector &);
     }
+
+    using selector::ElectronSelector;
+    using selector::MuonSelector;
 }
 
 // Template(s) implementation

@@ -23,6 +23,12 @@ namespace bsm
     {
         class ClosestJet;
     }
+
+    namespace selector
+    {
+        class ElectronSelector;
+        class MuonSelector;
+    }
 }
 
 #endif
