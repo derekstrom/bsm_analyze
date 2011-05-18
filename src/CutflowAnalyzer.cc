@@ -26,6 +26,7 @@ CutflowAnalyzer::CutflowAnalyzer()
 {
     _el_selector.reset(new ElectronSelector());
     _mu_selector.reset(new MuonSelector());
+    _mu_selector->d0_bsp()->disable();
 }
 
 CutflowAnalyzer::~CutflowAnalyzer()
@@ -68,6 +69,8 @@ void CutflowAnalyzer::electrons(const Event *event)
     const PrimaryVertex &pv = *event->primary_vertices().begin();
 
     Electrons selected_electrons;
+
+    selector::LockSelectorEventCounterOnUpdate lock(*_el_selector);
     for(Electrons::const_iterator el = event->pf_electrons().begin();
             event->pf_electrons().end() != el;
             ++el)
@@ -87,6 +90,7 @@ void CutflowAnalyzer::muons(const Event *event)
     const PrimaryVertex &pv = *event->primary_vertices().begin();
 
     Muons selected_muons;
+    selector::LockSelectorEventCounterOnUpdate lock(*_mu_selector);
     for(Muons::const_iterator mu = event->pf_muons().begin();
             event->pf_muons().end() != mu;
             ++mu)
