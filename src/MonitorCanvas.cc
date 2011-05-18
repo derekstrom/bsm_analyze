@@ -44,12 +44,12 @@ void DeltaCanvas::draw(const DeltaMonitor &monitor)
 
     _r = convert(*monitor.r());
     _r->GetXaxis()->SetTitle("#Delta R");
-    _r->Draw();
+    _r->Draw("hist");
 
     _canvas->cd(2);
     _ptrel = convert(*monitor.ptrel());
     _ptrel->GetXaxis()->SetTitle("p_{T}^{rel} [GeV/c]");
-    _ptrel->Draw();
+    _ptrel->Draw("hist");
 
     _canvas->cd(3);
     _ptrel_vs_r = convert(*monitor.ptrel_vs_r());
@@ -60,12 +60,12 @@ void DeltaCanvas::draw(const DeltaMonitor &monitor)
     _canvas->cd(4);
     _phi = convert(*monitor.phi());
     _phi->GetXaxis()->SetTitle("#Delta #phi [rad]");
-    _phi->Draw();
+    _phi->Draw("hist");
 
     _canvas->cd(5);
     _eta = convert(*monitor.eta());
     _eta->GetXaxis()->SetTitle("#Delta #eta");
-    _eta->Draw();
+    _eta->Draw("hist");
 }
 
 
@@ -89,17 +89,17 @@ void ElectronCanvas::draw(const ElectronMonitor &monitor)
 
     _multiplicity = convert(*monitor.multiplicity());
     _multiplicity->GetXaxis()->SetTitle("N_{e}");
-    _multiplicity->Draw();
+    _multiplicity->Draw("hist");
 
     _canvas->cd(2);
     _leading_pt = convert(*monitor.leading_pt());
     _leading_pt->GetXaxis()->SetTitle("leading p^{e}_{T} [GeV/c]");
-    _leading_pt->Draw();
+    _leading_pt->Draw("hist");
 
     _canvas->cd(3);
     _pt = convert(*monitor.pt());
     _pt->GetXaxis()->SetTitle("p^{e}_{T} [GeV/c]");
-    _pt->Draw();
+    _pt->Draw("hist");
 }
 
 
@@ -122,37 +122,37 @@ void LorentzVectorCanvas::draw(const LorentzVectorMonitor &monitor)
     _canvas->cd(1);
     _energy = convert(*monitor.energy());
     _energy->GetXaxis()->SetTitle("E [GeV]");
-    _energy->Draw();
+    _energy->Draw("hist");
 
     _canvas->cd(2);
     _px = convert(*monitor.px());
     _px->GetXaxis()->SetTitle("p_{X} [GeV/c]");
-    _px->Draw();
+    _px->Draw("hist");
 
     _canvas->cd(3);
     _py = convert(*monitor.py());
     _py->GetXaxis()->SetTitle("p_{Y} [GeV/c]");
-    _py->Draw();
+    _py->Draw("hist");
 
     _canvas->cd(4);
     _pz = convert(*monitor.pz());
     _pz->GetXaxis()->SetTitle("p_{Z} [GeV/c]");
-    _pz->Draw();
+    _pz->Draw("hist");
 
     _canvas->cd(5);
     _pt = convert(*monitor.pt());
     _pt->GetXaxis()->SetTitle("p_{T} [GeV/c]");
-    _pt->Draw();
+    _pt->Draw("hist");
 
     _canvas->cd(6);
     _eta = convert(*monitor.eta());
     _eta->GetXaxis()->SetTitle("#eta");
-    _eta->Draw();
+    _eta->Draw("hist");
 
     _canvas->cd(7);
     _phi = convert(*monitor.phi());
     _phi->GetXaxis()->SetTitle("#phi [rad]");
-    _phi->Draw();
+    _phi->Draw("hist");
 }
 
 
@@ -175,22 +175,22 @@ void MissingEnergyCanvas::draw(const MissingEnergyMonitor &monitor)
     _canvas->cd(1);
     _pt = convert(*monitor.pt());
     _pt->GetXaxis()->SetTitle("p^{MET}_{T} [GeV/c]");
-    _pt->Draw();
+    _pt->Draw("hist");
 
     _canvas->cd(2);
     _x = convert(*monitor.x());
     _x->GetXaxis()->SetTitle("X^{MET} [cm]");
-    _x->Draw();
+    _x->Draw("hist");
 
     _canvas->cd(3);
     _y = convert(*monitor.y());
     _y->GetXaxis()->SetTitle("Y^{MET} [cm]");
-    _y->Draw();
+    _y->Draw("hist");
 
     _canvas->cd(4);
     _z = convert(*monitor.z());
     _z->GetXaxis()->SetTitle("Z^{MET} [cm]");
-    _z->Draw();
+    _z->Draw("hist");
 }
 
 
@@ -214,17 +214,17 @@ void MuonCanvas::draw(const MuonMonitor &monitor)
 
     _multiplicity = convert(*monitor.multiplicity());
     _multiplicity->GetXaxis()->SetTitle("N_{#mu}");
-    _multiplicity->Draw();
+    _multiplicity->Draw("hist");
 
     _canvas->cd(2);
     _leading_pt = convert(*monitor.leading_pt());
     _leading_pt->GetXaxis()->SetTitle("leading p^{#mu}_{T} [GeV/c]");
-    _leading_pt->Draw();
+    _leading_pt->Draw("hist");
 
     _canvas->cd(3);
     _pt = convert(*monitor.pt());
     _pt->GetXaxis()->SetTitle("p^{#mu}_{T} [GeV/c]");
-    _pt->Draw();
+    _pt->Draw("hist");
 }
 
 
@@ -251,17 +251,17 @@ void JetCanvas::draw(const JetMonitor &monitor)
 
     _multiplicity = convert(*monitor.multiplicity());
     _multiplicity->GetXaxis()->SetTitle("N_{jet}");
-    _multiplicity->Draw();
+    _multiplicity->Draw("hist");
 
     _canvas->cd(2);
     _leading_pt = convert(*monitor.leading_pt());
     _leading_pt->GetXaxis()->SetTitle("leading p^{jet}_{T} [GeV/c]");
-    _leading_pt->Draw();
+    _leading_pt->Draw("hist");
 
     _canvas->cd(3);
     _pt = convert(*monitor.pt());
     _pt->GetXaxis()->SetTitle("p^{jet}_{T} [GeV/c]");
-    _pt->Draw();
+    _pt->Draw("hist");
 }
 
 
@@ -284,20 +284,20 @@ void PrimaryVertexCanvas::draw(const PrimaryVertexMonitor &monitor)
     _canvas->cd(1);
     _multiplicity = convert(*monitor.multiplicity());
     _multiplicity->GetXaxis()->SetTitle("N_{PV}");
-    _multiplicity->Draw();
+    _multiplicity->Draw("hist");
 
     _canvas->cd(2);
     _x = convert(*monitor.x());
     _x->GetXaxis()->SetTitle("X^{PV} [cm]");
-    _x->Draw();
+    _x->Draw("hist");
 
     _canvas->cd(3);
     _y = convert(*monitor.y());
     _y->GetXaxis()->SetTitle("Y^{PV} [cm]");
-    _y->Draw();
+    _y->Draw("hist");
 
     _canvas->cd(4);
     _z = convert(*monitor.z());
     _z->GetXaxis()->SetTitle("Z^{PV} [cm]");
-    _z->Draw();
+    _z->Draw("hist");
 }
