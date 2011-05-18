@@ -20,10 +20,11 @@
 #include "interface/Selector.h"
 #include "interface/Utility.h"
 
-using std::ostream;
 using std::endl;
-using std::setw;
 using std::left;
+using std::ostream;
+using std::setw;
+using std::setfill;
 
 using bsm::selector::Cut;
 using bsm::selector::Comparator;
@@ -77,6 +78,9 @@ ElectronSelector::CutPtr ElectronSelector::primary_vertex() const
 
 void ElectronSelector::print(std::ostream &out) const
 {
+    out << "     CUT                 " << setw(5) << " "
+        << " Objects Events" << endl;
+    out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
     out << " [+]                Et > " << *_et << endl;
     out << " [+]             |eta| < " << *_eta << endl;
     out << " [+] |el.z() - pv.z()| < " << *_primary_vertex << endl;
@@ -208,6 +212,9 @@ MuonSelector::CutPtr MuonSelector::eta() const
 
 void MuonSelector::print(std::ostream &out) const
 {
+    out << "     CUT                 " << setw(5) << " "
+        << " Objects Events" << endl;
+    out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
     out << " [+] is Global           " << *_is_global << endl;
     out << " [+] is Tracker          " << *_is_tracker << endl;
     out << " [+]     Muon Segments > " << *_muon_segments << endl;
