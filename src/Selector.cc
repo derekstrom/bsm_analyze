@@ -142,14 +142,14 @@ bool MuonSelector::operator()(const Muon &muon, const PrimaryVertex &pv)
 {
     utility::set(_p4.get(), &muon.physics_object().p4());
 
-    return _is_global->operator()(muon.is_global())
-        && _is_tracker->operator()(muon.is_tracker())
-        && _muon_segments->operator()(muon.number_of_matches())
+    return _is_global->operator()(muon.extra().is_global())
+        && _is_tracker->operator()(muon.extra().is_tracker())
+        && _muon_segments->operator()(muon.extra().number_of_matches())
         && _muon_hits->operator()(muon.global_track().hits())
         && _muon_normalized_chi2->operator()(muon.global_track().normalized_chi2())
         && _tracker_hits->operator()(muon.inner_track().hits())
-        && _pixel_hits->operator()(muon.pixel_hits())
-        && _d0_bsp->operator()(muon.d0_bsp())
+        && _pixel_hits->operator()(muon.extra().pixel_hits())
+        && _d0_bsp->operator()(muon.extra().d0_bsp())
         && _primary_vertex->operator()(fabs(muon.physics_object().vertex().z() - pv.vertex().z()))
         && _pt->operator()(_p4->Pt())
         && _eta->operator()(fabs(_p4->Eta()));

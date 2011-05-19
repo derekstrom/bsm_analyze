@@ -384,15 +384,12 @@ MissingEnergyMonitor
 
 void MissingEnergyMonitor::fill(const MissingEnergy &missing_energy)
 {
-    _p4->SetPxPyPzE(missing_energy.physics_object().p4().px(),
-            missing_energy.physics_object().p4().py(),
-            missing_energy.physics_object().p4().pz(),
-            missing_energy.physics_object().p4().e());
+    _p4->SetPxPyPzE(missing_energy.p4().px(),
+            missing_energy.p4().py(),
+            missing_energy.p4().pz(),
+            missing_energy.p4().e());
 
     _pt->fill(_p4->Pt());
-    _x->fill(missing_energy.physics_object().vertex().x());
-    _y->fill(missing_energy.physics_object().vertex().y());
-    _z->fill(missing_energy.physics_object().vertex().z());
 }
 
 const MissingEnergyMonitor::H1Ptr MissingEnergyMonitor::pt() const
