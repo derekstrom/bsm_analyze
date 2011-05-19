@@ -285,7 +285,7 @@ Counter &Counter::operator +=(const Counter &counter)
 {
     if (!isLocked())
     {
-        _count = counter;
+        _count += counter;
 
         if (isLockOnUpdate())
         {
