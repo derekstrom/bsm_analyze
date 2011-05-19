@@ -26,7 +26,9 @@ namespace bsm
 
     namespace selector
     {
+        class Cut;
         class ElectronSelector;
+        class MultiplicitySelector;
         class MuonSelector;
     }
 }
