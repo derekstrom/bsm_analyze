@@ -21,6 +21,8 @@ namespace bsm
 
     namespace algorithm
     {
+        // Search for closest jet to electron, muon
+        //
         class ClosestJet
         {
             public:
@@ -41,6 +43,8 @@ namespace bsm
                 P4 _jet_p4;
         };
     }
+
+    using algorithm::ClosestJet;
 }
 
 #endif
