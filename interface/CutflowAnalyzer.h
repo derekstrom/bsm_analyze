@@ -42,10 +42,17 @@ namespace bsm
             void electrons(const Event *);
             void muons(const Event *);
 
-            boost::shared_ptr<selector::ElectronSelector> _el_selector;
-            boost::shared_ptr<MultiplicityCutflow> _el_number_selector;
-            boost::shared_ptr<selector::MuonSelector> _mu_selector;
-            boost::shared_ptr<MultiplicityCutflow> _mu_number_selector;
+            boost::shared_ptr<selector::ElectronSelector> _pf_el_selector;
+            boost::shared_ptr<MultiplicityCutflow> _pf_el_number_selector;
+
+            boost::shared_ptr<selector::ElectronSelector> _gsf_el_selector;
+            boost::shared_ptr<MultiplicityCutflow> _gsf_el_number_selector;
+
+            boost::shared_ptr<selector::MuonSelector> _pf_mu_selector;
+            boost::shared_ptr<MultiplicityCutflow> _pf_mu_number_selector;
+
+            boost::shared_ptr<selector::MuonSelector> _reco_mu_selector;
+            boost::shared_ptr<MultiplicityCutflow> _reco_mu_number_selector;
     };
 
     class MultiplicityCutflow

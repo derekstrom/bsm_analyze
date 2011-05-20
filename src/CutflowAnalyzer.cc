@@ -26,11 +26,17 @@ using bsm::MultiplicityCutflow;
 
 CutflowAnalyzer::CutflowAnalyzer()
 {
-    _el_selector.reset(new ElectronSelector());
-    _el_number_selector.reset(new MultiplicityCutflow(4));
+    _pf_el_selector.reset(new ElectronSelector());
+    _pf_el_number_selector.reset(new MultiplicityCutflow(4));
 
-    _mu_selector.reset(new MuonSelector());
-    _mu_number_selector.reset(new MultiplicityCutflow(4));
+    _gsf_el_selector.reset(new ElectronSelector());
+    _gsf_el_number_selector.reset(new MultiplicityCutflow(4));
+
+    _pf_mu_selector.reset(new MuonSelector());
+    _pf_mu_number_selector.reset(new MultiplicityCutflow(4));
+
+    _reco_mu_selector.reset(new MuonSelector());
+    _reco_mu_number_selector.reset(new MultiplicityCutflow(4));
 }
 
 CutflowAnalyzer::~CutflowAnalyzer()
@@ -50,11 +56,17 @@ void CutflowAnalyzer::merge(const AnalyzerPtr &analyzer_ptr)
     if (!analyzer)
         return;
 
-    _el_selector->merge(analyzer->_el_selector);
-    _el_number_selector->merge(analyzer->_el_number_selector);
+    _pf_el_selector->merge(analyzer->_pf_el_selector);
+    _pf_el_number_selector->merge(analyzer->_pf_el_number_selector);
 
-    _mu_selector->merge(analyzer->_mu_selector);
-    _mu_number_selector->merge(analyzer->_mu_number_selector);
+    _gsf_el_selector->merge(analyzer->_gsf_el_selector);
+    _gsf_el_number_selector->merge(analyzer->_gsf_el_number_selector);
+
+    _pf_mu_selector->merge(analyzer->_pf_mu_selector);
+    _pf_mu_number_selector->merge(analyzer->_pf_mu_number_selector);
+
+    _reco_mu_selector->merge(analyzer->_reco_mu_selector);
+    _reco_mu_number_selector->merge(analyzer->_reco_mu_number_selector);
 }
 
 void CutflowAnalyzer::process(const Event *event)
@@ -68,72 +80,125 @@ void CutflowAnalyzer::process(const Event *event)
 
 void CutflowAnalyzer::electrons(const Event *event)
 {
-    if (!event->pf_electrons().size())
-        return;
-
     typedef ::google::protobuf::RepeatedPtrField<Electron> Electrons;
 
     const PrimaryVertex &pv = *event->primary_vertices().begin();
 
-    Electrons selected_electrons;
-
-    selector::LockSelectorEventCounterOnUpdate lock(*_el_selector);
-    for(Electrons::const_iterator el = event->pf_electrons().begin();
-            event->pf_electrons().end() != el;
-            ++el)
+    if (event->pf_electrons().size())
     {
-        if ((*_el_selector)(*el, pv))
-            *selected_electrons.Add() = *el;
+        Electrons selected_electrons;
+
+        selector::LockSelectorEventCounterOnUpdate lock(*_pf_el_selector);
+        for(Electrons::const_iterator el = event->pf_electrons().begin();
+                event->pf_electrons().end() != el;
+                ++el)
+        {
+            if ((*_pf_el_selector)(*el, pv))
+                *selected_electrons.Add() = *el;
+        }
+
+        (*_pf_el_number_selector)(selected_electrons.size());
     }
 
-    (*_el_number_selector)(selected_electrons.size());
+    if (event->gsf_electrons().size())
+    {
+        Electrons selected_electrons;
+
+        selector::LockSelectorEventCounterOnUpdate lock(*_gsf_el_selector);
+        for(Electrons::const_iterator el = event->gsf_electrons().begin();
+                event->gsf_electrons().end() != el;
+                ++el)
+        {
+            if ((*_gsf_el_selector)(*el, pv))
+                *selected_electrons.Add() = *el;
+        }
+
+        (*_gsf_el_number_selector)(selected_electrons.size());
+    }
 }
 
 void CutflowAnalyzer::muons(const Event *event)
 {
-    if (!event->pf_muons().size())
-        return;
-
     typedef ::google::protobuf::RepeatedPtrField<Muon> Muons;
 
     const PrimaryVertex &pv = *event->primary_vertices().begin();
 
-    Muons selected_muons;
-    selector::LockSelectorEventCounterOnUpdate lock(*_mu_selector);
-    for(Muons::const_iterator mu = event->pf_muons().begin();
-            event->pf_muons().end() != mu;
-            ++mu)
+    if (event->pf_muons().size())
     {
-        if ((*_mu_selector)(*mu, pv))
-            *selected_muons.Add() = *mu;
+        Muons selected_muons;
+        selector::LockSelectorEventCounterOnUpdate lock(*_pf_mu_selector);
+        for(Muons::const_iterator mu = event->pf_muons().begin();
+                event->pf_muons().end() != mu;
+                ++mu)
+        {
+            if ((*_pf_mu_selector)(*mu, pv))
+                *selected_muons.Add() = *mu;
+        }
+
+        (*_pf_mu_number_selector)(selected_muons.size());
     }
 
-    (*_mu_number_selector)(selected_muons.size());
+    if (event->reco_muons().size())
+    {
+        Muons selected_muons;
+        selector::LockSelectorEventCounterOnUpdate lock(*_reco_mu_selector);
+        for(Muons::const_iterator mu = event->reco_muons().begin();
+                event->reco_muons().end() != mu;
+                ++mu)
+        {
+            if ((*_reco_mu_selector)(*mu, pv))
+                *selected_muons.Add() = *mu;
+        }
+
+        (*_reco_mu_number_selector)(selected_muons.size());
+    }
 }
 
 void CutflowAnalyzer::print(std::ostream &out) const
 {
-    out << "Electron Selector" << endl;
-    out << *_el_selector << endl;
+    out << "Particle-Flow Electrons" << endl;
+    out << "[Selector]" << endl;
+    out << *_pf_el_selector << endl;
     out << endl;
-    out << "Electron Multiplicity" << endl;
-    out << *_el_number_selector << endl;
+    out << "[Multiplicity]" << endl;
+    out << *_pf_el_number_selector << endl;
     out << endl;
 
-    out << "Muon Selector" << endl;
-    out << *_mu_selector << endl;
+    out << "Gsf Electrons" << endl;
+    out << "[Selector]" << endl;
+    out << *_gsf_el_selector << endl;
     out << endl;
-    out << "Muon Multiplicity" << endl;
-    out << *_mu_number_selector << endl;
+    out << "[Multiplicity]" << endl;
+    out << *_gsf_el_number_selector << endl;
+    out << endl;
+
+    out << "Particle-Flow Muons" << endl;
+    out << "[Selector]" << endl;
+    out << *_pf_mu_selector << endl;
+    out << endl;
+    out << "[Multiplicity]" << endl;
+    out << *_pf_mu_number_selector << endl;
+    out << endl;
+
+    out << "Reco Muons" << endl;
+    out << "[Selector]" << endl;
+    out << *_reco_mu_selector << endl;
+    out << endl;
+    out << "[Multiplicity]" << endl;
+    out << *_reco_mu_number_selector << endl;
     out << endl;
 }
 
 CutflowAnalyzer::operator bool() const
 {
-    return _el_selector
-        && _el_number_selector
-        && _mu_selector
-        && _mu_number_selector;
+    return _pf_el_selector
+        && _pf_el_number_selector
+        && _gsf_el_selector
+        && _gsf_el_number_selector
+        && _pf_mu_selector
+        && _pf_mu_number_selector
+        && _reco_mu_selector
+        && _reco_mu_number_selector;
 }
 
 
