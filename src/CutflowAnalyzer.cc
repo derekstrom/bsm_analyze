@@ -222,12 +222,12 @@ MultiplicityCutflow::~MultiplicityCutflow()
 
 void MultiplicityCutflow::operator()(const uint32_t &number)
 {
-    for(Cuts::iterator cut = _cuts.begin();
-            _cuts.end() != cut;
-            ++cut)
-    {
-        (**cut)(number);
-    }
+    // It does not make sense to apply all cuts. Only Nth one:
+    //
+    if (_cuts.size() > number)
+        (*_cuts[number])(number);
+    else
+        (**(_cuts.end() - 1))(number);
 }
 
 MultiplicityCutflow::CutPtr
@@ -277,7 +277,7 @@ void MultiplicityCutflow::merge(const CutflowPtr &selector_ptr)
 
     for(uint32_t i = 0; _cuts.size() > i; ++i)
     {
-        *cut(i) = *selector->cut(i);
+        *cut(i) += *selector->cut(i);
     }
 }
 
