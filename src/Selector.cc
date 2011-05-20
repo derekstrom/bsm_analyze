@@ -113,12 +113,28 @@ void ElectronSelector::merge(const SelectorPtr &selector)
     *primary_vertex() += *el_selector->primary_vertex();
 }
 
+void ElectronSelector::enable()
+{
+    et()->enable();
+    eta()->enable();
+    primary_vertex()->enable();
+}
+
+void ElectronSelector::disable()
+{
+    et()->disable();
+    eta()->disable();
+    primary_vertex()->disable();
+}
+
 
 
 // Muon Selector
 //
 MuonSelector::MuonSelector()
 {
+    _pt.reset(new Comparator<>(30));
+    _eta.reset(new Comparator<std::less<double> >(2.1));
     _is_global.reset(new Comparator<std::logical_and<bool> >(true));
     _is_tracker.reset(new Comparator<std::logical_and<bool> >(true));
     _muon_segments.reset(new Comparator<>(1));
@@ -128,8 +144,6 @@ MuonSelector::MuonSelector()
     _pixel_hits.reset(new Comparator<>(0));
     _d0_bsp.reset(new Comparator<std::less<double> >(0.02));
     _primary_vertex.reset(new Comparator<std::less<double> >(1));
-    _pt.reset(new Comparator<>(20));
-    _eta.reset(new Comparator<std::less<double> >(2.1));
 
     _p4.reset(new TLorentzVector());
 }
@@ -142,7 +156,9 @@ bool MuonSelector::operator()(const Muon &muon, const PrimaryVertex &pv)
 {
     utility::set(_p4.get(), &muon.physics_object().p4());
 
-    return _is_global->operator()(muon.extra().is_global())
+    return _pt->operator()(_p4->Pt())
+        && _eta->operator()(fabs(_p4->Eta()))
+        && _is_global->operator()(muon.extra().is_global())
         && _is_tracker->operator()(muon.extra().is_tracker())
         && _muon_segments->operator()(muon.extra().number_of_matches())
         && _muon_hits->operator()(muon.global_track().hits())
@@ -150,9 +166,17 @@ bool MuonSelector::operator()(const Muon &muon, const PrimaryVertex &pv)
         && _tracker_hits->operator()(muon.inner_track().hits())
         && _pixel_hits->operator()(muon.extra().pixel_hits())
         && _d0_bsp->operator()(muon.extra().d0_bsp())
-        && _primary_vertex->operator()(fabs(muon.physics_object().vertex().z() - pv.vertex().z()))
-        && _pt->operator()(_p4->Pt())
-        && _eta->operator()(fabs(_p4->Eta()));
+        && _primary_vertex->operator()(fabs(muon.physics_object().vertex().z() - pv.vertex().z()));
+}
+
+MuonSelector::CutPtr MuonSelector::pt() const
+{
+    return _pt;
+}
+
+MuonSelector::CutPtr MuonSelector::eta() const
+{
+    return _eta;
 }
 
 MuonSelector::CutPtr MuonSelector::is_global() const
@@ -200,21 +224,13 @@ MuonSelector::CutPtr MuonSelector::primary_vertex() const
     return _primary_vertex;
 }
 
-MuonSelector::CutPtr MuonSelector::pt() const
-{
-    return _pt;
-}
-
-MuonSelector::CutPtr MuonSelector::eta() const
-{
-    return _eta;
-}
-
 void MuonSelector::print(std::ostream &out) const
 {
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
+    out << " [+]                pT > " << *_pt << endl;
+    out << " [+]             |eta| < " << *_eta << endl;
     out << " [+] is Global           " << *_is_global << endl;
     out << " [+] is Tracker          " << *_is_tracker << endl;
     out << " [+]     Muon Segments > " << *_muon_segments << endl;
@@ -224,14 +240,14 @@ void MuonSelector::print(std::ostream &out) const
     out << " [+]        Pixel Hits > " << *_pixel_hits << endl;
     out << " [+]          |d0_bsp| < " << *_d0_bsp << endl;
     out << " [+] |mu.z() - pv.z()| < " << *_primary_vertex << endl;
-    out << " [+]                pT > " << *_pt << endl;
-    out << " [+]             |eta| < " << *_eta << endl;
 }
 
 Selector::SelectorPtr MuonSelector::clone() const
 {
     boost::shared_ptr<MuonSelector> selector(new MuonSelector());
 
+    *selector->pt() = *pt();
+    *selector->eta() = *eta();
     *selector->is_global() = *is_global();
     *selector->is_tracker() = *is_tracker();
     *selector->muon_segments() = *muon_segments();
@@ -241,8 +257,6 @@ Selector::SelectorPtr MuonSelector::clone() const
     *selector->pixel_hits() = *pixel_hits();
     *selector->d0_bsp() = *d0_bsp();
     *selector->primary_vertex() = *primary_vertex();
-    *selector->pt() = *pt();
-    *selector->eta() = *eta();
 
     return selector;
 }
@@ -257,6 +271,8 @@ void MuonSelector::merge(const SelectorPtr &selector)
     if (!mu_selector)
         return;
 
+    *pt() += *mu_selector->pt();
+    *eta() += *mu_selector->eta();
     *is_global() += *mu_selector->is_global();
     *is_tracker() += *mu_selector->is_tracker();
     *muon_segments() += *mu_selector->muon_segments();
@@ -266,8 +282,36 @@ void MuonSelector::merge(const SelectorPtr &selector)
     *pixel_hits() += *mu_selector->pixel_hits();
     *d0_bsp() += *mu_selector->d0_bsp();
     *primary_vertex() += *mu_selector->primary_vertex();
-    *pt() += *mu_selector->pt();
-    *eta() += *mu_selector->eta();
+}
+
+void MuonSelector::enable()
+{
+    pt()->enable();
+    eta()->enable();
+    is_global()->enable();
+    is_tracker()->enable();
+    muon_segments()->enable();
+    muon_hits()->enable();
+    muon_normalized_chi2()->enable();
+    tracker_hits()->enable();
+    pixel_hits()->enable();
+    d0_bsp()->enable();
+    primary_vertex()->enable();
+}
+
+void MuonSelector::disable()
+{
+    pt()->disable();
+    eta()->disable();
+    is_global()->disable();
+    is_tracker()->disable();
+    muon_segments()->disable();
+    muon_hits()->disable();
+    muon_normalized_chi2()->disable();
+    tracker_hits()->disable();
+    pixel_hits()->disable();
+    d0_bsp()->disable();
+    primary_vertex()->disable();
 }
 
 
