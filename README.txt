@@ -54,7 +54,10 @@ INSTALL
                         i   print status of application: number of files
                             processed and left
 
-                    User may hit key(s) several times, e.g. 'i', 'i', 'q'
+                    User may hit key(s) several times at any time during the
+                    execution, e.g. 'i', 'i', 'q'
+
+
 
 COMPILATION
 ===========
