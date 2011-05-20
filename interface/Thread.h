@@ -89,6 +89,8 @@ namespace bsm
             //
             virtual void onRunLoopCommand(const uint32_t &);
 
+            const uint32_t eventsProcessed() const;
+
         private:
             typedef boost::shared_ptr<Reader> ReaderPtr;
 
@@ -126,6 +128,8 @@ namespace bsm
 
             AnalyzerPtr _analyzer;
             std::string _file_name;
+
+            uint32_t _events_processed;
     };
 
     class ThreadController
@@ -176,6 +180,9 @@ namespace bsm
             void onThreadWait();
             core::Thread *waitingThread();
 
+            void startKeyboardThread();
+            void stopKeyboardThread();
+
             // Typedefs
             //
             typedef std::queue<std::string> InputFiles; // FIFO
@@ -201,6 +208,10 @@ namespace bsm
             ThreadPtr _keyboard_thread;
 
             AnalyzerPtr _analyzer;
+
+            class Summary;
+
+            boost::shared_ptr<Summary> _summary;
     };
 }
 

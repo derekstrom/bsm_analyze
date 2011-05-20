@@ -94,7 +94,8 @@ bool KeyboardOperation::isContinue() const
 // Analyzer Thread
 //
 AnalyzerOperation::AnalyzerOperation():
-    _continue(true)
+    _continue(true),
+    _events_processed(0)
 {
     _thread = 0;
     _controller = 0;
@@ -201,6 +202,11 @@ void AnalyzerOperation::onRunLoopCommand(const uint32_t &command)
     }
 }
 
+const uint32_t AnalyzerOperation::eventsProcessed() const
+{
+    return _events_processed;
+}
+
 // Privates
 //
 bool AnalyzerOperation::isRunning() const
@@ -261,6 +267,8 @@ void AnalyzerOperation::processFile()
         Lock lock(thread()->condition());
 
         _analyzer->process(event.get());
+
+        ++_events_processed;
     }
 }
 
@@ -287,11 +295,46 @@ void AnalyzerOperation::waitForInstructions()
 
 
 
+// Thread Controller summary
+//
+class ThreadController::Summary
+{
+    public:
+        Summary():
+            _events_processed(0),
+            _files_processed(0)
+        {
+        }
+
+        uint64_t eventsProcessed() const
+        {
+            return _events_processed;
+        }
+
+        uint32_t filesProcessed() const
+        {
+            return _files_processed;
+        }
+
+        void addEventsProcessed(const uint32_t &events)
+        {
+            _events_processed += events;
+        }
+
+        void addFilesProcessed()
+        {
+            ++_files_processed;
+        }
+
+    private:
+        uint64_t _events_processed;
+        uint32_t _files_processed;
+};
+
 // Thread controller
 //
 ThreadController::ThreadController():
-    _max_threads(boost::thread::hardware_concurrency()),
-    _processed_files(0)
+    _max_threads(boost::thread::hardware_concurrency())
 {
     _condition.reset(new core::Condition());
     _input_files.reset(new InputFiles());
@@ -328,12 +371,9 @@ void ThreadController::start()
             || !hasAnalyzer())
         return;
 
-    _keyboard_thread.reset(new Thread());
-    KeyboardOperationPtr operation(new KeyboardOperation());
-    _keyboard_thread->init(operation);
+    _summary.reset(new Summary());
 
-    operation->init(this);
-    _keyboard_thread->start();
+    startKeyboardThread();
 
     for(uint32_t threads_to_create = countMaxThreads();
             threads_to_create;
@@ -344,8 +384,14 @@ void ThreadController::start()
 
     run();
 
-    _keyboard_thread->stop();
-    _keyboard_thread->join();
+    stopKeyboardThread();
+
+    cout << "Job Summary" << endl;
+    cout << "Processed Events: " << _summary->eventsProcessed() << endl;
+    cout << "Processed  Files: " << _summary->filesProcessed() << endl;
+    cout << endl;
+
+    _summary.reset();
 }
 
 void 
@@ -378,7 +424,7 @@ void ThreadController::info()
     Lock lock(condition());
 
     cout << "INFO" << endl;
-    cout << "Inputs p: " << _processed_files << " l: "
+    cout << "Inputs p: " << _summary->filesProcessed() << " l: "
         << _input_files->size() << endl;
     cout << endl;
 }
@@ -473,7 +519,7 @@ void ThreadController::onThreadWait()
 {
     using boost::dynamic_pointer_cast;
 
-    ++_processed_files;
+    _summary->addFilesProcessed();
 
     if (hasInputFiles())
     {
@@ -505,10 +551,16 @@ void ThreadController::onThreadWait()
             dynamic_pointer_cast<AnalyzerOperation>(thread->operation());
 
         if (operation)
+        {
             _analyzer->merge(operation->analyzer());
+
+            Lock lock(condition());
+            _summary->addEventsProcessed(operation->eventsProcessed());
+        }
 
         // Remove thread form the list of running threads
         //
+        Lock lock(condition());
         _threads.erase(thread);
     }
 }
@@ -520,4 +572,22 @@ Thread *ThreadController::waitingThread()
     _threads_waiting->pop();
     
     return thread;
+}
+
+void ThreadController::startKeyboardThread()
+{
+    Lock lock(condition());
+
+    _keyboard_thread.reset(new Thread());
+    KeyboardOperationPtr operation(new KeyboardOperation());
+    _keyboard_thread->init(operation);
+
+    operation->init(this);
+    _keyboard_thread->start();
+}
+
+void ThreadController::stopKeyboardThread()
+{
+    _keyboard_thread->stop();
+    _keyboard_thread->join();
 }
