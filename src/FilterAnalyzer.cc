@@ -63,7 +63,8 @@ void FilterAnalyzer::onFileOpen(const std::string &filename, const Input *input)
     namespace fs = boost::filesystem;
 
     fs::path path(filename);
-    _writer.reset(new Writer(path.stem() + "_filtered" + path.extension()));
+    _writer.reset(new Writer(path.stem().generic_string() + std::string("_filtered")
+                + path.extension().generic_string()));
 
     *_writer->input() = *input;
 
