@@ -88,6 +88,10 @@ void MonitorAnalyzer::merge(const AnalyzerPtr &analyzer)
     bsm::merge(*_monitor_primary_vertices, *analyzer_ptr->_monitor_primary_vertices);
 }
 
+void MonitorAnalyzer::onFileOpen(const std::string &filename, const Input *)
+{
+}
+
 void MonitorAnalyzer::process(const Event *event)
 {
     // It is assumed that analyzer is in valid state

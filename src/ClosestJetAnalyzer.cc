@@ -114,6 +114,10 @@ void ClosestJetAnalyzer::merge(const AnalyzerPtr &analyzer)
     bsm::merge(*_monitor_muon_delta, *analyzer_ptr->_monitor_muon_delta);
 }
 
+void ClosestJetAnalyzer::onFileOpen(const std::string &filename, const Input *)
+{
+}
+
 void ClosestJetAnalyzer::process(const Event *event)
 {
     // It is assumed that analyzer is in valid state

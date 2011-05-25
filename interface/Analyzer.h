@@ -12,10 +12,12 @@
 #include <boost/shared_ptr.hpp>
 
 #include <iosfwd>
+#include <string>
 
 namespace bsm
 {
     class Event;
+    class Input;
 
     namespace core
     {
@@ -35,6 +37,7 @@ namespace bsm
                 //
                 virtual void merge(const AnalyzerPtr &) = 0;
 
+                virtual void onFileOpen(const std::string &, const Input *) = 0;
                 virtual void process(const Event *) = 0;
 
                 // Each analyzer should know how to print itself on screen

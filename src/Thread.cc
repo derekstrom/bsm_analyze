@@ -250,6 +250,8 @@ AnalyzerOperation::ReaderPtr AnalyzerOperation::createReader()
     ReaderPtr reader(new Reader(_file_name));
     _file_name.clear();
 
+    _analyzer->onFileOpen(reader->filename(), reader->input().get());
+
     return reader;
 }
 

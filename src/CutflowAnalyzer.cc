@@ -93,6 +93,10 @@ void CutflowAnalyzer::merge(const AnalyzerPtr &analyzer_ptr)
     _reco_mu_number_selector->merge(analyzer->_reco_mu_number_selector);
 }
 
+void CutflowAnalyzer::onFileOpen(const std::string &filename, const Input *)
+{
+}
+
 void CutflowAnalyzer::process(const Event *event)
 {
     (*_pv_multiplicity)(event->primary_vertices().size());

@@ -42,6 +42,7 @@ namespace bsm
 
             virtual void merge(const AnalyzerPtr &);
 
+            virtual void onFileOpen(const std::string &filename, const Input *);
             virtual void process(const Event *);
 
             virtual void print(std::ostream &) const;
