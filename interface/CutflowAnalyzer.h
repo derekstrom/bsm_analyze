@@ -41,9 +41,13 @@ namespace bsm
 
         private:
             void electrons(const Event *);
+            void jets(const Event *);
             void muons(const Event *);
 
             boost::shared_ptr<MultiplicityCutflow> _pv_multiplicity;
+
+            boost::shared_ptr<selector::JetSelector> _jet_selector;
+            boost::shared_ptr<MultiplicityCutflow> _jet_multiplicity;
 
             boost::shared_ptr<selector::ElectronSelector> _pf_el_selector;
             boost::shared_ptr<MultiplicityCutflow> _pf_el_number_selector;

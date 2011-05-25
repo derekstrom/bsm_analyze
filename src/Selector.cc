@@ -14,6 +14,7 @@
 #include <TLorentzVector.h>
 
 #include "bsm_input/interface/Electron.pb.h"
+#include "bsm_input/interface/Jet.pb.h"
 #include "bsm_input/interface/Muon.pb.h"
 #include "bsm_input/interface/Physics.pb.h"
 #include "bsm_input/interface/PrimaryVertex.pb.h"
@@ -32,6 +33,7 @@ using bsm::selector::Counter;
 using bsm::selector::CounterLock;
 using bsm::selector::CounterLockOnUpdate;
 using bsm::selector::ElectronSelector;
+using bsm::selector::JetSelector;
 using bsm::selector::LockSelectorEventCounterOnUpdate;
 using bsm::selector::MuonSelector;
 using bsm::selector::Selector;
@@ -125,6 +127,85 @@ void ElectronSelector::disable()
     et()->disable();
     eta()->disable();
     primary_vertex()->disable();
+}
+
+
+
+// JetSelector
+//
+JetSelector::JetSelector()
+{
+    _pt.reset(new Comparator<>(50));
+    _eta.reset(new Comparator<std::less<double> >(2.4));
+
+    _p4.reset(new TLorentzVector());
+}
+
+JetSelector::~JetSelector()
+{
+}
+
+bool JetSelector::operator()(const Jet &jet)
+{
+    utility::set(_p4.get(), &jet.physics_object().p4());
+
+    return _pt->operator()(_p4->Pt())
+        && _eta->operator()(fabs(_p4->Eta()));
+}
+
+JetSelector::CutPtr JetSelector::pt() const
+{
+    return _pt;
+}
+
+JetSelector::CutPtr JetSelector::eta() const
+{
+    return _eta;
+}
+
+void JetSelector::print(std::ostream &out) const
+{
+    out << "     CUT                 " << setw(5) << " "
+        << " Objects Events" << endl;
+    out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
+    out << " [+]                Pt > " << *_pt << endl;
+    out << " [+]             |eta| < " << *_eta << endl;
+}
+
+Selector::SelectorPtr JetSelector::clone() const
+{
+    boost::shared_ptr<JetSelector> selector(new JetSelector());
+
+    *selector->pt() = *pt();
+    *selector->eta() = *eta();
+
+    return selector;
+}
+
+void JetSelector::merge(const SelectorPtr &selector_ptr)
+{
+    if (!selector_ptr)
+        return;
+
+    boost::shared_ptr<JetSelector> selector =
+        boost::dynamic_pointer_cast<JetSelector>(selector_ptr);
+    if (!selector)
+        return;
+
+    *pt() += *selector->pt();
+    *eta() += *selector->eta();
+}
+
+void JetSelector::enable()
+{
+    pt()->enable();
+    eta()->enable();
+}
+
+void JetSelector::disable()
+{
+    pt()->disable();
+    eta()->disable();
 }
 
 
@@ -431,6 +512,15 @@ LockSelectorEventCounterOnUpdate::LockSelectorEventCounterOnUpdate(
                 new CounterLockOnUpdate(selector.eta()->events())));
     _lockers.push_back(Locker(
                 new CounterLockOnUpdate(selector.primary_vertex()->events())));
+}
+
+LockSelectorEventCounterOnUpdate::LockSelectorEventCounterOnUpdate(
+        JetSelector &selector)
+{
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.pt()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.eta()->events())));
 }
 
 LockSelectorEventCounterOnUpdate::LockSelectorEventCounterOnUpdate(

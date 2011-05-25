@@ -12,6 +12,7 @@
 
 #include "bsm_input/interface/Electron.pb.h"
 #include "bsm_input/interface/Event.pb.h"
+#include "bsm_input/interface/Jet.pb.h"
 #include "bsm_input/interface/Muon.pb.h"
 #include "interface/Selector.h"
 #include "interface/CutflowAnalyzer.h"
@@ -27,6 +28,9 @@ using bsm::MultiplicityCutflow;
 CutflowAnalyzer::CutflowAnalyzer()
 {
     _pv_multiplicity.reset(new MultiplicityCutflow(16));
+
+    _jet_selector.reset(new JetSelector());
+    _jet_multiplicity.reset(new MultiplicityCutflow(4));
 
     _pf_el_selector.reset(new ElectronSelector());
     _pf_el_number_selector.reset(new MultiplicityCutflow(4));
@@ -74,6 +78,9 @@ void CutflowAnalyzer::merge(const AnalyzerPtr &analyzer_ptr)
 
     _pv_multiplicity->merge(analyzer->_pv_multiplicity);
 
+    _jet_selector->merge(analyzer->_jet_selector);
+    _jet_multiplicity->merge(analyzer->_jet_multiplicity);
+
     _pf_el_selector->merge(analyzer->_pf_el_selector);
     _pf_el_number_selector->merge(analyzer->_pf_el_number_selector);
 
@@ -104,6 +111,7 @@ void CutflowAnalyzer::process(const Event *event)
     if (!event->primary_vertices().size())
         return;
 
+    jets(event);
     electrons(event);
     muons(event);
 }
@@ -144,6 +152,27 @@ void CutflowAnalyzer::electrons(const Event *event)
         }
 
         (*_gsf_el_number_selector)(selected_electrons);
+    }
+}
+
+void CutflowAnalyzer::jets(const Event *event)
+{
+    typedef ::google::protobuf::RepeatedPtrField<Jet> Jets;
+
+    if (event->jets().size())
+    {
+        uint32_t selected_jets;
+
+        selector::LockSelectorEventCounterOnUpdate lock(*_jet_selector);
+        for(Jets::const_iterator jet = event->jets().begin();
+                event->jets().end() != jet;
+                ++jet)
+        {
+            if ((*_jet_selector)(*jet))
+                ++selected_jets;
+        }
+
+        (*_jet_multiplicity)(selected_jets);
     }
 }
 
@@ -201,6 +230,14 @@ void CutflowAnalyzer::print(std::ostream &out) const
     out << "Primary Vertices" << endl;
     out << *_pv_multiplicity << endl;
 
+    out << "Particle-Flow Jets" << endl;
+    out << "[Selector]" << endl;
+    out << *_jet_selector << endl;
+    out << endl;
+    out << "[Multiplicity]" << endl;
+    out << *_jet_multiplicity << endl;
+    out << endl;
+
     out << "Particle-Flow Electrons" << endl;
     out << "[Selector]" << endl;
     out << *_pf_el_selector << endl;
@@ -251,6 +288,8 @@ void CutflowAnalyzer::print(std::ostream &out) const
 CutflowAnalyzer::operator bool() const
 {
     return _pv_multiplicity
+        && _jet_selector
+        && _jet_multiplicity
         && _pf_el_selector
         && _pf_el_number_selector
         && _gsf_el_selector

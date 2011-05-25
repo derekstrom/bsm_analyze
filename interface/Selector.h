@@ -19,6 +19,7 @@ class TLorentzVector;
 namespace bsm
 {
     class Electron;
+    class Jet;
     class Muon;
     class PrimaryVertex;
 
@@ -86,6 +87,45 @@ namespace bsm
                 CutPtr _et;
                 CutPtr _eta;
                 CutPtr _primary_vertex;
+
+                // Temporary variable that is used to convert
+                // bsm::LorentzVector to TLorentzVector
+                //
+                P4 _p4;
+        };
+
+        class JetSelector : public Selector
+        {
+            public:
+                typedef boost::shared_ptr<Cut> CutPtr;
+
+                JetSelector();
+                virtual ~JetSelector();
+
+                // Test if object passes the selector
+                //
+                virtual bool operator()(const Jet &);
+
+                // Cuts accessors
+                //
+                CutPtr pt() const;
+                CutPtr eta() const;
+
+                // Selector interface
+                //
+                virtual void print(std::ostream &) const;
+
+                virtual SelectorPtr clone() const;
+                virtual void merge(const SelectorPtr &);
+
+                virtual void enable();
+                virtual void disable();
+
+            private:
+                typedef boost::shared_ptr<TLorentzVector> P4;
+
+                CutPtr _pt;
+                CutPtr _eta;
 
                 // Temporary variable that is used to convert
                 // bsm::LorentzVector to TLorentzVector
@@ -200,6 +240,7 @@ namespace bsm
         {
             public:
                 LockSelectorEventCounterOnUpdate(ElectronSelector &);
+                LockSelectorEventCounterOnUpdate(JetSelector &);
                 LockSelectorEventCounterOnUpdate(MuonSelector &);
 
             private:
@@ -291,6 +332,7 @@ namespace bsm
     }
 
     using selector::ElectronSelector;
+    using selector::JetSelector;
     using selector::MuonSelector;
 }
 
