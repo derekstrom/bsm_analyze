@@ -7,6 +7,7 @@
 
 #include <ostream>
 
+#include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/pointer_cast.hpp>
 
