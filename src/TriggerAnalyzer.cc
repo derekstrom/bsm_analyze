@@ -6,11 +6,13 @@
 // Copyright 2011, All rights reserved
 
 #include <iomanip>
+#include <iostream>
 #include <ostream>
 
 #include <boost/pointer_cast.hpp>
 
 #include "bsm_input/interface/Event.pb.h"
+#include "bsm_input/interface/Input.pb.h"
 #include "bsm_input/interface/Trigger.pb.h"
 #include "interface/TriggerAnalyzer.h"
 
@@ -41,27 +43,115 @@ void TriggerAnalyzer::merge(const AnalyzerPtr &analyzer_ptr)
 
     if (!analyzer)
         return;
+
+    for(HLTMap::const_iterator hlt = analyzer->_hlt_map.begin();
+            analyzer->_hlt_map.end() != hlt;
+            ++hlt)
+    {
+        if (_hlt_map.end() != _hlt_map.find(hlt->first))
+            continue;
+
+        _hlt_map.insert(*hlt);
+    }
+
+    for(HLTCutflow::const_iterator hlt = analyzer->_hlt_cutflow.begin();
+            analyzer->_hlt_cutflow.end() != hlt;
+            ++hlt)
+    {
+        _hlt_cutflow[hlt->first] += hlt->second;
+    }
 }
 
-void TriggerAnalyzer::onFileOpen(const std::string &filename, const Input *)
+void TriggerAnalyzer::onFileOpen(const std::string &filename, const Input *input)
 {
+    if (!input->has_info())
+        return;
+
+    typedef ::google::protobuf::RepeatedPtrField<TriggerItem> TriggerItems;
+    for(TriggerItems::const_iterator hlt = input->info().triggers().begin();
+            input->info().triggers().end() != hlt;
+            ++hlt)
+    {
+        if (_hlt_map.end() != _hlt_map.find(hlt->hash()))
+            continue;
+
+        _hlt_map[hlt->hash()] = hlt->name();
+    }
 }
 
 void TriggerAnalyzer::process(const Event *event)
 {
-    triggers(event);
-}
-
-void TriggerAnalyzer::triggers(const Event *event)
-{
     typedef ::google::protobuf::RepeatedPtrField<Trigger> Triggers;
+
+    if (!event->hlts().size())
+    {
+        cout << "HLT is not available" << endl;
+        return;
+    }
+
+    for(Triggers::const_iterator hlt = event->hlts().begin();
+            event->hlts().end() != hlt;
+            ++hlt)
+    {
+        ++_hlt_cutflow[*hlt];
+    }
 }
 
 void TriggerAnalyzer::print(std::ostream &out) const
 {
+    out << "Found " << _hlt_map.size() << " HLT(s) in file(s)" << endl;
+
+    for(HLTMap::const_iterator hlt = _hlt_map.begin();
+            _hlt_map.end() != hlt;
+            ++hlt)
+    {
+        out << setw(20) << left << hlt->first << " " << hlt->second << endl;
+    }
+
+    out << endl;
+    out << "HLT Cutflow" << endl;
+    for(HLTCutflow::const_iterator hlt = _hlt_cutflow.begin();
+            _hlt_cutflow.end() != hlt;
+            ++hlt)
+    {
+        out << hlt->first << " " << hlt->second << endl;
+    }
 }
 
 TriggerAnalyzer::operator bool() const
 {
     return true;
+}
+
+
+
+// Helpers
+//
+bool bsm::operator <(const bsm::Trigger &t1, const bsm::Trigger &t2)
+{
+    if (t1.hash() < t2.hash())
+        return true;
+
+    if (t1.hash() == t2.hash())
+    {
+        if (t1.version() < t2.version())
+            return true;
+
+        if (t1.version() == t2.version())
+        {
+            if (t1.prescale() < t2.prescale())
+                return true;
+        }
+    }
+
+    return false;
+}
+
+std::ostream &bsm::operator <<(std::ostream &out, const bsm::Trigger &t)
+{
+    out << "h: " << setw(20) << left << t.hash()
+        << " " << setw(3) << left << t.version()
+        << " " << t.prescale();
+
+    return out;
 }

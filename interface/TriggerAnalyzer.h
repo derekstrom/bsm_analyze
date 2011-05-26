@@ -9,6 +9,7 @@
 #define BSM_TRIGGER_ANALYZER
 
 #include <iosfwd>
+#include <string>
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
@@ -18,6 +19,7 @@
 
 namespace bsm
 {
+    class Trigger;
     class TriggerAnalyzer : public core::Analyzer
     {
         public:
@@ -38,8 +40,18 @@ namespace bsm
             virtual operator bool() const;
 
         private:
-            void triggers(const Event *);
+            typedef std::map<std::size_t, std::string> HLTMap;
+
+            typedef std::map<bsm::Trigger, uint32_t> HLTCutflow;
+
+            HLTMap _hlt_map;
+            HLTCutflow _hlt_cutflow;
     };
+
+    // Helpers
+    //
+    bool operator <(const bsm::Trigger &, const bsm::Trigger &);
+    std::ostream &operator <<(std::ostream &, const bsm::Trigger &);
 }
 
 #endif
