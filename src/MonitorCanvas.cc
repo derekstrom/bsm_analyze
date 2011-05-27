@@ -238,8 +238,8 @@ JetCanvas::JetCanvas(const std::string &title)
     std::ostringstream name;
     name << "jet_canvas_" << JetCanvas::_id->add();
 
-    _canvas.reset(new TCanvas(name.str().c_str(), title.c_str(), 800, 320));
-    _canvas->Divide(3);
+    _canvas.reset(new TCanvas(name.str().c_str(), title.c_str(), 1024, 320));
+    _canvas->Divide(4);
 
     if (!title.empty())
         _canvas->SetTitle(title.c_str());
@@ -262,6 +262,11 @@ void JetCanvas::draw(const JetMonitor &monitor)
     _pt = convert(*monitor.pt());
     _pt->GetXaxis()->SetTitle("p^{jet}_{T} [GeV/c]");
     _pt->Draw("hist");
+
+    _canvas->cd(4);
+    _children = convert(*monitor.children());
+    _children->GetXaxis()->SetTitle("N_{children}");
+    _children->Draw("hist");
 }
 
 
