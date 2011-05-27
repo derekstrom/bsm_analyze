@@ -89,7 +89,8 @@ namespace bsm
             //
             virtual void onRunLoopCommand(const uint32_t &);
 
-            const uint32_t eventsProcessed() const;
+            uint32_t eventsProcessed() const;
+            uint32_t totalEventsSize() const;
 
         private:
             typedef boost::shared_ptr<Reader> ReaderPtr;
@@ -130,6 +131,7 @@ namespace bsm
             std::string _file_name;
 
             uint32_t _events_processed;
+            uint32_t _total_events_size;
     };
 
     class ThreadController

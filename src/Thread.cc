@@ -95,7 +95,8 @@ bool KeyboardOperation::isContinue() const
 //
 AnalyzerOperation::AnalyzerOperation():
     _continue(true),
-    _events_processed(0)
+    _events_processed(0),
+    _total_events_size(0)
 {
     _thread = 0;
     _controller = 0;
@@ -202,9 +203,14 @@ void AnalyzerOperation::onRunLoopCommand(const uint32_t &command)
     }
 }
 
-const uint32_t AnalyzerOperation::eventsProcessed() const
+uint32_t AnalyzerOperation::eventsProcessed() const
 {
     return _events_processed;
+}
+
+uint32_t AnalyzerOperation::totalEventsSize() const
+{
+    return _total_events_size;
 }
 
 // Privates
@@ -272,6 +278,8 @@ void AnalyzerOperation::processFile()
 
         ++_events_processed;
     }
+
+    _total_events_size = reader->totalEventsSize();
 }
 
 void AnalyzerOperation::waitForInstructions()
@@ -304,7 +312,8 @@ class ThreadController::Summary
     public:
         Summary():
             _events_processed(0),
-            _files_processed(0)
+            _files_processed(0),
+            _total_events_size(0)
         {
         }
 
@@ -318,6 +327,13 @@ class ThreadController::Summary
             return _files_processed;
         }
 
+        uint32_t averageEventSize() const
+        {
+            return eventsProcessed()
+                ? (_total_events_size / eventsProcessed())
+                : 0;
+        }
+
         void addEventsProcessed(const uint32_t &events)
         {
             _events_processed += events;
@@ -328,9 +344,15 @@ class ThreadController::Summary
             ++_files_processed;
         }
 
+        void addEventsSize(const uint32_t &size)
+        {
+            _total_events_size += size;
+        }
+
     private:
         uint64_t _events_processed;
         uint32_t _files_processed;
+        uint64_t _total_events_size;
 };
 
 // Thread controller
@@ -389,8 +411,9 @@ void ThreadController::start()
     stopKeyboardThread();
 
     cout << "Job Summary" << endl;
-    cout << "Processed Events: " << _summary->eventsProcessed() << endl;
-    cout << "Processed  Files: " << _summary->filesProcessed() << endl;
+    cout << "  Processed Events: " << _summary->eventsProcessed() << endl;
+    cout << "  Processed  Files: " << _summary->filesProcessed() << endl;
+    cout << "Average Event Size: " << _summary->averageEventSize() << endl;
     cout << endl;
 
     _summary.reset();
@@ -558,6 +581,7 @@ void ThreadController::onThreadWait()
 
             Lock lock(condition());
             _summary->addEventsProcessed(operation->eventsProcessed());
+            _summary->addEventsSize(operation->totalEventsSize());
         }
 
         // Remove thread form the list of running threads
