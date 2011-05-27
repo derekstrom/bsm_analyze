@@ -42,6 +42,7 @@ JetMonitor::JetMonitor()
     _multiplicity.reset(new H1(10, 0, 10));
     _pt.reset(new H1(100, 0, 100));
     _leading_pt.reset(new H1(100, 0, 100));
+    _children.reset(new H1(10, 0, 10));
 
     _p4.reset(new TLorentzVector());
 }
@@ -51,6 +52,7 @@ JetMonitor &JetMonitor::operator =(const JetMonitor &monitor)
     *multiplicity() = *monitor.multiplicity();
     *pt() = *monitor.pt();
     *leading_pt() = *monitor.leading_pt();
+    *children() = *monitor.children();
 
     return *this;
 }
@@ -76,6 +78,7 @@ void JetMonitor::fill(const Jets &jets)
             leading_pt = pt;
 
         _pt->fill(pt);
+        _children->fill(jet->children().size());
     }
 
     if (leading_pt)
@@ -95,6 +98,11 @@ const JetMonitor::H1Ptr JetMonitor::pt() const
 const JetMonitor::H1Ptr JetMonitor::leading_pt() const
 {
     return _leading_pt;
+}
+
+const JetMonitor::H1Ptr JetMonitor::children() const
+{
+    return _children;
 }
 
 
@@ -586,7 +594,9 @@ std::ostream &bsm::operator<<(std::ostream &out, const JetMonitor &monitor)
     out << setw(16) << left << " [multiplicity]"
         << *monitor.multiplicity() << endl;
     out << setw(16) << left << " [pt]" << *monitor.pt() << endl;
-    out << setw(16) << left << " [leading pt] " << *monitor.leading_pt() << endl;
+    out << setw(16) << left << " [leading pt] " << *monitor.leading_pt()
+        << endl;
+    out << setw(16) << left << " [children]" << *monitor.children() << endl;
 
     return out;
 }
@@ -668,6 +678,7 @@ void bsm::merge(JetMonitor &m1, const JetMonitor &m2)
     *m1.multiplicity() += *m2.multiplicity();
     *m1.pt() += *m2.pt();
     *m1.leading_pt() += *m2.leading_pt();
+    *m1.children() += *m2.children();
 }
 
 void bsm::merge(DeltaMonitor &m1, const DeltaMonitor &m2)

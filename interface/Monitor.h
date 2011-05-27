@@ -105,6 +105,7 @@ namespace bsm
             const H1Ptr multiplicity() const;
             const H1Ptr pt() const;
             const H1Ptr leading_pt() const;
+            const H1Ptr children() const;
 
         private:
             JetMonitor(const JetMonitor &);
@@ -114,6 +115,7 @@ namespace bsm
             H1Ptr _multiplicity;
             H1Ptr _pt;
             H1Ptr _leading_pt;
+            H1Ptr _children;
 
             // Convert bsm::LorentzVector to TLorentzVector
             P4 _p4;
