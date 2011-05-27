@@ -93,7 +93,10 @@ void TriggerAnalyzer::process(const Event *event)
             event->hlts().end() != hlt;
             ++hlt)
     {
-        ++_hlt_cutflow[*hlt];
+        if (hlt->pass())
+            ++_hlt_cutflow[*hlt];
+        else
+            _hlt_cutflow[*hlt];
     }
 }
 
@@ -110,12 +113,30 @@ void TriggerAnalyzer::print(std::ostream &out) const
 
     out << endl;
     out << "HLT Cutflow" << endl;
+    out << setw(70) << right << setfill('-') << " " << setfill(' ') << endl;
+    out << setw(50) << left << "Name" << " "
+        << setw(2) << left << "V" << " "
+        << setw(3) << left << "PS"  << " "
+        << "Events" << endl;
+    out << setw(70) << right << setfill('-') << " " << setfill(' ') << endl;
     for(HLTCutflow::const_iterator hlt = _hlt_cutflow.begin();
             _hlt_cutflow.end() != hlt;
             ++hlt)
     {
-        out << hlt->first << " " << hlt->second << endl;
+        HLTMap::const_iterator name = _hlt_map.find(hlt->first.hash());
+        if (_hlt_map.end() == name)
+        {
+            cerr << "Trigger is missing in the Hash map" << endl;
+
+            continue;
+        }
+
+        out << setw(50) << left << name->second
+            << " " << setw(2) << left <<hlt->first.version()
+            << " " << setw(3) << left << hlt->first.prescale()
+            << " " << hlt->second << endl;
     }
+    out << setw(70) << right << setfill('-') << " " << setfill(' ') << endl;
 }
 
 TriggerAnalyzer::operator bool() const
