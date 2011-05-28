@@ -18,8 +18,6 @@
 
 namespace bsm
 {
-    class MultiplicityCutflow;
-
     class CutflowAnalyzer : public core::Analyzer
     {
         public:
@@ -44,63 +42,31 @@ namespace bsm
             void jets(const Event *);
             void muons(const Event *);
 
-            boost::shared_ptr<MultiplicityCutflow> _pv_multiplicity;
+            boost::shared_ptr<selector::MultiplicityCutflow> _pv_multiplicity;
 
             boost::shared_ptr<selector::JetSelector> _jet_selector;
-            boost::shared_ptr<MultiplicityCutflow> _jet_multiplicity;
+            boost::shared_ptr<selector::MultiplicityCutflow> _jet_multiplicity;
 
             boost::shared_ptr<selector::ElectronSelector> _pf_el_selector;
-            boost::shared_ptr<MultiplicityCutflow> _pf_el_number_selector;
+            boost::shared_ptr<selector::MultiplicityCutflow> _pf_el_number_selector;
 
             boost::shared_ptr<selector::ElectronSelector> _gsf_el_selector;
-            boost::shared_ptr<MultiplicityCutflow> _gsf_el_number_selector;
+            boost::shared_ptr<selector::MultiplicityCutflow> _gsf_el_number_selector;
 
             // Et and Eta cuts only
             //
             boost::shared_ptr<selector::MuonSelector> _pf_mu_selector_step1;
-            boost::shared_ptr<MultiplicityCutflow> _pf_mu_number_selector_step1;
+            boost::shared_ptr<selector::MultiplicityCutflow> _pf_mu_number_selector_step1;
 
             boost::shared_ptr<selector::MuonSelector> _pf_mu_selector;
-            boost::shared_ptr<MultiplicityCutflow> _pf_mu_number_selector;
+            boost::shared_ptr<selector::MultiplicityCutflow> _pf_mu_number_selector;
 
             boost::shared_ptr<selector::MuonSelector> _reco_mu_selector_step1;
-            boost::shared_ptr<MultiplicityCutflow> _reco_mu_number_selector_step1;
+            boost::shared_ptr<selector::MultiplicityCutflow> _reco_mu_number_selector_step1;
 
             boost::shared_ptr<selector::MuonSelector> _reco_mu_selector;
-            boost::shared_ptr<MultiplicityCutflow> _reco_mu_number_selector;
+            boost::shared_ptr<selector::MultiplicityCutflow> _reco_mu_number_selector;
     };
-
-    class MultiplicityCutflow
-    {
-        public:
-            typedef boost::shared_ptr<MultiplicityCutflow> CutflowPtr;
-            typedef boost::shared_ptr<selector::Cut> CutPtr;
-
-            MultiplicityCutflow(const uint32_t &max);
-            virtual ~MultiplicityCutflow();
-
-            // Test if selector is passed
-            //
-            virtual void operator()(const uint32_t &);
-
-            // Cuts accessors
-            //
-            CutPtr cut(const uint32_t &) const;
-
-            // Cutflow interface
-            //
-            virtual void print(std::ostream &) const;
-
-            virtual CutflowPtr clone() const;
-            virtual void merge(const CutflowPtr &);
-
-        private:
-            typedef std::vector<CutPtr> Cuts;
-
-            Cuts _cuts;
-    };
-
-    std::ostream &operator <<(std::ostream &, const MultiplicityCutflow &);
 }
 
 #endif

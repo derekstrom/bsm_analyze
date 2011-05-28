@@ -29,8 +29,9 @@ namespace bsm
         class Cut;
         class ElectronSelector;
         class JetSelector;
-        class MultiplicitySelector;
+        class MultiplicityCutflow;
         class MuonSelector;
+        class WJetSelector;
     }
 }
 

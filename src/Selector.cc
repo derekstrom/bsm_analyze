@@ -23,6 +23,7 @@
 
 using std::endl;
 using std::left;
+using std::right;
 using std::ostream;
 using std::setw;
 using std::setfill;
@@ -36,7 +37,9 @@ using bsm::selector::ElectronSelector;
 using bsm::selector::JetSelector;
 using bsm::selector::LockSelectorEventCounterOnUpdate;
 using bsm::selector::MuonSelector;
+using bsm::selector::MultiplicityCutflow;
 using bsm::selector::Selector;
+using bsm::selector::WJetSelector;
 
 // ElectronSelector
 //
@@ -206,6 +209,132 @@ void JetSelector::disable()
 {
     pt()->disable();
     eta()->disable();
+}
+
+
+
+// WJetSelector
+//
+WJetSelector::WJetSelector()
+{
+    _children.reset(new Comparator<std::equal_to<uint32_t> >(2));
+    _pt.reset(new Comparator<>(200));
+    _mass_drop.reset(new Comparator<std::less<double> >(0.4));
+    _mass_lower_bound.reset(new Comparator<>(60));
+    _mass_upper_bound.reset(new Comparator<std::less<double> >(130));
+
+    _p4.reset(new TLorentzVector());
+}
+
+WJetSelector::~WJetSelector()
+{
+}
+
+bool WJetSelector::operator()(const Jet &jet)
+{
+    if (!_children->operator()(jet.children().size()))
+        return false;
+
+    utility::set(_p4.get(), &jet.physics_object().p4());
+    if (!_pt->operator()(_p4->Pt()))
+        return false;
+
+    double mass = _p4->M();
+
+    utility::set(_p4.get(), &jet.children().Get(0).physics_object().p4());
+    double m1 = _p4->M();
+
+    utility::set(_p4.get(), &jet.children().Get(0).physics_object().p4());
+    double m2 = _p4->M();
+
+    return _mass_drop->operator()(std::max(m1, m2) / mass)
+        && _mass_lower_bound->operator()(mass)
+        && _mass_upper_bound->operator()(mass);
+}
+
+WJetSelector::CutPtr WJetSelector::children() const
+{
+    return _children;
+}
+
+WJetSelector::CutPtr WJetSelector::pt() const
+{
+    return _pt;
+}
+
+WJetSelector::CutPtr WJetSelector::mass_drop() const
+{
+    return _mass_drop;
+}
+
+WJetSelector::CutPtr WJetSelector::mass_lower_bound() const
+{
+    return _mass_lower_bound;
+}
+
+WJetSelector::CutPtr WJetSelector::mass_upper_bound() const
+{
+    return _mass_upper_bound;
+}
+
+void WJetSelector::print(std::ostream &out) const
+{
+    out << "     CUT                 " << setw(5) << " "
+        << " Objects Events" << endl;
+    out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
+    out << " [+]          Children = " << *_children << endl;
+    out << " [+]                Pt > " << *_pt << endl;
+    out << " [+]         Mass Drop < " << *_mass_drop << endl;
+    out << " [+]  Mass Lower Bound > " << *_mass_lower_bound << endl;
+    out << " [+]  Mass Upper Bound < " << *_mass_upper_bound << endl;
+}
+
+Selector::SelectorPtr WJetSelector::clone() const
+{
+    boost::shared_ptr<WJetSelector> selector(new WJetSelector());
+
+    *selector->children() = *children();
+    *selector->pt() = *pt();
+    *selector->mass_drop() = *mass_drop();
+    *selector->mass_lower_bound() = *mass_lower_bound();
+    *selector->mass_upper_bound() = *mass_upper_bound();
+
+    return selector;
+}
+
+void WJetSelector::merge(const SelectorPtr &selector_ptr)
+{
+    if (!selector_ptr)
+        return;
+
+    boost::shared_ptr<WJetSelector> selector =
+        boost::dynamic_pointer_cast<WJetSelector>(selector_ptr);
+    if (!selector)
+        return;
+
+    *children() += *selector->children();
+    *pt() += *selector->pt();
+    *mass_drop() += *selector->mass_drop();
+    *mass_lower_bound() += *selector->mass_lower_bound();
+    *mass_upper_bound() += *selector->mass_upper_bound();
+}
+
+void WJetSelector::enable()
+{
+    children()->enable();
+    pt()->enable();
+    mass_drop()->enable();
+    mass_lower_bound()->enable();
+    mass_upper_bound()->enable();
+}
+
+void WJetSelector::disable()
+{
+    children()->disable();
+    pt()->disable();
+    mass_drop()->disable();
+    mass_lower_bound()->disable();
+    mass_upper_bound()->disable();
 }
 
 
@@ -397,6 +526,86 @@ void MuonSelector::disable()
 
 
 
+// Multiplicity Cutflow
+//
+MultiplicityCutflow::MultiplicityCutflow(const uint32_t &max)
+{
+    using selector::Comparator;
+
+    for(uint32_t i = 0; max > i; ++i)
+    {
+        _cuts.push_back(CutPtr(new Comparator<std::equal_to<uint32_t> >(i)));
+    }
+    _cuts.push_back(CutPtr(new Comparator<std::greater_equal<uint32_t> >(max)));
+}
+
+MultiplicityCutflow::~MultiplicityCutflow()
+{
+}
+
+void MultiplicityCutflow::operator()(const uint32_t &number)
+{
+    // It does not make sense to apply all cuts. Only Nth one:
+    //
+    if (_cuts.size() > number)
+        (*_cuts[number])(number);
+    else
+        (**(_cuts.end() - 1))(number);
+}
+
+MultiplicityCutflow::CutPtr
+    MultiplicityCutflow::cut(const uint32_t &cut) const
+{
+    return cut > _cuts.size()
+        ? *_cuts.end()
+        : _cuts[cut];
+}
+
+void MultiplicityCutflow::print(std::ostream &out) const
+{
+    out << "     CUT                 " << setw(5) << " "
+        << " Objects Events" << endl;
+    out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
+    for(uint32_t cut = 0, max = _cuts.size() - 1; max > cut; ++cut)
+    {
+        out << " [+] " << setw(20) << right << " = " << *_cuts[cut] << endl;
+    }
+    out << " [+] " << setw(20) << right << " >= "
+        << **(_cuts.end() - 1) << endl;
+}
+
+MultiplicityCutflow::CutflowPtr MultiplicityCutflow::clone() const
+{
+    boost::shared_ptr<MultiplicityCutflow>
+        selector(new MultiplicityCutflow(_cuts.size()));
+
+    for(uint32_t i = 0; _cuts.size() > i; ++i)
+    {
+        *selector->cut(i) = *cut(i);
+    }
+
+    return selector;
+}
+
+void MultiplicityCutflow::merge(const CutflowPtr &selector_ptr)
+{
+    if (!selector_ptr)
+        return;
+
+    boost::shared_ptr<MultiplicityCutflow> selector =
+        boost::dynamic_pointer_cast<MultiplicityCutflow>(selector_ptr);
+    if (!selector
+            || _cuts.size() != selector->_cuts.size())
+        return;
+
+    for(uint32_t i = 0; _cuts.size() > i; ++i)
+    {
+        *cut(i) += *selector->cut(i);
+    }
+}
+
+
+
 // Counter
 //
 Counter::Counter():
@@ -524,6 +733,21 @@ LockSelectorEventCounterOnUpdate::LockSelectorEventCounterOnUpdate(
 }
 
 LockSelectorEventCounterOnUpdate::LockSelectorEventCounterOnUpdate(
+        WJetSelector &selector)
+{
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.children()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.pt()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.mass_drop()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.mass_lower_bound()->events())));
+    _lockers.push_back(Locker(
+                new CounterLockOnUpdate(selector.mass_upper_bound()->events())));
+}
+
+LockSelectorEventCounterOnUpdate::LockSelectorEventCounterOnUpdate(
         MuonSelector &selector)
 {
     _lockers.push_back(Locker(
@@ -641,6 +865,14 @@ std::ostream &bsm::selector::operator <<(std::ostream &out, const Cut &cut)
 std::ostream &bsm::selector::operator <<(std::ostream &out, const Selector &s)
 {
     s.print(out);
+
+    return out;
+}
+
+std::ostream &bsm::selector::operator <<(std::ostream &out,
+        const MultiplicityCutflow &cutflow)
+{
+    cutflow.print(out);
 
     return out;
 }

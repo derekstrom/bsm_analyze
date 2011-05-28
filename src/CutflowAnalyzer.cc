@@ -23,7 +23,6 @@ using boost::dynamic_pointer_cast;
 
 using bsm::AnalyzerPtr;
 using bsm::CutflowAnalyzer;
-using bsm::MultiplicityCutflow;
 
 CutflowAnalyzer::CutflowAnalyzer()
 {
@@ -302,96 +301,4 @@ CutflowAnalyzer::operator bool() const
         && _reco_mu_number_selector_step1
         && _reco_mu_selector
         && _reco_mu_number_selector;
-}
-
-
-
-// Multiplicity Cutflow
-//
-MultiplicityCutflow::MultiplicityCutflow(const uint32_t &max)
-{
-    using selector::Comparator;
-
-    for(uint32_t i = 0; max > i; ++i)
-    {
-        _cuts.push_back(CutPtr(new Comparator<std::equal_to<uint32_t> >(i)));
-    }
-    _cuts.push_back(CutPtr(new Comparator<std::greater_equal<uint32_t> >(max)));
-}
-
-MultiplicityCutflow::~MultiplicityCutflow()
-{
-}
-
-void MultiplicityCutflow::operator()(const uint32_t &number)
-{
-    // It does not make sense to apply all cuts. Only Nth one:
-    //
-    if (_cuts.size() > number)
-        (*_cuts[number])(number);
-    else
-        (**(_cuts.end() - 1))(number);
-}
-
-MultiplicityCutflow::CutPtr
-    MultiplicityCutflow::cut(const uint32_t &cut) const
-{
-    return cut > _cuts.size()
-        ? *_cuts.end()
-        : _cuts[cut];
-}
-
-void MultiplicityCutflow::print(std::ostream &out) const
-{
-    out << "     CUT                 " << setw(5) << " "
-        << " Objects Events" << endl;
-    out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    for(uint32_t cut = 0, max = _cuts.size() - 1; max > cut; ++cut)
-    {
-        out << " [+] " << setw(20) << right << " = " << *_cuts[cut] << endl;
-    }
-    out << " [+] " << setw(20) << right << " >= "
-        << **(_cuts.end() - 1) << endl;
-}
-
-MultiplicityCutflow::CutflowPtr MultiplicityCutflow::clone() const
-{
-    boost::shared_ptr<MultiplicityCutflow>
-        selector(new MultiplicityCutflow(_cuts.size()));
-
-    for(uint32_t i = 0; _cuts.size() > i; ++i)
-    {
-        *selector->cut(i) = *cut(i);
-    }
-
-    return selector;
-}
-
-void MultiplicityCutflow::merge(const CutflowPtr &selector_ptr)
-{
-    if (!selector_ptr)
-        return;
-
-    boost::shared_ptr<MultiplicityCutflow> selector =
-        boost::dynamic_pointer_cast<MultiplicityCutflow>(selector_ptr);
-    if (!selector
-            || _cuts.size() != selector->_cuts.size())
-        return;
-
-    for(uint32_t i = 0; _cuts.size() > i; ++i)
-    {
-        *cut(i) += *selector->cut(i);
-    }
-}
-
-
-
-// Helpers
-//
-std::ostream &bsm::operator <<(std::ostream &out,
-        const MultiplicityCutflow &cutflow)
-{
-    cutflow.print(out);
-
-    return out;
 }

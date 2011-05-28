@@ -133,6 +133,51 @@ namespace bsm
                 P4 _p4;
         };
 
+        class WJetSelector : public Selector
+        {
+            public:
+                typedef boost::shared_ptr<Cut> CutPtr;
+
+                WJetSelector();
+                virtual ~WJetSelector();
+
+                // Test if object passes the selector
+                //
+                virtual bool operator()(const Jet &);
+
+                // Cuts accessors
+                //
+                CutPtr children() const;
+                CutPtr pt() const;
+                CutPtr mass_drop() const;
+                CutPtr mass_lower_bound() const;
+                CutPtr mass_upper_bound() const;
+
+                // Selector interface
+                //
+                virtual void print(std::ostream &) const;
+
+                virtual SelectorPtr clone() const;
+                virtual void merge(const SelectorPtr &);
+
+                virtual void enable();
+                virtual void disable();
+
+            private:
+                typedef boost::shared_ptr<TLorentzVector> P4;
+
+                CutPtr _children;
+                CutPtr _pt;
+                CutPtr _mass_drop;
+                CutPtr _mass_lower_bound;
+                CutPtr _mass_upper_bound;;
+
+                // Temporary variable that is used to convert
+                // bsm::LorentzVector to TLorentzVector
+                //
+                P4 _p4;
+        };
+
         class MuonSelector : public Selector
         {
             public:
@@ -190,6 +235,36 @@ namespace bsm
                 P4 _p4;
         };
 
+        class MultiplicityCutflow
+        {
+            public:
+                typedef boost::shared_ptr<MultiplicityCutflow> CutflowPtr;
+                typedef boost::shared_ptr<selector::Cut> CutPtr;
+
+                MultiplicityCutflow(const uint32_t &max);
+                virtual ~MultiplicityCutflow();
+
+                // Test if selector is passed
+                //
+                virtual void operator()(const uint32_t &);
+
+                // Cuts accessors
+                //
+                CutPtr cut(const uint32_t &) const;
+
+                // Cutflow interface
+                //
+                virtual void print(std::ostream &) const;
+
+                virtual CutflowPtr clone() const;
+                virtual void merge(const CutflowPtr &);
+
+            private:
+                typedef std::vector<CutPtr> Cuts;
+
+                Cuts _cuts;
+        };
+
         class Counter
         {
             public:
@@ -241,6 +316,7 @@ namespace bsm
             public:
                 LockSelectorEventCounterOnUpdate(ElectronSelector &);
                 LockSelectorEventCounterOnUpdate(JetSelector &);
+                LockSelectorEventCounterOnUpdate(WJetSelector &);
                 LockSelectorEventCounterOnUpdate(MuonSelector &);
 
             private:
@@ -329,11 +405,14 @@ namespace bsm
         //
         std::ostream &operator <<(std::ostream &, const Cut &);
         std::ostream &operator <<(std::ostream &, const Selector &);
+        std::ostream &operator <<(std::ostream &, const MultiplicityCutflow &);
     }
 
     using selector::ElectronSelector;
     using selector::JetSelector;
     using selector::MuonSelector;
+    using selector::MultiplicityCutflow;
+    using selector::WJetSelector;
 }
 
 // Template(s) implementation
