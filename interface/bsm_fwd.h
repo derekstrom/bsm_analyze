@@ -22,6 +22,7 @@ namespace bsm
     namespace algorithm
     {
         class ClosestJet;
+        class MissingEnergyCorrection;
     }
 
     namespace selector
