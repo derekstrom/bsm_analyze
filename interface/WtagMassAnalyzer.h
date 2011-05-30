@@ -53,6 +53,7 @@ namespace bsm
             typedef std::vector<const Jet *> Jets;
             typedef boost::shared_ptr<LorentzVector> PBP4;
 
+            bool muons(const Event *);
             void electrons(const Event *);
             void jets(const Event *, const Electron *);
 
@@ -62,10 +63,15 @@ namespace bsm
             boost::shared_ptr<selector::ElectronSelector> _el_selector;
             boost::shared_ptr<selector::MultiplicityCutflow> _el_multiplicity;
 
+            boost::shared_ptr<selector::MuonSelector> _mu_selector;
+            boost::shared_ptr<selector::MultiplicityCutflow> _mu_multiplicity;
+
             boost::shared_ptr<selector::MultiplicityCutflow> _leptonic_multiplicity;
             boost::shared_ptr<selector::MultiplicityCutflow> _hadronic_multiplicity;
 
             boost::shared_ptr<selector::WJetSelector> _wjet_selector;
+            boost::shared_ptr<selector::MultiplicityCutflow> _met_solutions;
+            boost::shared_ptr<algorithm::MissingEnergyCorrection> _met_corrector;
 
             H1Ptr _mttbar;
 

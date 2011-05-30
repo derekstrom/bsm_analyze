@@ -13,10 +13,13 @@
 
 #include <TLorentzVector.h>
 
+#include "bsm_input/interface/Algebra.h"
+#include "bsm_input/interface/Electron.pb.h"
 #include "bsm_input/interface/Event.pb.h"
 #include "bsm_input/interface/Jet.pb.h"
-#include "bsm_input/interface/Algebra.h"
+#include "bsm_input/interface/Muon.pb.h"
 #include "bsm_stat/interface/H1.h"
+#include "interface/Algorithm.h"
 #include "interface/Selector.h"
 #include "interface/WtagMassAnalyzer.h"
 #include "interface/Utility.h"
@@ -35,10 +38,15 @@ WtagMassAnalyzer::WtagMassAnalyzer()
     _el_selector.reset(new ElectronSelector());
     _el_multiplicity.reset(new MultiplicityCutflow(4));
 
+    _mu_selector.reset(new MuonSelector());
+    _mu_multiplicity.reset(new MultiplicityCutflow(4));
+
     _leptonic_multiplicity.reset(new MultiplicityCutflow(3));
     _hadronic_multiplicity.reset(new MultiplicityCutflow(3));
 
     _wjet_selector.reset(new WJetSelector());
+    _met_solutions.reset(new MultiplicityCutflow(2));
+    _met_corrector.reset(new MissingEnergyCorrection(80.399));
 
     _mttbar.reset(new H1(25, 500, 3000));
 
@@ -70,10 +78,14 @@ void WtagMassAnalyzer::merge(const AnalyzerPtr &analyzer_ptr)
     _el_selector->merge(analyzer->_el_selector);
     _el_multiplicity->merge(analyzer->_el_multiplicity);
 
+    _mu_selector->merge(analyzer->_mu_selector);
+    _mu_multiplicity->merge(analyzer->_mu_multiplicity);
+
     _leptonic_multiplicity->merge(analyzer->_leptonic_multiplicity);
     _hadronic_multiplicity->merge(analyzer->_hadronic_multiplicity);
 
     _wjet_selector->merge(analyzer->_wjet_selector);
+    _met_solutions->merge(analyzer->_met_solutions);
 
     *_mttbar += *analyzer->_mttbar;
 }
@@ -88,7 +100,32 @@ void WtagMassAnalyzer::process(const Event *event)
             || !event->has_missing_energy())
         return;
 
+    if (muons(event))
+        return;
+
     electrons(event);
+}
+
+bool WtagMassAnalyzer::muons(const Event *event)
+{
+    typedef ::google::protobuf::RepeatedPtrField<Muon> Muons;
+
+    uint32_t good_muons = 0;
+
+    const PrimaryVertex &pv = event->primary_vertices().Get(0);
+
+    selector::LockSelectorEventCounterOnUpdate lock(*_mu_selector);
+    for(Muons::const_iterator muon = event->pf_muons().begin();
+            event->pf_muons().end() != muon;
+            ++muon)
+    {
+        if (_mu_selector->operator()(*muon, pv))
+            ++good_muons;
+    }
+
+    _mu_multiplicity->operator()(good_muons);
+
+    return 0 < good_muons;
 }
 
 void WtagMassAnalyzer::electrons(const Event *event)
@@ -207,7 +244,13 @@ WtagMassAnalyzer::PBP4 WtagMassAnalyzer::leptonicLeg(const Event *event,
     PBP4 p4(new LorentzVector());
     
     *p4 += el->physics_object().p4();
-    *p4 += event->missing_energy().p4();
+
+    uint32_t solutions = _met_corrector->operator()(el->physics_object().p4(),
+            event->missing_energy().p4());
+
+    _met_solutions->operator()(solutions);
+
+    *p4 += *_met_corrector->solution(1);
 
     // Find jet with max Mass
     //
@@ -263,6 +306,13 @@ WtagMassAnalyzer::PBP4 WtagMassAnalyzer::hadronicLeg(const Event *event,
 
 void WtagMassAnalyzer::print(std::ostream &out) const
 {
+    out << "PF Muons" << endl;
+    out << *_mu_selector << endl;
+    out << endl;
+    out << "PF Muons Multiplicity" << endl;
+    out << *_mu_multiplicity << endl;
+    out << endl;
+
     out << "PF Electrons" << endl;
     out << *_el_selector << endl;
     out << endl;
@@ -277,6 +327,11 @@ void WtagMassAnalyzer::print(std::ostream &out) const
     out << "Leptonic Leg Multiplicity" << endl;
     out << *_leptonic_multiplicity << endl;
     out << endl;
+
+    out << "MET Solutions" << endl;
+    out << *_met_solutions << endl;
+
+    out << endl;
     out << "Hadronic Leg Multiplicity" << endl;
     out << *_hadronic_multiplicity << endl;
     out << endl;
@@ -289,8 +344,12 @@ WtagMassAnalyzer::operator bool() const
 {
     return _el_selector
         && _el_multiplicity
+        && _mu_selector
+        && _mu_multiplicity
         && _leptonic_multiplicity
         && _hadronic_multiplicity
         && _wjet_selector
+        && _met_solutions
+        && _met_corrector
         && _mttbar;
 }
