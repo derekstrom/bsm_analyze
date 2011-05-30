@@ -17,6 +17,7 @@ class TLorentzVector;
 namespace bsm
 {
     class Electron;
+    class LorentzVector;
     class Muon;
 
     namespace algorithm
@@ -42,9 +43,49 @@ namespace bsm
                 P4 _lepton_p4;
                 P4 _jet_p4;
         };
+
+        // Given the Decay: A -> B + Neutrino
+        // correct Neutrino pZ component of the Lorentz Vector
+        //
+        // Calculation is carried with formula:
+        //
+        //      P4A^2 = (P4B + P4Neutrino) ^ 2
+        //
+        // and
+        //      P4Neutrino^2 = 0 (within the SM: m_neutrino = 0)
+        //
+        class MissingEnergyCorrection
+        {
+            public:
+                typedef boost::shared_ptr<LorentzVector> P4Ptr;
+
+                MissingEnergyCorrection(const double &mass_a);
+
+                // return number of solutions found
+                //  0   imaginary solution
+                //  1   only one solution (discriminator = 0)
+                //  2   two solutions are found
+                //
+                uint32_t operator()(const LorentzVector &p4_b,
+                        const LorentzVector &missing_energy);
+
+                P4Ptr solution(const uint32_t &) const;
+
+            private:
+                void addSolution(P4Ptr &,
+                        const LorentzVector &,
+                        const double &pz);
+
+                const double _mass_a;
+
+                uint32_t _solutions;
+                P4Ptr _solution_one;
+                P4Ptr _solution_two;
+        };
     }
 
     using algorithm::ClosestJet;
+    using algorithm::MissingEnergyCorrection;
 }
 
 #endif
