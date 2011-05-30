@@ -46,7 +46,7 @@ WtagMassAnalyzer::WtagMassAnalyzer()
 
     _wjet_selector.reset(new WJetSelector());
     _met_solutions.reset(new MultiplicityCutflow(2));
-    _met_corrector.reset(new MissingEnergyCorrection(80.399));
+    _met_corrector.reset(new MissingEnergyCorrection(80.399, 0.00051099891));
 
     _mttbar.reset(new H1(25, 500, 3000));
 
@@ -132,13 +132,11 @@ void WtagMassAnalyzer::electrons(const Event *event)
 {
     typedef ::google::protobuf::RepeatedPtrField<Electron> Electrons;
 
-    uint32_t good_electrons = 0;
-
     const PrimaryVertex &pv = event->primary_vertices().Get(0);
 
     selector::LockSelectorEventCounterOnUpdate lock(*_el_selector);
     const Electron *electron = 0;
-    double electron_et = 0;
+    uint32_t good_electrons = 0;
     for(Electrons::const_iterator el = event->pf_electrons().begin();
             event->pf_electrons().end() != el;
             ++el)
@@ -147,20 +145,13 @@ void WtagMassAnalyzer::electrons(const Event *event)
         {
             ++good_electrons;
 
-            utility::set(_p4.get(), &el->physics_object().p4());
-            if (electron
-                    && _p4->Et() <= electron_et)
-
-                    continue;
-
             electron = &*el;
-            electron_et = _p4->Et();
         }
     }
 
     _el_multiplicity->operator()(good_electrons);
 
-    if (!electron)
+    if (1 != good_electrons)
         return;
 
     // Process jets
@@ -172,15 +163,24 @@ void WtagMassAnalyzer::jets(const Event *event, const Electron *el)
 {
     typedef ::google::protobuf::RepeatedPtrField<Jet> PBJets;
 
+    // Store all leptonic side jets but electron and Missing Energy
+    //
     Jets leptonic;
+
+    // Store all hadronic side jets but w-tagged jet(s)
+    //
     Jets hadronic;
 
-    TLorentzVector el_p4(*_p4);
+    // Cache electron LorentzVector
+    //
+    TLorentzVector el_p4;
+    utility::set(&el_p4, &el->physics_object().p4());
+
     double delta_phi_cut = TMath::Pi() / 2;
 
     selector::LockSelectorEventCounterOnUpdate lock(*_wjet_selector);
     const Jet *wjet = 0;
-    double wjet_pt = 0;
+    uint32_t wjets = 0;
     for(PBJets::const_iterator jet = event->jets().begin();
             event->jets().end() != jet;
             ++jet)
@@ -193,36 +193,34 @@ void WtagMassAnalyzer::jets(const Event *event, const Electron *el)
             continue;
         }
 
-        // Check if the jet is a W
+        // Check if the jet is a W: w-boson is expected to be in the hadronic
+        // leg
         //
-        if (_wjet_selector->operator()(*jet))
+        if (!_wjet_selector->operator()(*jet))
         {
-            if (!wjet
-                    || _p4->Pt() > wjet_pt)
-            {
-                wjet = &*jet;
-                wjet_pt = _p4->Pt();
-            }
+            hadronic.push_back(&*jet);
 
-            // Do not store wjet in hadronic leg
-            //
             continue;
         }
 
-        hadronic.push_back(&*jet);
+        wjet = &*jet;
+        ++wjets;
     }
 
-    if (!wjet)
+    if (1 != wjets)
         return;
 
     _leptonic_multiplicity->operator()(leptonic.size());
     _hadronic_multiplicity->operator()(hadronic.size());
 
+    // there should be at least one jet on leptonic/hadronic side
+    //
     if (!leptonic.size()
             || !hadronic.size())
 
         return;
 
+    // Get LorentzVector of the leptonic/hadronic sides
     PBP4 leptonic_p4 = leptonicLeg(event, el, leptonic);
     PBP4 hadronic_p4 = hadronicLeg(event, wjet, hadronic);
 
@@ -232,41 +230,44 @@ void WtagMassAnalyzer::jets(const Event *event, const Electron *el)
 
     *leptonic_p4 += *hadronic_p4;
 
-    utility::set(_p4.get(), leptonic_p4.get());
-
-    _mttbar->fill(_p4->M());
+    _mttbar->fill(mass(*leptonic_p4));
 }
 
 WtagMassAnalyzer::PBP4 WtagMassAnalyzer::leptonicLeg(const Event *event,
         const Electron *el,
         const Jets &jets)
 {
+    // Calculate LorentzVector of the leptonic leg: lepton + MET + jet
+    //
     PBP4 p4(new LorentzVector());
     
     *p4 += el->physics_object().p4();
 
+    // Apply pZ correction to the Missing Energy
+    //
     uint32_t solutions = _met_corrector->operator()(el->physics_object().p4(),
             event->missing_energy().p4());
 
     _met_solutions->operator()(solutions);
 
+    // Always take the largest solution
+    //
     *p4 += *_met_corrector->solution(1);
 
-    // Find jet with max Mass
+    // Find the jet with max Mass
     //
     const Jet *jet = 0;
-    double mass = 0;
+    double max_mass = 0;
     for(Jets::const_iterator ijet = jets.begin();
             jets.end() != ijet;
             ++ijet)
     {
-        utility::set(_p4.get(), &(*ijet)->physics_object().p4());
-
-        if (_p4->M() <= mass)
+        double jet_mass = mass((*ijet)->physics_object().p4());
+        if (jet_mass <= max_mass)
             continue;
-       
+
         jet = *ijet;
-        mass = _p4->M(); 
+        max_mass = jet_mass;
     }
 
     *p4 += jet->physics_object().p4();
@@ -285,18 +286,17 @@ WtagMassAnalyzer::PBP4 WtagMassAnalyzer::hadronicLeg(const Event *event,
     // Find jet with max Mass and Wjet
     //
     const Jet *jet = 0;
-    double mass = 0;
+    double max_mass = 0;
     for(Jets::const_iterator ijet = jets.begin();
             jets.end() != ijet;
             ++ijet)
     {
-        utility::set(_p4.get(), &(*ijet)->physics_object().p4());
-
-        if (_p4->M() <= mass)
+        double jet_mass = mass((*ijet)->physics_object().p4());
+        if (jet_mass <= max_mass)
             continue;
        
         jet = *ijet;
-        mass = _p4->M(); 
+        max_mass = jet_mass;
     }
 
     *p4 += jet->physics_object().p4();
@@ -328,13 +328,13 @@ void WtagMassAnalyzer::print(std::ostream &out) const
     out << *_leptonic_multiplicity << endl;
     out << endl;
 
-    out << "MET Solutions" << endl;
-    out << *_met_solutions << endl;
-
     out << endl;
     out << "Hadronic Leg Multiplicity" << endl;
     out << *_hadronic_multiplicity << endl;
     out << endl;
+
+    out << "MET Solutions" << endl;
+    out << *_met_solutions << endl;
 
     out << "Mttbar" << endl;
     out << *_mttbar << endl;

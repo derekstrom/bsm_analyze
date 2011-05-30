@@ -59,7 +59,8 @@ namespace bsm
             public:
                 typedef boost::shared_ptr<LorentzVector> P4Ptr;
 
-                MissingEnergyCorrection(const double &mass_a);
+                MissingEnergyCorrection(const double &mass_a,
+                        const double &mass_b);
 
                 // return number of solutions found
                 //  0   imaginary solution
@@ -69,16 +70,28 @@ namespace bsm
                 uint32_t operator()(const LorentzVector &p4_b,
                         const LorentzVector &missing_energy);
 
+                // Solutions are counted from 0
+                //
                 P4Ptr solution(const uint32_t &) const;
+
+                void reset();
 
             private:
                 void addSolution(P4Ptr &,
                         const LorentzVector &,
                         const double &pz);
 
+                void setSolution(P4Ptr &,
+                        const double &,
+                        const double &,
+                        const double &,
+                        const double &);
+
                 const double _mass_a;
+                const double _mass_b;
 
                 uint32_t _solutions;
+
                 P4Ptr _solution_one;
                 P4Ptr _solution_two;
         };

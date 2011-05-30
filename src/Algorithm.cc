@@ -74,8 +74,10 @@ const bsm::Jet *ClosestJet::operator()(const Jets &jets)
 
 // Missing Energy Correct
 //
-MissingEnergyCorrection::MissingEnergyCorrection(const double &mass_a):
+MissingEnergyCorrection::MissingEnergyCorrection(const double &mass_a,
+        const double &mass_b):
     _mass_a(mass_a),
+    _mass_b(mass_b),
     _solutions(0)
 {
     _solution_one.reset(new LorentzVector());
@@ -85,10 +87,10 @@ MissingEnergyCorrection::MissingEnergyCorrection(const double &mass_a):
 uint32_t MissingEnergyCorrection::operator()(const LorentzVector &p4,
         const LorentzVector &met)
 {
-    _solutions = 0;
+    reset();
 
     double a = _mass_a * _mass_a
-        - p4 * p4
+        - _mass_b * _mass_b
         + 2 * p4.px() * met.px()
         + 2 * p4.py() * met.py();
 
@@ -111,7 +113,12 @@ uint32_t MissingEnergyCorrection::operator()(const LorentzVector &p4,
     double discriminant = B * B - A * C;
 
     if (0 > discriminant)
+    {
+        // Take only real part of the solution
+        _solutions = 0;
+
         addSolution(_solution_one, met, -B / A);
+    }
     else if(0 == discriminant)
     {
         _solutions = 1;
@@ -120,12 +127,12 @@ uint32_t MissingEnergyCorrection::operator()(const LorentzVector &p4,
     }
     else
     {
+        _solutions = 2;
+
         discriminant = sqrt(discriminant);
 
         addSolution(_solution_one, met, (-B - discriminant) / A);
         addSolution(_solution_two, met, (-B + discriminant) / A);
-
-        _solutions = 2;
     }
 
     return _solutions;
@@ -141,14 +148,31 @@ MissingEnergyCorrection::P4Ptr
     return _solution_two;
 }
 
+void MissingEnergyCorrection::reset()
+{
+    _solutions = 0;
+
+    setSolution(_solution_one, 0, 0, 0, 0);
+    setSolution(_solution_two, 0, 0, 0, 0);
+}
+
 // Privates
 //
 void MissingEnergyCorrection::addSolution(P4Ptr &solution,
         const LorentzVector &p4,
         const double &pz)
 {
-    solution->set_e(p4.e());
-    solution->set_px(p4.px());
-    solution->set_py(p4.py());
+    setSolution(solution, p4.e(), p4.px(), p4.py(), pz);
+}
+
+void MissingEnergyCorrection::setSolution(P4Ptr &solution,
+        const double &e,
+        const double &px,
+        const double &py,
+        const double &pz)
+{
+    solution->set_e(e);
+    solution->set_px(px);
+    solution->set_py(py);
     solution->set_pz(pz);
 }
