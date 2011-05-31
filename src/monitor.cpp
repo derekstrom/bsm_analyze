@@ -36,8 +36,8 @@ using namespace bsm;
 typedef shared_ptr<MonitorAnalyzer> MonitorAnalyzerPtr;
 typedef shared_ptr<ThreadController> ControllerPtr;
 
-void run(ControllerPtr &);
-void plot(const MonitorAnalyzerPtr &);
+void run(ControllerPtr &, char *[]);
+void plot(const MonitorAnalyzerPtr &, char *[]);
 
 int main(int argc, char *argv[])
 {
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         for(int i = 1; argc > i; ++i)
             controller->push(argv[i]);
 
-        run(controller);
+        run(controller, argv);
     }
     catch(...)
     {
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     return result;
 }
 
-void run(ControllerPtr &controller)
+void run(ControllerPtr &controller, char *argv[])
 try
 {
     // Prepare Analysis
@@ -89,28 +89,34 @@ try
 
     // Plot results
     //
-    plot(analyzer);
+    plot(analyzer, argv);
 }
 catch(...)
 {
 }
 
-void plot(const MonitorAnalyzerPtr &analyzer)
+void plot(const MonitorAnalyzerPtr &analyzer, char *argv[])
 {
     // Cheat ROOT with empty args
     //
     int empty_argc = 1;
-    char *empty_argv[] = { "root" };
+    char *empty_argv[] = { argv[0] };
     shared_ptr<TRint> app(new TRint("app", &empty_argc, empty_argv));
 
     shared_ptr<JetCanvas> jet_canvas(new JetCanvas("Jets"));
     jet_canvas->draw(*analyzer->monitorJets());
 
-    shared_ptr<MuonCanvas> mu_canvas(new MuonCanvas("Muons"));
-    mu_canvas->draw(*analyzer->monitorMuons());
+    shared_ptr<MuonCanvas> mu_pf_canvas(new MuonCanvas("Particle Flow Muons"));
+    mu_pf_canvas->draw(*analyzer->monitorPFMuons());
 
-    shared_ptr<ElectronCanvas> el_canvas(new ElectronCanvas("Electrons"));
-    el_canvas->draw(*analyzer->monitorElectrons());
+    shared_ptr<MuonCanvas> mu_reco_canvas(new MuonCanvas("Reco Muons"));
+    mu_reco_canvas->draw(*analyzer->monitorRecoMuons());
+
+    shared_ptr<ElectronCanvas> el_pf_canvas(new ElectronCanvas("Particle Flow Electrons"));
+    el_pf_canvas->draw(*analyzer->monitorPFElectrons());
+
+    shared_ptr<ElectronCanvas> el_gsf_canvas(new ElectronCanvas("GSF Electrons"));
+    el_gsf_canvas->draw(*analyzer->monitorGSFElectrons());
 
     shared_ptr<PrimaryVertexCanvas> pv_canvas(new PrimaryVertexCanvas("Primary Vertex"));
     pv_canvas->draw(*analyzer->monitorPrimaryVertices());

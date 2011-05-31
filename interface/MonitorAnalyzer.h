@@ -51,10 +51,13 @@ namespace bsm
 
             // Getter
             //
-            const ElectronMonitorPtr monitorElectrons() const;
+            const ElectronMonitorPtr monitorPFElectrons() const;
+            const ElectronMonitorPtr monitorGSFElectrons() const;
+            const MuonMonitorPtr monitorPFMuons() const;
+            const MuonMonitorPtr monitorRecoMuons() const;
+
             const JetMonitorPtr monitorJets() const;
             const MissingEnergyMonitorPtr monitorMissingEnergy() const;
-            const MuonMonitorPtr monitorMuons() const;
             const PrimaryVertexMonitorPtr monitorPrimaryVertices() const;
 
         private:
@@ -62,10 +65,14 @@ namespace bsm
             //
             MonitorAnalyzer &operator =(const MonitorAnalyzer &);
 
-            ElectronMonitorPtr _monitor_electrons;
+            ElectronMonitorPtr _monitor_pf_electrons;
+            ElectronMonitorPtr _monitor_gsf_electrons;
+
+            MuonMonitorPtr _monitor_pf_muons;
+            MuonMonitorPtr _monitor_reco_muons;
+
             JetMonitorPtr _monitor_jets;
             MissingEnergyMonitorPtr _monitor_missing_energy;
-            MuonMonitorPtr _monitor_muons;
             PrimaryVertexMonitorPtr _monitor_primary_vertices;
     };
 }
