@@ -492,7 +492,7 @@ void ThreadController::addThread()
 
     {
         Lock lock(condition());
-        operation->use(_analyzer->clone());
+        operation->use(boost::dynamic_pointer_cast<Analyzer>(_analyzer->clone()));
         _threads[thread.get()] = thread;
     }
 

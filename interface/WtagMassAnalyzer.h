@@ -8,48 +8,51 @@
 #ifndef BSM_WTAGMASS_ANALYZER
 #define BSM_WTAGMASS_ANALYZER
 
-#include <iosfwd>
-#include <string>
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
 
 #include "bsm_stat/interface/bsm_stat_fwd.h"
-#include "interface/bsm_fwd.h"
+#include "bsm_input/interface/bsm_input_fwd.h"
 #include "interface/Analyzer.h"
+#include "interface/bsm_fwd.h"
 
 class TLorentzVector;
 
 namespace bsm
 {
-    class Electron;
-    class Jet;
-    class LorentzVector;
-
-    class WtagMassAnalyzer : public core::Analyzer
+    class WtagMassAnalyzer : public Analyzer
     {
         public:
             typedef boost::shared_ptr<stat::H1> H1Ptr;
 
             WtagMassAnalyzer();
-            virtual ~WtagMassAnalyzer();
+            WtagMassAnalyzer(const WtagMassAnalyzer &);
 
+            // Getters
+            //
             const H1Ptr mttbar() const;
 
             // Analyzer interface
             //
-            virtual AnalyzerPtr clone() const;
-
-            virtual void merge(const AnalyzerPtr &);
-
             virtual void onFileOpen(const std::string &filename, const Input *);
             virtual void process(const Event *);
 
+            // Object interface
+            //
+            virtual uint32_t id() const;
+
+            virtual ObjectPtr clone() const;
+            using Object::merge;
+
             virtual void print(std::ostream &) const;
 
-            virtual operator bool() const;
-
         private:
+            // Prevent copying
+            //
+            WtagMassAnalyzer &operator =(const WtagMassAnalyzer &);
+
+            typedef boost::shared_ptr<H1Proxy> H1ProxyPtr;
             typedef std::vector<const Jet *> Jets;
             typedef boost::shared_ptr<LorentzVector> PBP4;
 
@@ -60,20 +63,21 @@ namespace bsm
             PBP4 leptonicLeg(const Event *, const Electron *, const Jets &);
             PBP4 hadronicLeg(const Event *, const Jet *wjet, const Jets &);
 
-            boost::shared_ptr<selector::ElectronSelector> _el_selector;
-            boost::shared_ptr<selector::MultiplicityCutflow> _el_multiplicity;
+            boost::shared_ptr<ElectronSelector> _el_selector;
+            boost::shared_ptr<MultiplicityCutflow> _el_multiplicity;
 
-            boost::shared_ptr<selector::MuonSelector> _mu_selector;
-            boost::shared_ptr<selector::MultiplicityCutflow> _mu_multiplicity;
+            boost::shared_ptr<MuonSelector> _mu_selector;
+            boost::shared_ptr<MultiplicityCutflow> _mu_multiplicity;
 
-            boost::shared_ptr<selector::MultiplicityCutflow> _leptonic_multiplicity;
-            boost::shared_ptr<selector::MultiplicityCutflow> _hadronic_multiplicity;
+            boost::shared_ptr<MultiplicityCutflow> _leptonic_multiplicity;
+            boost::shared_ptr<MultiplicityCutflow> _hadronic_multiplicity;
 
-            boost::shared_ptr<selector::WJetSelector> _wjet_selector;
-            boost::shared_ptr<selector::MultiplicityCutflow> _met_solutions;
-            boost::shared_ptr<algorithm::MissingEnergyCorrection> _met_corrector;
+            boost::shared_ptr<WJetSelector> _wjet_selector;
+            boost::shared_ptr<MultiplicityCutflow> _met_solutions;
 
-            H1Ptr _mttbar;
+            boost::shared_ptr<algorithm::NeutrinoReconstruct> _met_reconstructor;
+
+            H1ProxyPtr _mttbar;
 
             boost::shared_ptr<TLorentzVector> _p4;
     };

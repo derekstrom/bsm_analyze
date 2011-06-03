@@ -8,64 +8,66 @@
 #ifndef BSM_CUTFLOW_ANALYZER
 #define BSM_CUTFLOW_ANALYZER
 
-#include <iosfwd>
-#include <vector>
-
 #include <boost/shared_ptr.hpp>
 
-#include "interface/bsm_fwd.h"
 #include "interface/Analyzer.h"
+#include "interface/bsm_fwd.h"
 
 namespace bsm
 {
-    class CutflowAnalyzer : public core::Analyzer
+    class CutflowAnalyzer : public Analyzer
     {
         public:
             CutflowAnalyzer();
-            virtual ~CutflowAnalyzer();
+            CutflowAnalyzer(const CutflowAnalyzer &);
 
             // Analyzer interface
             //
-            virtual AnalyzerPtr clone() const;
-
-            virtual void merge(const AnalyzerPtr &);
-
             virtual void onFileOpen(const std::string &filename, const Input *);
             virtual void process(const Event *);
 
-            virtual void print(std::ostream &) const;
+            // Object interface
+            //
+            virtual uint32_t id() const;
 
-            virtual operator bool() const;
+            virtual ObjectPtr clone() const;
+            using Object::merge;
+
+            virtual void print(std::ostream &) const;
 
         private:
             void electrons(const Event *);
             void jets(const Event *);
             void muons(const Event *);
 
-            boost::shared_ptr<selector::MultiplicityCutflow> _pv_multiplicity;
+            typedef boost::shared_ptr<MultiplicityCutflow> CutflowPtr;
+            typedef boost::shared_ptr<ElectronSelector> ElSelectorPtr;
+            typedef boost::shared_ptr<MuonSelector> MuSelectorPtr;
 
-            boost::shared_ptr<selector::JetSelector> _jet_selector;
-            boost::shared_ptr<selector::MultiplicityCutflow> _jet_multiplicity;
+            CutflowPtr _pv_multiplicity;
 
-            boost::shared_ptr<selector::ElectronSelector> _pf_el_selector;
-            boost::shared_ptr<selector::MultiplicityCutflow> _pf_el_number_selector;
+            boost::shared_ptr<JetSelector> _jet_selector;
+            CutflowPtr _jet_multiplicity;
 
-            boost::shared_ptr<selector::ElectronSelector> _gsf_el_selector;
-            boost::shared_ptr<selector::MultiplicityCutflow> _gsf_el_number_selector;
+            ElSelectorPtr _pf_el_selector;
+            CutflowPtr _pf_el_number_selector;
+
+            ElSelectorPtr _gsf_el_selector;
+            CutflowPtr _gsf_el_number_selector;
 
             // Et and Eta cuts only
             //
-            boost::shared_ptr<selector::MuonSelector> _pf_mu_selector_step1;
-            boost::shared_ptr<selector::MultiplicityCutflow> _pf_mu_number_selector_step1;
+            MuSelectorPtr _pf_mu_selector_step1;
+            CutflowPtr _pf_mu_number_selector_step1;
 
-            boost::shared_ptr<selector::MuonSelector> _pf_mu_selector;
-            boost::shared_ptr<selector::MultiplicityCutflow> _pf_mu_number_selector;
+            MuSelectorPtr _pf_mu_selector;
+            CutflowPtr _pf_mu_number_selector;
 
-            boost::shared_ptr<selector::MuonSelector> _reco_mu_selector_step1;
-            boost::shared_ptr<selector::MultiplicityCutflow> _reco_mu_number_selector_step1;
+            MuSelectorPtr _reco_mu_selector_step1;
+            CutflowPtr _reco_mu_number_selector_step1;
 
-            boost::shared_ptr<selector::MuonSelector> _reco_mu_selector;
-            boost::shared_ptr<selector::MultiplicityCutflow> _reco_mu_number_selector;
+            MuSelectorPtr _reco_mu_selector;
+            CutflowPtr _reco_mu_number_selector;
     };
 }
 

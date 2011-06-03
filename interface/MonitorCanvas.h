@@ -18,12 +18,12 @@
 namespace bsm
 {
     class DeltaMonitor;
-    class ElectronMonitor;
-    class JetMonitor;
+    class ElectronsMonitor;
+    class JetsMonitor;
     class LorentzVectorMonitor;
     class MissingEnergyMonitor;
-    class MuonMonitor;
-    class PrimaryVertexMonitor;
+    class MuonsMonitor;
+    class PrimaryVerticesMonitor;
 
     class DeltaCanvas
     {
@@ -54,7 +54,7 @@ namespace bsm
         public:
             ElectronCanvas(const std::string &title = "");
 
-            void draw(const ElectronMonitor &);
+            void draw(const ElectronsMonitor &);
 
         private:
             typedef boost::shared_ptr<core::IDCounter> IDPtr;
@@ -75,7 +75,7 @@ namespace bsm
         public:
             JetCanvas(const std::string &title = "");
 
-            void draw(const JetMonitor &);
+            void draw(const JetsMonitor &);
 
         private:
             typedef boost::shared_ptr<core::IDCounter> IDPtr;
@@ -145,7 +145,7 @@ namespace bsm
         public:
             MuonCanvas(const std::string &title = "");
 
-            void draw(const MuonMonitor &);
+            void draw(const MuonsMonitor &);
 
         private:
             typedef boost::shared_ptr<core::IDCounter> IDPtr;
@@ -166,7 +166,7 @@ namespace bsm
         public:
             PrimaryVertexCanvas(const std::string &title = "");
 
-            void draw(const PrimaryVertexMonitor &);
+            void draw(const PrimaryVerticesMonitor &);
 
         private:
             typedef boost::shared_ptr<core::IDCounter> IDPtr;

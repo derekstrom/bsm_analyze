@@ -13,9 +13,7 @@
 #include "interface/CutflowAnalyzer.h"
 #include "interface/Thread.h"
 
-using std::cerr;
-using std::cout;
-using std::endl;
+using namespace std;
 
 using boost::shared_ptr;
 

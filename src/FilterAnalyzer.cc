@@ -18,6 +18,7 @@
 #include "bsm_input/interface/Writer.h"
 #include "interface/FilterAnalyzer.h"
 #include "interface/Selector.h"
+/*
 
 using bsm::FilterAnalyzer;
 
@@ -216,3 +217,4 @@ void FilterAnalyzer::muons(const Event *event)
         }
     }
 }
+*/

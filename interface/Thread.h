@@ -23,6 +23,8 @@ namespace bsm
     class Reader;
     class ThreadController;
 
+    typedef boost::shared_ptr<Analyzer> AnalyzerPtr;
+
     // Keyaboard Thread: watch for keyboard input and report to the controller
     //
     class KeyboardOperation : public core::Operation

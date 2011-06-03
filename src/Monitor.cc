@@ -11,6 +11,8 @@
 
 #include <TLorentzVector.h>
 
+#include "bsm_core/interface/ID.h"
+#include "bsm_input/interface/Algebra.h"
 #include "bsm_input/interface/GenParticle.pb.h"
 #include "bsm_input/interface/MissingEnergy.pb.h"
 #include "bsm_input/interface/Physics.pb.h"
@@ -19,103 +21,61 @@
 #include "bsm_stat/interface/Utility.h"
 
 #include "interface/Monitor.h"
+#include "interface/StatProxy.h"
 #include "interface/Utility.h"
 
 using std::endl;
+using std::left;
+using std::setw;
 
 using bsm::DeltaMonitor;
-using bsm::ElectronMonitor;
+using bsm::ElectronsMonitor;
 using bsm::GenParticleMonitor;
-using bsm::JetMonitor;
+using bsm::JetsMonitor;
 using bsm::LorentzVectorMonitor;
 using bsm::MissingEnergyMonitor;
-using bsm::MuonMonitor;
-using bsm::PrimaryVertexMonitor;
+using bsm::MuonsMonitor;
+using bsm::PrimaryVerticesMonitor;
 
 using bsm::stat::H1;
 using bsm::stat::H2;
 
-// Jet Monitor
-//
-JetMonitor::JetMonitor()
-{
-    _multiplicity.reset(new H1(10, 0, 10));
-    _pt.reset(new H1(100, 0, 100));
-    _leading_pt.reset(new H1(100, 0, 100));
-    _children.reset(new H1(10, 0, 10));
-
-    _p4.reset(new TLorentzVector());
-}
-
-JetMonitor &JetMonitor::operator =(const JetMonitor &monitor)
-{
-    *multiplicity() = *monitor.multiplicity();
-    *pt() = *monitor.pt();
-    *leading_pt() = *monitor.leading_pt();
-    *children() = *monitor.children();
-
-    return *this;
-}
-
-void JetMonitor::fill(const Jets &jets)
-{
-    _multiplicity->fill(jets.size());
-
-    double leading_pt = 0;
-    double pt = 0;
-    for(Jets::const_iterator jet = jets.begin();
-            jets.end() != jet;
-            ++jet)
-    {
-        _p4->SetPxPyPzE(jet->physics_object().p4().px(),
-                jet->physics_object().p4().py(),
-                jet->physics_object().p4().pz(),
-                jet->physics_object().p4().e());
-
-        pt = _p4->Pt();
-
-        if (leading_pt < pt)
-            leading_pt = pt;
-
-        _pt->fill(pt);
-        _children->fill(jet->children().size());
-    }
-
-    if (leading_pt)
-        _leading_pt->fill(leading_pt);
-}
-
-const JetMonitor::H1Ptr JetMonitor::multiplicity() const
-{
-    return _multiplicity;
-}
-
-const JetMonitor::H1Ptr JetMonitor::pt() const
-{
-    return _pt;
-}
-
-const JetMonitor::H1Ptr JetMonitor::leading_pt() const
-{
-    return _leading_pt;
-}
-
-const JetMonitor::H1Ptr JetMonitor::children() const
-{
-    return _children;
-}
-
-
+using bsm::H1Ptr;
+using bsm::H2Ptr;
 
 // Delta Monitor
 //
 DeltaMonitor::DeltaMonitor()
 {
-    _r.reset(new H1(50, 0, 5));
-    _eta.reset(new H1(200, -5, 5));
-    _phi.reset(new H1(160, -4, 4));
-    _ptrel.reset(new H1(50, 0, 10));
-    _ptrel_vs_r.reset(new H2(50, 0, 10, 50, 0, 5));
+    _r.reset(new H1Proxy(50, 0, 5));
+    _eta.reset(new H1Proxy(200, -5, 5));
+    _phi.reset(new H1Proxy(160, -4, 4));
+    _ptrel.reset(new H1Proxy(50, 0, 10));
+    _ptrel_vs_r.reset(new H2Proxy(50, 0, 10, 50, 0, 5));
+
+    monitor(_r);
+    monitor(_eta);
+    monitor(_phi);
+    monitor(_ptrel);
+    monitor(_ptrel_vs_r);
+
+    _p4_1.reset(new TLorentzVector());
+    _p4_2.reset(new TLorentzVector());
+}
+
+DeltaMonitor::DeltaMonitor(const DeltaMonitor &object)
+{
+    _r.reset(new H1Proxy(*object._r));
+    _eta.reset(new H1Proxy(*object._eta));
+    _phi.reset(new H1Proxy(*object._phi));
+    _ptrel.reset(new H1Proxy(*object._ptrel));
+    _ptrel_vs_r.reset(new H2Proxy(*object._ptrel_vs_r));
+
+    monitor(_r);
+    monitor(_eta);
+    monitor(_phi);
+    monitor(_ptrel);
+    monitor(_ptrel_vs_r);
 
     _p4_1.reset(new TLorentzVector());
     _p4_2.reset(new TLorentzVector());
@@ -137,101 +97,139 @@ void DeltaMonitor::fill(const LorentzVector &p4_1, const LorentzVector &p4_2)
     utility::set(_p4_1.get(), &p4_1);
     utility::set(_p4_2.get(), &p4_2);
 
-    _r->fill(_p4_1->DeltaR(*_p4_2));
-    _eta->fill(_p4_1->Eta() - _p4_2->Eta());
-    _phi->fill(_p4_1->Phi() - _p4_2->Phi());
-    _ptrel->fill(_p4_1->Vect().Perp(_p4_2->Vect()));
+    r()->fill(_p4_1->DeltaR(*_p4_2));
+    eta()->fill(_p4_1->Eta() - _p4_2->Eta());
+    phi()->fill(_p4_1->Phi() - _p4_2->Phi());
+    ptrel()->fill(_p4_1->Vect().Perp(_p4_2->Vect()));
 
-    _ptrel_vs_r->fill(_p4_1->Vect().Perp(_p4_2->Vect()),
+    ptrel_vs_r()->fill(_p4_1->Vect().Perp(_p4_2->Vect()),
             _p4_1->DeltaR(*_p4_2));
 }
 
-const DeltaMonitor::H1Ptr DeltaMonitor::r() const
+const H1Ptr DeltaMonitor::r() const
 {
-    return _r;
+    return _r->histogram();
 }
 
-const DeltaMonitor::H1Ptr DeltaMonitor::eta() const
+const H1Ptr DeltaMonitor::eta() const
 {
-    return _eta;
+    return _eta->histogram();
 }
 
-const DeltaMonitor::H1Ptr DeltaMonitor::phi() const
+const H1Ptr DeltaMonitor::phi() const
 {
-    return _phi;
+    return _phi->histogram();
 }
 
-const DeltaMonitor::H1Ptr DeltaMonitor::ptrel() const
+const H1Ptr DeltaMonitor::ptrel() const
 {
-    return _ptrel;
+    return _ptrel->histogram();
 }
 
-const DeltaMonitor::H2Ptr DeltaMonitor::ptrel_vs_r() const
+const H2Ptr DeltaMonitor::ptrel_vs_r() const
 {
-    return _ptrel_vs_r;
+    return _ptrel_vs_r->histogram();
+}
+
+uint32_t DeltaMonitor::id() const
+{
+    return core::ID<DeltaMonitor>::get();
+}
+
+DeltaMonitor::ObjectPtr DeltaMonitor::clone() const
+{
+    return ObjectPtr(new DeltaMonitor(*this));
+}
+
+void DeltaMonitor::print(std::ostream &out) const
+{
+    out << setw(15) << left << " [R]" << *r() << endl;
+    out << setw(15) << left << " [eta]" << *eta() << endl;
+    out << setw(15) << left << " [phi] " << *phi() << endl;
+    out << setw(15) << left << " [pTrel]" << *ptrel() << endl;
+    out << setw(14) << left << " [pTrel vs R]" << *ptrel_vs_r();
 }
 
 
 
-// Electron Monitor
-ElectronMonitor::ElectronMonitor()
+// Electrons Monitor
+//
+ElectronsMonitor::ElectronsMonitor()
 {
-    _multiplicity.reset(new H1(10, 0, 10));
-    _pt.reset(new H1(100, 0, 100));
-    _leading_pt.reset(new H1(100, 0, 100));
+    _multiplicity.reset(new H1Proxy(10, 0, 10));
+    _pt.reset(new H1Proxy(100, 0, 100));
+    _leading_pt.reset(new H1Proxy(100, 0, 100));
 
-    _p4.reset(new TLorentzVector());
+    monitor(_multiplicity);
+    monitor(_pt);
+    monitor(_leading_pt);
 }
 
-ElectronMonitor &ElectronMonitor::operator =(const ElectronMonitor &monitor)
+ElectronsMonitor::ElectronsMonitor(const ElectronsMonitor &object)
 {
-    *multiplicity() = *monitor.multiplicity();
-    *pt() = *monitor.pt();
-    *leading_pt() = *monitor.leading_pt();
+    _multiplicity.reset(new H1Proxy(*object._multiplicity));
+    _pt.reset(new H1Proxy(*object._pt));
+    _leading_pt.reset(new H1Proxy(*object._leading_pt));
 
-    return *this;
+    monitor(_multiplicity);
+    monitor(_pt);
+    monitor(_leading_pt);
 }
 
-void ElectronMonitor::fill(const Electrons &electrons)
+void ElectronsMonitor::fill(const Electrons &electrons)
 {
-    _multiplicity->fill(electrons.size());
+    multiplicity()->fill(electrons.size());
 
-    double leading_pt = 0;
-    double pt = 0;
+    double max_el_pt = 0;
+    double el_pt = 0;
     for(Electrons::const_iterator electron = electrons.begin();
             electrons.end() != electron;
             ++electron)
     {
-        _p4->SetPxPyPzE(electron->physics_object().p4().px(),
-                electron->physics_object().p4().py(),
-                electron->physics_object().p4().pz(),
-                electron->physics_object().p4().e());
+        el_pt = bsm::pt(electron->physics_object().p4());
 
-        pt = _p4->Pt();
+        pt()->fill(el_pt);
 
-        if (leading_pt < pt)
-            leading_pt = pt;
+        if (el_pt <= max_el_pt)
+            continue;
 
-        _pt->fill(_p4->Pt());
+        max_el_pt = el_pt;
     }
 
-    if (leading_pt)
-        _leading_pt->fill(leading_pt);
+    if (max_el_pt)
+        leading_pt()->fill(max_el_pt);
 }
 
-const ElectronMonitor::H1Ptr ElectronMonitor::multiplicity() const
+const H1Ptr ElectronsMonitor::multiplicity() const
 {
-    return _multiplicity;
+    return _multiplicity->histogram();
 }
 
-const ElectronMonitor::H1Ptr ElectronMonitor::pt() const
+const H1Ptr ElectronsMonitor::pt() const
 {
-    return _pt;
+    return _pt->histogram();
 }
 
-const ElectronMonitor::H1Ptr ElectronMonitor::leading_pt() const
+const H1Ptr ElectronsMonitor::leading_pt() const
 {
-    return _leading_pt;
+    return _leading_pt->histogram();
+}
+
+uint32_t ElectronsMonitor::id() const
+{
+    return core::ID<ElectronsMonitor>::get();
+}
+
+ElectronsMonitor::ObjectPtr ElectronsMonitor::clone() const
+{
+    return ObjectPtr(new ElectronsMonitor(*this));
+}
+
+void ElectronsMonitor::print(std::ostream &out) const
+{
+    out << setw(16) << left << " [multiplicity]" << *multiplicity() << endl;
+    out << setw(16) << left << " [pt]" << *pt() << endl;
+    out << setw(16) << left << " [leading pt] " << *leading_pt();
 }
 
 
@@ -240,49 +238,161 @@ const ElectronMonitor::H1Ptr ElectronMonitor::leading_pt() const
 //
 GenParticleMonitor::GenParticleMonitor()
 {
-    _id.reset(new H1(100, -50, 50));
-    _status.reset(new H1(10, 0, 10));
-    _pt.reset(new H1(100, 0, 100));
+    _pdg_id.reset(new H1Proxy(100, -50, 50));
+    _status.reset(new H1Proxy(10, 0, 10));
+    _pt.reset(new H1Proxy(100, 0, 100));
 
-    _p4.reset(new TLorentzVector());
+    monitor(_pdg_id);
+    monitor(_status);
+    monitor(_pt);
 }
 
-GenParticleMonitor
-    &GenParticleMonitor::operator =(const GenParticleMonitor &monitor)
+GenParticleMonitor::GenParticleMonitor(const GenParticleMonitor &object)
 {
-    *id() = *monitor.id();
-    *status() = *monitor.status();
-    *pt() = *monitor.pt();
+    _pdg_id.reset(new H1Proxy(*object._pdg_id));
+    _status.reset(new H1Proxy(*object._status));
+    _pt.reset(new H1Proxy(*object._pt));
 
-    return *this;
+    monitor(_pdg_id);
+    monitor(_status);
+    monitor(_pt);
 }
 
 void GenParticleMonitor::fill(const GenParticle &particle)
 {
-    _id->fill(particle.id());
-    _status->fill(particle.status());
+    pdgid()->fill(particle.id());
+    status()->fill(particle.status());
 
-    _p4->SetPxPyPzE(particle.physics_object().p4().px(),
-            particle.physics_object().p4().py(),
-            particle.physics_object().p4().pz(),
-            particle.physics_object().p4().e());
-
-    _pt->fill(_p4->Pt());
+    pt()->fill(bsm::pt(particle.physics_object().p4()));
 }
 
-const GenParticleMonitor::H1Ptr GenParticleMonitor::id() const
+const GenParticleMonitor::H1Ptr GenParticleMonitor::pdgid() const
 {
-    return _id;
+    return _pdg_id->histogram();
 }
 
 const GenParticleMonitor::H1Ptr GenParticleMonitor::status() const
 {
-    return _status;
+    return _status->histogram();
 }
 
 const GenParticleMonitor::H1Ptr GenParticleMonitor::pt() const
 {
-    return _pt;
+    return _pt->histogram();
+}
+
+uint32_t GenParticleMonitor::id() const
+{
+    return core::ID<GenParticleMonitor>::get();
+}
+
+GenParticleMonitor::ObjectPtr GenParticleMonitor::clone() const
+{
+    return ObjectPtr(new GenParticleMonitor(*this));
+}
+
+void GenParticleMonitor::print(std::ostream &out) const
+{
+    out << setw(10) << left << " [PDG id]" << *pdgid() << endl;
+    out << setw(10) << left << " [status]" << *status() << endl;
+    out << setw(10) << left << " [pt] " << *pt();
+
+}
+
+
+
+// Jets Monitor
+//
+JetsMonitor::JetsMonitor()
+{
+    _multiplicity.reset(new H1Proxy(10, 0, 10));
+    _pt.reset(new H1Proxy(100, 0, 100));
+    _leading_pt.reset(new H1Proxy(100, 0, 100));
+    _children.reset(new H1Proxy(10, 0, 10));
+
+    monitor(_multiplicity);
+    monitor(_pt);
+    monitor(_leading_pt);
+    monitor(_children);
+}
+
+JetsMonitor::JetsMonitor(const JetsMonitor &object)
+{
+    _multiplicity.reset(new H1Proxy(*object._multiplicity));
+    _pt.reset(new H1Proxy(*object._pt));
+    _leading_pt.reset(new H1Proxy(*object._leading_pt));
+    _children.reset(new H1Proxy(*object._children));
+
+    monitor(_multiplicity);
+    monitor(_pt);
+    monitor(_leading_pt);
+    monitor(_children);
+}
+
+void JetsMonitor::fill(const Jets &jets)
+{
+    multiplicity()->fill(jets.size());
+
+    double max_jet_pt = 0;
+    double jet_pt = 0;
+    for(Jets::const_iterator jet = jets.begin();
+            jets.end() != jet;
+            ++jet)
+    {
+        children()->fill(jet->children().size());
+
+        jet_pt = bsm::pt(jet->physics_object().p4());
+
+        pt()->fill(jet_pt);
+
+        if (jet_pt <= max_jet_pt)
+            continue;
+
+        max_jet_pt = jet_pt;
+    }
+
+    if (max_jet_pt)
+        leading_pt()->fill(max_jet_pt);
+}
+
+const H1Ptr JetsMonitor::multiplicity() const
+{
+    return _multiplicity->histogram();
+}
+
+const H1Ptr JetsMonitor::pt() const
+{
+    return _pt->histogram();
+}
+
+const H1Ptr JetsMonitor::leading_pt() const
+{
+    return _leading_pt->histogram();
+}
+
+const H1Ptr JetsMonitor::children() const
+{
+    return _children->histogram();
+}
+
+uint32_t JetsMonitor::id() const
+{
+    return core::ID<JetsMonitor>::get();
+}
+
+JetsMonitor::ObjectPtr JetsMonitor::clone() const
+{
+    return ObjectPtr(new JetsMonitor(*this));
+}
+
+void JetsMonitor::print(std::ostream &out) const
+{
+    out << setw(16) << left << " [multiplicity]"
+        << *multiplicity() << endl;
+    out << setw(16) << left << " [pt]" << *pt() << endl;
+    out << setw(16) << left << " [leading pt] " << *leading_pt()
+        << endl;
+    out << setw(16) << left << " [children]" << *children();
 }
 
 
@@ -291,78 +401,113 @@ const GenParticleMonitor::H1Ptr GenParticleMonitor::pt() const
 //
 LorentzVectorMonitor::LorentzVectorMonitor()
 {
-    _energy.reset(new H1(100, 0, 100));
-    _px.reset(new H1(100, 0, 100));
-    _py.reset(new H1(100, 0, 100));
-    _pz.reset(new H1(100, 0, 100));
-    _pt.reset(new H1(500, 0, 500));
-    _eta.reset(new H1(100, -5, 5));
-    _phi.reset(new H1(80, -4, 4));
+    _energy.reset(new H1Proxy(100, 0, 100));
+    _px.reset(new H1Proxy(100, 0, 100));
+    _py.reset(new H1Proxy(100, 0, 100));
+    _pz.reset(new H1Proxy(100, 0, 100));
+    _pt.reset(new H1Proxy(500, 0, 500));
+    _eta.reset(new H1Proxy(100, -5, 5));
+    _phi.reset(new H1Proxy(80, -4, 4));
+
+    monitor(_energy);
+    monitor(_px);
+    monitor(_py);
+    monitor(_pz);
+    monitor(_pt);
+    monitor(_eta);
+    monitor(_phi);
 
     _p4.reset(new TLorentzVector());
 }
 
-LorentzVectorMonitor
-    &LorentzVectorMonitor::operator =(const LorentzVectorMonitor &monitor)
+LorentzVectorMonitor::LorentzVectorMonitor(const LorentzVectorMonitor &object)
 {
-    *energy() = *monitor.energy();
-    *px() = *monitor.px();
-    *py() = *monitor.py();
-    *pz() = *monitor.pz();
+    _energy.reset(new H1Proxy(*object._energy));
+    _px.reset(new H1Proxy(*object._px));
+    _py.reset(new H1Proxy(*object._py));
+    _pz.reset(new H1Proxy(*object._pz));
+    _pt.reset(new H1Proxy(*object._pt));
+    _eta.reset(new H1Proxy(*object._eta));
+    _phi.reset(new H1Proxy(*object._phi));
 
-    *pt() = *monitor.pt();
-    *eta() = *monitor.eta();
-    *phi() = *monitor.phi();
+    monitor(_energy);
+    monitor(_px);
+    monitor(_py);
+    monitor(_pz);
+    monitor(_pt);
+    monitor(_eta);
+    monitor(_phi);
 
-    return *this;
+    _p4.reset(new TLorentzVector());
 }
 
 void LorentzVectorMonitor::fill(const LorentzVector &p4)
 {
-    _energy->fill(p4.e());
-    _px->fill(p4.px());
-    _py->fill(p4.py());
-    _pz->fill(p4.pz());
+    energy()->fill(p4.e());
+    px()->fill(p4.px());
+    py()->fill(p4.py());
+    pz()->fill(p4.pz());
 
     utility::set(_p4.get(), &p4);
-    _pt->fill(_p4->Pt());
-    _eta->fill(_p4->Eta());
-    _phi->fill(_p4->Phi());
+    pt()->fill(_p4->Pt());
+    eta()->fill(_p4->Eta());
+    phi()->fill(_p4->Phi());
 }
 
-const LorentzVectorMonitor::H1Ptr LorentzVectorMonitor::energy() const
+const H1Ptr LorentzVectorMonitor::energy() const
 {
-    return _energy;
+    return _energy->histogram();
 }
 
-const LorentzVectorMonitor::H1Ptr LorentzVectorMonitor::px() const
+const H1Ptr LorentzVectorMonitor::px() const
 {
-    return _px;
+    return _px->histogram();
 }
 
-const LorentzVectorMonitor::H1Ptr LorentzVectorMonitor::py() const
+const H1Ptr LorentzVectorMonitor::py() const
 {
-    return _py;
+    return _py->histogram();
 }
  
-const LorentzVectorMonitor::H1Ptr LorentzVectorMonitor::pz() const
+const H1Ptr LorentzVectorMonitor::pz() const
 {
-    return _pz;
+    return _pz->histogram();
 }
 
-const LorentzVectorMonitor::H1Ptr LorentzVectorMonitor::pt() const
+const H1Ptr LorentzVectorMonitor::pt() const
 {
-    return _pt;
+    return _pt->histogram();
 }
 
-const LorentzVectorMonitor::H1Ptr LorentzVectorMonitor::eta() const
+const H1Ptr LorentzVectorMonitor::eta() const
 {
-    return _eta;
+    return _eta->histogram();
 }
 
-const LorentzVectorMonitor::H1Ptr LorentzVectorMonitor::phi() const
+const H1Ptr LorentzVectorMonitor::phi() const
 {
-    return _phi;
+    return _phi->histogram();
+}
+
+uint32_t LorentzVectorMonitor::id() const
+{
+    return core::ID<LorentzVectorMonitor>::get();
+}
+
+LorentzVectorMonitor::ObjectPtr LorentzVectorMonitor::clone() const
+{
+    return ObjectPtr(new LorentzVectorMonitor(*this));
+}
+
+void LorentzVectorMonitor::print(std::ostream &out) const
+{
+    out << setw(16) << left << " [e]" << *energy() << endl;
+    out << setw(16) << left << " [px]" << *px() << endl;
+    out << setw(16) << left << " [py]" << *py() << endl;
+    out << setw(16) << left << " [pz]" << *pz() << endl;
+    out << setw(16) << left << " [pt]" << *pt() << endl;
+    out << setw(16) << left << " [eta]" << *eta() << endl;
+    out << setw(16) << left << " [phi]" << *phi();
 }
 
 
@@ -371,356 +516,235 @@ const LorentzVectorMonitor::H1Ptr LorentzVectorMonitor::phi() const
 //
 MissingEnergyMonitor::MissingEnergyMonitor()
 {
-    _pt.reset(new H1(100, 0, 100));
-    _x.reset(new H1(100, -50, 50));
-    _y.reset(new H1(100, -50, 50));
-    _z.reset(new H1(100, -50, 50));
+    _pt.reset(new H1Proxy(100, 0, 100));
+    _x.reset(new H1Proxy(100, -50, 50));
+    _y.reset(new H1Proxy(100, -50, 50));
+    _z.reset(new H1Proxy(100, -50, 50));
 
-    _p4.reset(new TLorentzVector());
+    monitor(_pt);
+    monitor(_x);
+    monitor(_y);
+    monitor(_z);
 }
 
-MissingEnergyMonitor
-    &MissingEnergyMonitor::operator =(const MissingEnergyMonitor &monitor)
+MissingEnergyMonitor::MissingEnergyMonitor(const MissingEnergyMonitor &object)
 {
-    *pt() = *monitor.pt();
-    *x() = *monitor.x();
-    *y() = *monitor.y();
-    *z() = *monitor.z();
+    _pt.reset(new H1Proxy(*object._pt));
+    _x.reset(new H1Proxy(*object._x));
+    _y.reset(new H1Proxy(*object._y));
+    _z.reset(new H1Proxy(*object._z));
 
-    return *this;
+    monitor(_pt);
+    monitor(_x);
+    monitor(_y);
+    monitor(_z);
 }
 
 void MissingEnergyMonitor::fill(const MissingEnergy &missing_energy)
 {
-    _p4->SetPxPyPzE(missing_energy.p4().px(),
-            missing_energy.p4().py(),
-            missing_energy.p4().pz(),
-            missing_energy.p4().e());
-
-    _pt->fill(_p4->Pt());
+    pt()->fill(bsm::pt(missing_energy.p4()));
 }
 
-const MissingEnergyMonitor::H1Ptr MissingEnergyMonitor::pt() const
+const H1Ptr MissingEnergyMonitor::pt() const
 {
-    return _pt;
+    return _pt->histogram();
 }
 
-const MissingEnergyMonitor::H1Ptr MissingEnergyMonitor::x() const
+const H1Ptr MissingEnergyMonitor::x() const
 {
-    return _x;
+    return _x->histogram();
 }
 
-const MissingEnergyMonitor::H1Ptr MissingEnergyMonitor::y() const
+const H1Ptr MissingEnergyMonitor::y() const
 {
-    return _y;
+    return _y->histogram();
 }
 
-const MissingEnergyMonitor::H1Ptr MissingEnergyMonitor::z() const
+const H1Ptr MissingEnergyMonitor::z() const
 {
-    return _z;
+    return _z->histogram();
+}
+
+uint32_t MissingEnergyMonitor::id() const
+{
+    return core::ID<MissingEnergyMonitor>::get();
+}
+
+MissingEnergyMonitor::ObjectPtr MissingEnergyMonitor::clone() const
+{
+    return ObjectPtr(new MissingEnergyMonitor(*this));
+}
+
+void MissingEnergyMonitor::print(std::ostream &out) const
+{
+    out << setw(16) << left << " [pt]" << *pt() << endl;
+    out << setw(16) << left << " [x]" << *x() << endl;
+    out << setw(16) << left << " [y]" << *y() << endl;
+    out << setw(16) << left << " [z]" << *z();
 }
 
 
 
-// Muon Monitor
+// Muons Monitor
 //
-MuonMonitor::MuonMonitor()
+MuonsMonitor::MuonsMonitor()
 {
-    _multiplicity.reset(new H1(10, 0, 10));
-    _pt.reset(new H1(100, 0, 100));
-    _leading_pt.reset(new H1(100, 0, 100));
+    _multiplicity.reset(new H1Proxy(10, 0, 10));
+    _pt.reset(new H1Proxy(100, 0, 100));
+    _leading_pt.reset(new H1Proxy(100, 0, 100));
 
-    _p4.reset(new TLorentzVector());
+    monitor(_multiplicity);
+    monitor(_pt);
+    monitor(_leading_pt);
 }
 
-MuonMonitor &MuonMonitor::operator =(const MuonMonitor &monitor)
+MuonsMonitor::MuonsMonitor(const MuonsMonitor &object)
 {
-    *multiplicity() = *monitor.multiplicity();
-    *pt() = *monitor.pt();
-    *leading_pt() = *monitor.leading_pt();
+    _multiplicity.reset(new H1Proxy(*object._multiplicity));
+    _pt.reset(new H1Proxy(*object._pt));
+    _leading_pt.reset(new H1Proxy(*object._leading_pt));
 
-    return *this;
+    monitor(_multiplicity);
+    monitor(_pt);
+    monitor(_leading_pt);
 }
 
-void MuonMonitor::fill(const Muons &muons)
+void MuonsMonitor::fill(const Muons &muons)
 {
-    _multiplicity->fill(muons.size());
+    multiplicity()->fill(muons.size());
 
-    double leading_pt = 0;
-    double pt = 0;
+    double max_muon_pt = 0;
+    double muon_pt = 0;
     for(Muons::const_iterator muon = muons.begin();
             muons.end() != muon;
             ++muon)
     {
-        _p4->SetPxPyPzE(muon->physics_object().p4().px(),
-                muon->physics_object().p4().py(),
-                muon->physics_object().p4().pz(),
-                muon->physics_object().p4().e());
+        muon_pt = bsm::pt(muon->physics_object().p4());
 
-        pt = _p4->Pt();
+        pt()->fill(muon_pt);
 
-        if (leading_pt < pt)
-            leading_pt = pt;
+        if (muon_pt <= max_muon_pt)
+            continue;
 
-        _pt->fill(pt);
+        max_muon_pt = muon_pt;
     }
 
-    if (leading_pt)
-        _leading_pt->fill(leading_pt);
+    if (max_muon_pt)
+        leading_pt()->fill(max_muon_pt);
 }
 
-const MuonMonitor::H1Ptr MuonMonitor::multiplicity() const
+const H1Ptr MuonsMonitor::multiplicity() const
 {
-    return _multiplicity;
+    return _multiplicity->histogram();
 }
 
-const MuonMonitor::H1Ptr MuonMonitor::pt() const
+const H1Ptr MuonsMonitor::pt() const
 {
-    return _pt;
+    return _pt->histogram();
 }
 
-const MuonMonitor::H1Ptr MuonMonitor::leading_pt() const
+const H1Ptr MuonsMonitor::leading_pt() const
 {
-    return _leading_pt;
+    return _leading_pt->histogram();
+}
+
+uint32_t MuonsMonitor::id() const
+{
+    return core::ID<MuonsMonitor>::get();
+}
+
+MuonsMonitor::ObjectPtr MuonsMonitor::clone() const
+{
+    return ObjectPtr(new MuonsMonitor(*this));
+}
+
+void MuonsMonitor::print(std::ostream &out) const
+{
+    out << setw(16) << left << " [multiplicity]"
+        << *multiplicity() << endl;
+    out << setw(16) << left << " [pt]" << *pt() << endl;
+    out << setw(16) << left << " [leading pt] " << *leading_pt();
 }
 
 
 
-// Primary Vertex Monitor
+// Primary Vertices Monitor
 //
-PrimaryVertexMonitor::PrimaryVertexMonitor()
+PrimaryVerticesMonitor::PrimaryVerticesMonitor()
 {
-    _multiplicity.reset(new H1(20, 0, 20));
-    _x.reset(new H1(200, -.1, .1));
-    _y.reset(new H1(200, -.1, .1));
-    _z.reset(new H1(100, -50, 50));
+    _multiplicity.reset(new H1Proxy(20, 0, 20));
+    _x.reset(new H1Proxy(200, -.1, .1));
+    _y.reset(new H1Proxy(200, -.1, .1));
+    _z.reset(new H1Proxy(100, -50, 50));
+
+    monitor(_multiplicity);
+    monitor(_x);
+    monitor(_y);
+    monitor(_z);
 }
 
-PrimaryVertexMonitor
-    &PrimaryVertexMonitor::operator =(const PrimaryVertexMonitor &monitor)
+PrimaryVerticesMonitor::PrimaryVerticesMonitor(const PrimaryVerticesMonitor &object)
 {
-    *multiplicity() = *monitor.multiplicity();
-    *x() = *monitor.x();
-    *y() = *monitor.y();
-    *z() = *monitor.z();
+    _multiplicity.reset(new H1Proxy(*object._multiplicity));
+    _x.reset(new H1Proxy(*object._x));
+    _y.reset(new H1Proxy(*object._y));
+    _z.reset(new H1Proxy(*object._z));
 
-    return *this;
+    monitor(_multiplicity);
+    monitor(_x);
+    monitor(_y);
+    monitor(_z);
 }
 
-void PrimaryVertexMonitor::fill(const PrimaryVertices &primary_vertices)
+void PrimaryVerticesMonitor::fill(const PrimaryVertices &primary_vertices)
 {
-    _multiplicity->fill(primary_vertices.size());
+    multiplicity()->fill(primary_vertices.size());
 
     for(PrimaryVertices::const_iterator primary_vertex = primary_vertices.begin();
             primary_vertices.end() != primary_vertex;
             ++primary_vertex)
     {
-        _x->fill(primary_vertex->vertex().x());
-        _y->fill(primary_vertex->vertex().y());
-        _z->fill(primary_vertex->vertex().z());
+        x()->fill(primary_vertex->vertex().x());
+        y()->fill(primary_vertex->vertex().y());
+        z()->fill(primary_vertex->vertex().z());
     }
 }
 
-const PrimaryVertexMonitor::H1Ptr PrimaryVertexMonitor::multiplicity() const
+const H1Ptr PrimaryVerticesMonitor::multiplicity() const
 {
-    return _multiplicity;
+    return _multiplicity->histogram();
 }
 
-const PrimaryVertexMonitor::H1Ptr PrimaryVertexMonitor::x() const
+const H1Ptr PrimaryVerticesMonitor::x() const
 {
-    return _x;
+    return _x->histogram();
 }
 
-const PrimaryVertexMonitor::H1Ptr PrimaryVertexMonitor::y() const
+const H1Ptr PrimaryVerticesMonitor::y() const
 {
-    return _y;
+    return _y->histogram();
 }
 
-const PrimaryVertexMonitor::H1Ptr PrimaryVertexMonitor::z() const
+const H1Ptr PrimaryVerticesMonitor::z() const
 {
-    return _z;
+    return _z->histogram();
 }
 
-
-
-// Helpers
-//
-std::ostream &bsm::operator<<(std::ostream &out, const DeltaMonitor &monitor)
+uint32_t PrimaryVerticesMonitor::id() const
 {
-    using std::setw;
-    using std::left;
-
-    out << "Delta Monitor" << endl;
-    out << setw(5) << left << " [R]" << *monitor.r() << endl;
-    out << setw(5) << left << " [eta]" << *monitor.eta() << endl;
-    out << setw(5) << left << " [phi] " << *monitor.phi() << endl;
-
-    return out;
+    return core::ID<PrimaryVerticesMonitor>::get();
 }
 
-std::ostream &bsm::operator<<(std::ostream &out, const ElectronMonitor &monitor)
+PrimaryVerticesMonitor::ObjectPtr PrimaryVerticesMonitor::clone() const
 {
-    using std::setw;
-    using std::left;
-
-    out << "Electron Monitor" << endl;
-    out << setw(16) << left << " [multiplicity]" << *monitor.multiplicity() << endl;
-    out << setw(16) << left << " [pt]" << *monitor.pt() << endl;
-    out << setw(16) << left << " [leading pt] " << *monitor.leading_pt() << endl;
-
-    return out;
+    return ObjectPtr(new PrimaryVerticesMonitor(*this));
 }
 
-std::ostream &bsm::operator<<(std::ostream &out,
-        const GenParticleMonitor &monitor)
+void PrimaryVerticesMonitor::print(std::ostream &out) const
 {
-    using std::setw;
-    using std::left;
-
-    out << "Gen Particle Monitor" << endl;
-    out << setw(10) << left << " [id]" << *monitor.id() << endl;
-    out << setw(10) << left << " [status]" << *monitor.status() << endl;
-    out << setw(10) << left << " [pt] " << *monitor.pt() << endl;
-
-    return out;
-}
-
-std::ostream &bsm::operator<<(std::ostream &out, const JetMonitor &monitor)
-{
-    using std::setw;
-    using std::left;
-
-    out << "Jet Monitor" << endl;
     out << setw(16) << left << " [multiplicity]"
-        << *monitor.multiplicity() << endl;
-    out << setw(16) << left << " [pt]" << *monitor.pt() << endl;
-    out << setw(16) << left << " [leading pt] " << *monitor.leading_pt()
-        << endl;
-    out << setw(16) << left << " [children]" << *monitor.children() << endl;
-
-    return out;
-}
-
-std::ostream &bsm::operator<<(std::ostream &out,
-        const LorentzVectorMonitor &monitor)
-{
-    using std::setw;
-    using std::left;
-
-    out << "Lorentz Vector Monitor" << endl;
-    out << setw(16) << left << " [e]" << *monitor.energy() << endl;
-    out << setw(16) << left << " [px]" << *monitor.px() << endl;
-    out << setw(16) << left << " [py]" << *monitor.py() << endl;
-    out << setw(16) << left << " [pz]" << *monitor.pz() << endl;
-    out << setw(16) << left << " [pt]" << *monitor.pt() << endl;
-    out << setw(16) << left << " [eta]" << *monitor.eta() << endl;
-    out << setw(16) << left << " [phi]" << *monitor.phi() << endl;
-
-    return out;
-}
-
-std::ostream &bsm::operator<<(std::ostream &out,
-        const MissingEnergyMonitor &monitor)
-{
-    using std::setw;
-    using std::left;
-
-    out << "Missing Energy Monitor" << endl;
-    out << setw(16) << left << " [pt]" << *monitor.pt() << endl;
-    out << setw(16) << left << " [x]" << *monitor.x() << endl;
-    out << setw(16) << left << " [y]" << *monitor.y() << endl;
-    out << setw(16) << left << " [z]" << *monitor.z() << endl;
-
-    return out;
-}
-
-std::ostream &bsm::operator<<(std::ostream &out, const MuonMonitor &monitor)
-{
-    using std::setw;
-    using std::left;
-
-    out << "Muon Monitor" << endl;
-    out << setw(16) << left << " [multiplicity]"
-        << *monitor.multiplicity() << endl;
-    out << setw(16) << left << " [pt]" << *monitor.pt() << endl;
-    out << setw(16) << left << " [leading pt] " << *monitor.leading_pt() << endl;
-
-    return out;
-}
-
-std::ostream &bsm::operator<<(std::ostream &out,
-        const PrimaryVertexMonitor &monitor)
-{
-    using std::setw;
-    using std::left;
-
-    out << "Primary Vertex Monitor" << endl;
-    out << setw(16) << left << " [multiplicity]"
-        << *monitor.multiplicity() << endl;
-    out << setw(16) << left << " [x]" << *monitor.x() << endl;
-    out << setw(16) << left << " [y]" << *monitor.y() << endl;
-    out << setw(16) << left << " [z]" << *monitor.z() << endl;
-
-    return out;
-}
-
-
-
-void bsm::merge(ElectronMonitor &m1, const ElectronMonitor &m2)
-{
-    *m1.multiplicity() += *m2.multiplicity();
-    *m1.pt() += *m2.pt();
-    *m1.leading_pt() += *m2.leading_pt();
-}
-
-void bsm::merge(JetMonitor &m1, const JetMonitor &m2)
-{
-    *m1.multiplicity() += *m2.multiplicity();
-    *m1.pt() += *m2.pt();
-    *m1.leading_pt() += *m2.leading_pt();
-    *m1.children() += *m2.children();
-}
-
-void bsm::merge(DeltaMonitor &m1, const DeltaMonitor &m2)
-{
-    *m1.r() += *m2.r();
-    *m1.eta() += *m2.eta();
-    *m1.phi() += *m2.phi();
-    *m1.ptrel() += *m2.ptrel();
-    *m1.ptrel_vs_r() += *m2.ptrel_vs_r();
-}
-
-void bsm::merge(LorentzVectorMonitor &m1, const LorentzVectorMonitor &m2)
-{
-    *m1.energy() += *m2.energy();
-    *m1.px() += *m2.px();
-    *m1.py() += *m2.py();
-    *m1.pz() += *m2.pz();
-
-    *m1.pt() += *m2.pt();
-    *m1.eta() += *m2.eta();
-    *m1.phi() += *m2.phi();
-}
-
-void bsm::merge(MissingEnergyMonitor &m1, const MissingEnergyMonitor &m2)
-{
-    *m1.pt() += *m2.pt();
-    *m1.x() += *m2.x();
-    *m1.y() += *m2.y();
-    *m1.z() += *m2.z();
-}
-
-void bsm::merge(MuonMonitor &m1, const MuonMonitor &m2)
-{
-    *m1.multiplicity() += *m2.multiplicity();
-    *m1.pt() += *m2.pt();
-    *m1.leading_pt() += *m2.leading_pt();
-}
-
-void bsm::merge(PrimaryVertexMonitor &m1, const PrimaryVertexMonitor &m2)
-{
-    *m1.multiplicity() += *m2.multiplicity();
-    *m1.x() += *m2.x();
-    *m1.y() += *m2.y();
-    *m1.z() += *m2.z();
+        << *multiplicity() << endl;
+    out << setw(16) << left << " [x]" << *x() << endl;
+    out << setw(16) << left << " [y]" << *y() << endl;
+    out << setw(16) << left << " [z]" << *z();
 }

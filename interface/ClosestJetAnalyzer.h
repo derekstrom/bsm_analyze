@@ -10,50 +10,43 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "bsm_stat/interface/bsm_stat_fwd.h"
 #include "interface/Analyzer.h"
 #include "interface/bsm_fwd.h"
 
 namespace bsm
 {
-    class DeltaMonitor;
-    class LorentzVectorMonitor;
-
-    class ClosestJetAnalyzer : public core::Analyzer
+    class ClosestJetAnalyzer : public Analyzer
     {
         public:
-            typedef Analyzer::AnalyzerPtr AnalyzerPtr;
-
             typedef boost::shared_ptr<DeltaMonitor> DeltaMonitorPtr;
-            typedef boost::shared_ptr<LorentzVectorMonitor> 
-                LorentzVectorMonitorPtr;
-            typedef boost::shared_ptr<stat::H2> H2Ptr;
+            typedef boost::shared_ptr<LorentzVectorMonitor> P4MonitorPtr;
 
             ClosestJetAnalyzer();
-            virtual ~ClosestJetAnalyzer();
-
-            // Analyzer interface
-            //
-            virtual AnalyzerPtr clone() const;
-
-            virtual void merge(const AnalyzerPtr &);
-
-            virtual void onFileOpen(const std::string &filename, const Input *);
-            virtual void process(const Event *);
-
-            virtual void print(std::ostream &) const;
-
-            virtual operator bool() const;
+            ClosestJetAnalyzer(const ClosestJetAnalyzer &);
 
             // Getters
             //
-            const LorentzVectorMonitorPtr monitorElectrons() const;
-            const LorentzVectorMonitorPtr monitorElectronJets() const;
+            const P4MonitorPtr monitorElectrons() const;
+            const P4MonitorPtr monitorElectronJets() const;
             const DeltaMonitorPtr monitorElectronDelta() const;
 
-            const LorentzVectorMonitorPtr monitorMuons() const;
-            const LorentzVectorMonitorPtr monitorMuonJets() const;
+            const P4MonitorPtr monitorMuons() const;
+            const P4MonitorPtr monitorMuonJets() const;
             const DeltaMonitorPtr monitorMuonDelta() const;
+
+            // Analyzer interface
+            //
+            virtual void onFileOpen(const std::string &filename, const Input *);
+            virtual void process(const Event *);
+
+            // Object interface
+            //
+            virtual uint32_t id() const;
+
+            virtual ObjectPtr clone() const;
+            using Object::merge;
+
+            virtual void print(std::ostream &) const;
 
         private:
             void processElectrons(const Event *event);
@@ -63,12 +56,12 @@ namespace bsm
             //
             ClosestJetAnalyzer &operator =(const ClosestJetAnalyzer &);
 
-            LorentzVectorMonitorPtr _monitor_electrons;
-            LorentzVectorMonitorPtr _monitor_electron_jets;
+            P4MonitorPtr _monitor_electrons;
+            P4MonitorPtr _monitor_electron_jets;
             DeltaMonitorPtr _monitor_electron_delta;
 
-            LorentzVectorMonitorPtr _monitor_muons;
-            LorentzVectorMonitorPtr _monitor_muon_jets;
+            P4MonitorPtr _monitor_muons;
+            P4MonitorPtr _monitor_muon_jets;
             DeltaMonitorPtr _monitor_muon_delta;
 
             boost::shared_ptr<algorithm::ClosestJet> _closest_jet_finder;

@@ -83,7 +83,7 @@ ElectronCanvas::ElectronCanvas(const std::string &title)
     _canvas->Divide(3);
 }
 
-void ElectronCanvas::draw(const ElectronMonitor &monitor)
+void ElectronCanvas::draw(const ElectronsMonitor &monitor)
 {
     _canvas->cd(1);
 
@@ -208,7 +208,7 @@ MuonCanvas::MuonCanvas(const std::string &title)
     _canvas->Divide(3);
 }
 
-void MuonCanvas::draw(const MuonMonitor &monitor)
+void MuonCanvas::draw(const MuonsMonitor &monitor)
 {
     _canvas->cd(1);
 
@@ -245,7 +245,7 @@ JetCanvas::JetCanvas(const std::string &title)
         _canvas->SetTitle(title.c_str());
 }
 
-void JetCanvas::draw(const JetMonitor &monitor)
+void JetCanvas::draw(const JetsMonitor &monitor)
 {
     _canvas->cd(1);
 
@@ -284,7 +284,7 @@ PrimaryVertexCanvas::PrimaryVertexCanvas(const std::string &title)
     _canvas->Divide(2, 2);
 }
 
-void PrimaryVertexCanvas::draw(const PrimaryVertexMonitor &monitor)
+void PrimaryVertexCanvas::draw(const PrimaryVerticesMonitor &monitor)
 {
     _canvas->cd(1);
     _multiplicity = convert(*monitor.multiplicity());

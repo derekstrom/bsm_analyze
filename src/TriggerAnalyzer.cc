@@ -11,6 +11,7 @@
 
 #include <boost/pointer_cast.hpp>
 
+#include "bsm_core/interface/ID.h"
 #include "bsm_input/interface/Event.pb.h"
 #include "bsm_input/interface/Input.pb.h"
 #include "bsm_input/interface/Trigger.pb.h"
@@ -20,46 +21,10 @@ using namespace std;
 
 using boost::dynamic_pointer_cast;
 
-using bsm::AnalyzerPtr;
 using bsm::TriggerAnalyzer;
 
 TriggerAnalyzer::TriggerAnalyzer()
 {
-}
-
-TriggerAnalyzer::~TriggerAnalyzer()
-{
-}
-
-AnalyzerPtr TriggerAnalyzer::clone() const
-{
-    return AnalyzerPtr(new TriggerAnalyzer());
-}
-
-void TriggerAnalyzer::merge(const AnalyzerPtr &analyzer_ptr)
-{
-    boost::shared_ptr<TriggerAnalyzer> analyzer =
-        dynamic_pointer_cast<TriggerAnalyzer>(analyzer_ptr);
-
-    if (!analyzer)
-        return;
-
-    for(HLTMap::const_iterator hlt = analyzer->_hlt_map.begin();
-            analyzer->_hlt_map.end() != hlt;
-            ++hlt)
-    {
-        if (_hlt_map.end() != _hlt_map.find(hlt->first))
-            continue;
-
-        _hlt_map.insert(*hlt);
-    }
-
-    for(HLTCutflow::const_iterator hlt = analyzer->_hlt_cutflow.begin();
-            analyzer->_hlt_cutflow.end() != hlt;
-            ++hlt)
-    {
-        _hlt_cutflow[hlt->first] += hlt->second;
-    }
 }
 
 void TriggerAnalyzer::onFileOpen(const std::string &filename, const Input *input)
@@ -100,19 +65,47 @@ void TriggerAnalyzer::process(const Event *event)
     }
 }
 
+uint32_t TriggerAnalyzer::id() const
+{
+    return core::ID<TriggerAnalyzer>::get();
+}
+
+TriggerAnalyzer::ObjectPtr TriggerAnalyzer::clone() const
+{
+    return ObjectPtr(new TriggerAnalyzer(*this));
+}
+
+void TriggerAnalyzer::merge(const ObjectPtr &object_pointer)
+{
+    if (id() != object_pointer->id())
+        return;
+
+    boost::shared_ptr<TriggerAnalyzer> object =
+        dynamic_pointer_cast<TriggerAnalyzer>(object_pointer);
+
+    if (!object)
+        return;
+
+    // Copy found Triggers
+    //
+    for(HLTMap::const_iterator hlt = object->_hlt_map.begin();
+            object->_hlt_map.end() != hlt;
+            ++hlt)
+    {
+        _hlt_map.insert(*hlt);
+    }
+
+    for(HLTCutflow::const_iterator hlt = object->_hlt_cutflow.begin();
+            object->_hlt_cutflow.end() != hlt;
+            ++hlt)
+    {
+        _hlt_cutflow[hlt->first] += hlt->second;
+    }
+}
+
 void TriggerAnalyzer::print(std::ostream &out) const
 {
     out << "Found " << _hlt_map.size() << " HLT(s) in file(s)" << endl;
-
-    for(HLTMap::const_iterator hlt = _hlt_map.begin();
-            _hlt_map.end() != hlt;
-            ++hlt)
-    {
-        out << setw(20) << left << hlt->first << " " << hlt->second << endl;
-    }
-
-    out << endl;
-    out << "HLT Cutflow" << endl;
     out << setw(70) << right << setfill('-') << " " << setfill(' ') << endl;
     out << setw(50) << left << "Name" << " "
         << setw(2) << left << "V" << " "
@@ -137,11 +130,6 @@ void TriggerAnalyzer::print(std::ostream &out) const
             << " " << hlt->second << endl;
     }
     out << setw(70) << right << setfill('-') << " " << setfill(' ') << endl;
-}
-
-TriggerAnalyzer::operator bool() const
-{
-    return true;
 }
 
 

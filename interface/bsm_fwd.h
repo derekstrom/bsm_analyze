@@ -12,28 +12,37 @@
 
 namespace bsm
 {
-    namespace core
-    {
-        class Analyzer;
-    }
-
-    typedef boost::shared_ptr<core::Analyzer> AnalyzerPtr;
+    class Analyzer;
 
     namespace algorithm
     {
         class ClosestJet;
-        class MissingEnergyCorrection;
+        class NeutrinoReconstruct;
     }
 
-    namespace selector
-    {
-        class Cut;
-        class ElectronSelector;
-        class JetSelector;
-        class MultiplicityCutflow;
-        class MuonSelector;
-        class WJetSelector;
-    }
+    class Counter;
+    class Cut;
+    template<class Compare> class Comparator;
+    class LockCounterOnUpdate;
+
+    class ElectronSelector;
+    class JetSelector;
+    class MultiplicityCutflow;
+    class MuonSelector;
+    class WJetSelector;
+    class LockSelectorEventCounterOnUpdate;
+
+    class DeltaMonitor;
+    class ElectronsMonitor;
+    class GenParticleMonitor;
+    class JetsMonitor;
+    class LorentzVectorMonitor;
+    class MissingEnergyMonitor;
+    class MuonsMonitor;
+    class PrimaryVerticesMonitor;
+
+    class H1Proxy;
+    class H2Proxy;
 }
 
 #endif

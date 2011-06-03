@@ -7,56 +7,83 @@
 
 #include <TLorentzVector.h>
 
+#include <boost/pointer_cast.hpp>
+
+#include "bsm_core/interface/ID.h"
 #include "bsm_input/interface/Algebra.h"
 #include "bsm_input/interface/Electron.pb.h"
 #include "bsm_input/interface/Muon.pb.h"
 #include "bsm_input/interface/Physics.pb.h"
+#include "bsm_input/interface/Utility.h"
 #include "interface/Algorithm.h"
 #include "interface/Utility.h"
 
 using bsm::algorithm::ClosestJet;
-using bsm::algorithm::MissingEnergyCorrection;
+using bsm::algorithm::NeutrinoReconstruct;
+
+using bsm::core::ID;
 
 ClosestJet::ClosestJet()
 {
-    _lepton_p4.reset(new TLorentzVector());
-    _jet_p4.reset(new TLorentzVector());
+    _p4.reset(new TLorentzVector());
 }
 
-const bsm::Jet *ClosestJet::operator()(const Jets &jets,
+ClosestJet::ClosestJet(const ClosestJet &object)
+{
+    _p4.reset(new TLorentzVector());
+}
+
+const bsm::Jet *ClosestJet::find(const Jets &jets,
                                        const Electron &electron)
 {
     if (!jets.size())
         return 0;
 
-    utility::set(_lepton_p4.get(), &electron.physics_object().p4());
+    utility::set(_p4.get(), &electron.physics_object().p4());
 
-    return operator()(jets);
+    return find(jets);
 }
 
-const bsm::Jet *ClosestJet::operator()(const Jets &jets, const Muon &muon)
+const bsm::Jet *ClosestJet::find(const Jets &jets, const Muon &muon)
 {
     if (!jets.size())
         return 0;
 
-    utility::set(_lepton_p4.get(), &muon.physics_object().p4());
+    utility::set(_p4.get(), &muon.physics_object().p4());
 
-    return operator()(jets);
+    return find(jets);
+}
+
+uint32_t ClosestJet::id() const
+{
+    return ID<ClosestJet>::get();
+}
+
+ClosestJet::ObjectPtr ClosestJet::clone() const
+{
+    return ObjectPtr(new ClosestJet(*this));
+}
+
+void ClosestJet::print(std::ostream &out) const
+{
+    out << "nothing to print for the closest jet";
 }
 
 // Privates
 //
-const bsm::Jet *ClosestJet::operator()(const Jets &jets)
+const bsm::Jet *ClosestJet::find(const Jets &jets)
 {
+    TLorentzVector lepton_p4(*_p4);
+
     double min_delta_r = -1;
     const Jet *closest_jet = 0;
     for(Jets::const_iterator jet = jets.begin();
             jets.end() != jet;
             ++jet)
     { 
-        utility::set(_jet_p4.get(), &jet->physics_object().p4());
+        utility::set(_p4.get(), &jet->physics_object().p4());
 
-        double delta_r = _lepton_p4->DeltaR(*_jet_p4);
+        double delta_r = _p4->DeltaR(lepton_p4);
 
         if (-1 == min_delta_r
                 || delta_r < min_delta_r)
@@ -72,9 +99,9 @@ const bsm::Jet *ClosestJet::operator()(const Jets &jets)
 
 
 
-// Missing Energy Correct
+// Neutrino Momenturm Reconstructor
 //
-MissingEnergyCorrection::MissingEnergyCorrection(const double &mass_a,
+NeutrinoReconstruct::NeutrinoReconstruct(const double &mass_a,
         const double &mass_b):
     _mass_a(mass_a),
     _mass_b(mass_b),
@@ -84,7 +111,19 @@ MissingEnergyCorrection::MissingEnergyCorrection(const double &mass_a,
     _solution_two.reset(new LorentzVector());
 }
 
-uint32_t MissingEnergyCorrection::operator()(const LorentzVector &p4,
+NeutrinoReconstruct::NeutrinoReconstruct(const NeutrinoReconstruct &obj):
+    _mass_a(obj._mass_a),
+    _mass_b(obj._mass_b),
+    _solutions(obj._solutions)
+{
+    _solution_one.reset(new LorentzVector());
+    _solution_two.reset(new LorentzVector());
+
+    *_solution_one = *obj._solution_one;
+    *_solution_two = *obj._solution_two;
+}
+
+uint32_t NeutrinoReconstruct::apply(const LorentzVector &p4,
         const LorentzVector &met)
 {
     reset();
@@ -138,8 +177,8 @@ uint32_t MissingEnergyCorrection::operator()(const LorentzVector &p4,
     return _solutions;
 }
 
-MissingEnergyCorrection::P4Ptr
-    MissingEnergyCorrection::solution(const uint32_t &solution) const
+NeutrinoReconstruct::P4Ptr
+    NeutrinoReconstruct::solution(const uint32_t &solution) const
 {
     if (!_solutions
             || !solution)
@@ -148,7 +187,7 @@ MissingEnergyCorrection::P4Ptr
     return _solution_two;
 }
 
-void MissingEnergyCorrection::reset()
+void NeutrinoReconstruct::reset()
 {
     _solutions = 0;
 
@@ -156,16 +195,51 @@ void MissingEnergyCorrection::reset()
     setSolution(_solution_two, 0, 0, 0, 0);
 }
 
+uint32_t NeutrinoReconstruct::id() const
+{
+    return ID<NeutrinoReconstruct>::get();
+}
+
+NeutrinoReconstruct::ObjectPtr NeutrinoReconstruct::clone() const
+{
+    return ObjectPtr(new NeutrinoReconstruct(*this));
+}
+
+void NeutrinoReconstruct::merge(const ObjectPtr &object_pointer)
+{
+    if (id() != object_pointer->id())
+        return;
+
+    const boost::shared_ptr<NeutrinoReconstruct> object =
+        boost::dynamic_pointer_cast<NeutrinoReconstruct>(object_pointer);
+
+    if (!object)
+        return;
+
+    _mass_a = object->_mass_a;
+    _mass_b = object->_mass_b;
+    _solutions = object->_solutions;
+
+    _solution_one = object->_solution_one;
+    _solution_two = object->_solution_two;
+}
+
+void NeutrinoReconstruct::print(std::ostream &out) const
+{
+    out << _solutions << " solution(s): "
+        << *_solution_one << " " << *_solution_two;
+}
+
 // Privates
 //
-void MissingEnergyCorrection::addSolution(P4Ptr &solution,
+void NeutrinoReconstruct::addSolution(P4Ptr &solution,
         const LorentzVector &p4,
         const double &pz)
 {
     setSolution(solution, p4.e(), p4.px(), p4.py(), pz);
 }
 
-void MissingEnergyCorrection::setSolution(P4Ptr &solution,
+void NeutrinoReconstruct::setSolution(P4Ptr &solution,
         const double &e,
         const double &px,
         const double &py,

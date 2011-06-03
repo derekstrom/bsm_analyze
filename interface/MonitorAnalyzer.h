@@ -11,69 +11,62 @@
 #include <boost/shared_ptr.hpp>
 
 #include "interface/Analyzer.h"
+#include "interface/bsm_fwd.h"
 
 namespace bsm
 {
-    class ElectronMonitor;
-    class JetMonitor;
-    class MissingEnergyMonitor;
-    class MuonMonitor;
-    class PrimaryVertexMonitor;
-
-    class MonitorAnalyzer : public core::Analyzer
+    class MonitorAnalyzer : public Analyzer
     {
         public:
-            typedef Analyzer::AnalyzerPtr AnalyzerPtr;
-
-            typedef boost::shared_ptr<ElectronMonitor> ElectronMonitorPtr;
-            typedef boost::shared_ptr<JetMonitor> JetMonitorPtr;
-            typedef boost::shared_ptr<MissingEnergyMonitor>
-                MissingEnergyMonitorPtr;
-            typedef boost::shared_ptr<MuonMonitor> MuonMonitorPtr;
-            typedef boost::shared_ptr<PrimaryVertexMonitor>
-                PrimaryVertexMonitorPtr;
+            typedef boost::shared_ptr<ElectronsMonitor> ElMonitorPtr;
+            typedef boost::shared_ptr<JetsMonitor> JetMonitorPtr;
+            typedef boost::shared_ptr<MissingEnergyMonitor> METMonitorPtr;
+            typedef boost::shared_ptr<MuonsMonitor> MuMonitorPtr;
+            typedef boost::shared_ptr<PrimaryVerticesMonitor> PVMonitorPtr;
 
             MonitorAnalyzer();
-            virtual ~MonitorAnalyzer();
+            MonitorAnalyzer(const MonitorAnalyzer &);
+
+            // Getters
+            //
+            const ElMonitorPtr pfElectrons() const;
+            const ElMonitorPtr gsfElectrons() const;
+
+            const MuMonitorPtr pfMuons() const;
+            const MuMonitorPtr recoMuons() const;
+
+            const JetMonitorPtr jets() const;
+            const METMonitorPtr missingEnergy() const;
+            const PVMonitorPtr primaryVertices() const;
 
             // Analyzer interface
             //
-            virtual AnalyzerPtr clone() const;
-
-            virtual void merge(const AnalyzerPtr &);
-
             virtual void onFileOpen(const std::string &filename, const Input *);
             virtual void process(const Event *);
 
-            virtual void print(std::ostream &) const;
-
-            virtual operator bool() const;
-
-            // Getter
+            // Object interface
             //
-            const ElectronMonitorPtr monitorPFElectrons() const;
-            const ElectronMonitorPtr monitorGSFElectrons() const;
-            const MuonMonitorPtr monitorPFMuons() const;
-            const MuonMonitorPtr monitorRecoMuons() const;
+            virtual uint32_t id() const;
 
-            const JetMonitorPtr monitorJets() const;
-            const MissingEnergyMonitorPtr monitorMissingEnergy() const;
-            const PrimaryVertexMonitorPtr monitorPrimaryVertices() const;
+            virtual ObjectPtr clone() const;
+            using Object::merge;
+
+            virtual void print(std::ostream &) const;
 
         private:
             // Prevent copying
             //
             MonitorAnalyzer &operator =(const MonitorAnalyzer &);
 
-            ElectronMonitorPtr _monitor_pf_electrons;
-            ElectronMonitorPtr _monitor_gsf_electrons;
+            ElMonitorPtr _pf_electrons;
+            ElMonitorPtr _gsf_electrons;
 
-            MuonMonitorPtr _monitor_pf_muons;
-            MuonMonitorPtr _monitor_reco_muons;
+            MuMonitorPtr _pf_muons;
+            MuMonitorPtr _reco_muons;
 
-            JetMonitorPtr _monitor_jets;
-            MissingEnergyMonitorPtr _monitor_missing_energy;
-            PrimaryVertexMonitorPtr _monitor_primary_vertices;
+            JetMonitorPtr _jets;
+            METMonitorPtr _missing_energy;
+            PVMonitorPtr _primary_vertices;
     };
 }
 

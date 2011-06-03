@@ -16,6 +16,7 @@
 #include "interface/Analyzer.h"
 #include "interface/bsm_fwd.h"
 
+/*
 namespace bsm
 {
     class FilterAnalyzer : public core::Analyzer
@@ -54,5 +55,6 @@ namespace bsm
             boost::shared_ptr<selector::MuonSelector> _reco_mu_selector;
     };
 }
+*/
 
 #endif
