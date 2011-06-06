@@ -20,6 +20,8 @@
 
 using bsm::algorithm::ClosestJet;
 using bsm::algorithm::NeutrinoReconstruct;
+using bsm::algorithm::HadronicDecay;
+using bsm::algorithm::LeptonicDecay;
 
 using bsm::core::ID;
 
@@ -220,8 +222,8 @@ void NeutrinoReconstruct::merge(const ObjectPtr &object_pointer)
     _mass_b = object->_mass_b;
     _solutions = object->_solutions;
 
-    _solution_one = object->_solution_one;
-    _solution_two = object->_solution_two;
+    *_solution_one = *object->_solution_one;
+    *_solution_two = *object->_solution_two;
 }
 
 void NeutrinoReconstruct::print(std::ostream &out) const
@@ -249,4 +251,189 @@ void NeutrinoReconstruct::setSolution(P4Ptr &solution,
     solution->set_px(px);
     solution->set_py(py);
     solution->set_pz(pz);
+}
+
+
+
+// Hadronic Decay
+//
+HadronicDecay::HadronicDecay():
+    _dr(0),
+    _dr_w_top(0),
+    _dr_b_top(0)
+{
+    _top.reset(new LorentzVector());
+}
+
+HadronicDecay::HadronicDecay(const HadronicDecay &object):
+    _dr(object._dr),
+    _dr_w_top(object._dr_w_top),
+    _dr_b_top(object._dr_b_top)
+{
+    _top.reset(new LorentzVector());
+
+    *_top = *object._top;
+}
+
+double HadronicDecay::apply(const LorentzVector &w, const LorentzVector &b)
+{
+    _top->Clear();
+
+    *_top += w;
+    *_top += b;
+
+    _dr_w_top = bsm::dr(w, *_top);
+    _dr_b_top = bsm::dr(b, *_top);
+    _dr = _dr_w_top + _dr_b_top;
+
+    return _dr;
+}
+
+double HadronicDecay::dr() const
+{
+    return _dr;
+}
+
+double HadronicDecay::dr_w_top() const
+{
+    return _dr_w_top;
+}
+
+double HadronicDecay::dr_b_top() const
+{
+    return _dr_b_top;
+}
+
+uint32_t HadronicDecay::id() const
+{
+    return core::ID<HadronicDecay>::get();
+}
+
+HadronicDecay::ObjectPtr HadronicDecay::clone() const
+{
+    return ObjectPtr(new HadronicDecay(*this));
+}
+
+void HadronicDecay::merge(const ObjectPtr &object_pointer)
+{
+    if (id() != object_pointer->id())
+        return;
+
+    const boost::shared_ptr<HadronicDecay> object =
+        boost::dynamic_pointer_cast<HadronicDecay>(object_pointer);
+
+    if (!object)
+        return;
+
+    _dr = object->dr();
+    _dr_w_top = object->dr_w_top();
+    _dr_b_top = object->dr_b_top();
+
+    *_top = *object->_top;
+}
+
+void HadronicDecay::print(std::ostream &out) const
+{
+    out << "dr: " << dr()
+        << " dr(w,t): " << dr_w_top()
+        << " dr(b,t): " << dr_b_top();
+}
+
+
+
+// Leptonic Decay
+//
+LeptonicDecay::LeptonicDecay():
+    _dr(0),
+    _dr_l_top(0),
+    _dr_nu_top(0),
+    _dr_b_top(0)
+{
+    _top.reset(new LorentzVector());
+}
+
+LeptonicDecay::LeptonicDecay(const LeptonicDecay &object):
+    _dr(object._dr),
+    _dr_l_top(object._dr_l_top),
+    _dr_nu_top(object._dr_nu_top),
+    _dr_b_top(object._dr_b_top)
+{
+    _top.reset(new LorentzVector());
+
+    *_top = *object._top;
+}
+
+double LeptonicDecay::apply(const LorentzVector &l,
+        const LorentzVector &nu,
+        const LorentzVector &b)
+{
+    _top->Clear();
+
+    *_top += l;
+    *_top += nu;
+    *_top += b;
+
+    _dr_l_top = bsm::dr(l, *_top);
+    _dr_nu_top = bsm::dr(nu, *_top);
+    _dr_b_top = bsm::dr(b, *_top);
+    _dr = _dr_l_top + _dr_nu_top + _dr_b_top;
+
+    return _dr;
+}
+
+double LeptonicDecay::dr() const
+{
+    return _dr;
+}
+
+double LeptonicDecay::dr_l_top() const
+{
+    return _dr_l_top;
+}
+
+double LeptonicDecay::dr_nu_top() const
+{
+    return _dr_nu_top;
+}
+
+double LeptonicDecay::dr_b_top() const
+{
+    return _dr_b_top;
+}
+
+uint32_t LeptonicDecay::id() const
+{
+    return core::ID<LeptonicDecay>::get();
+}
+
+LeptonicDecay::ObjectPtr LeptonicDecay::clone() const
+{
+    return ObjectPtr(new LeptonicDecay(*this));
+}
+
+void LeptonicDecay::merge(const ObjectPtr &object_pointer)
+{
+    if (id() != object_pointer->id())
+        return;
+
+    const boost::shared_ptr<LeptonicDecay> object =
+        boost::dynamic_pointer_cast<LeptonicDecay>(object_pointer);
+
+    if (!object)
+        return;
+
+    _dr = object->dr();
+    _dr_l_top = object->dr_l_top();
+    _dr_nu_top = object->dr_nu_top();
+    _dr_b_top = object->dr_b_top();
+
+    *_top = *object->_top;
+}
+
+void LeptonicDecay::print(std::ostream &out) const
+{
+    out << "dr: " << dr()
+        << " dr(l,t): " << dr_l_top()
+        << " dr(nu,t): " << dr_nu_top()
+        << " dr(b,t): " << dr_b_top();
 }
