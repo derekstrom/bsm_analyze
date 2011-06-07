@@ -8,6 +8,8 @@
 #ifndef BSM_ALGORITHM
 #define BSM_ALGORITHM
 
+#include <vector>
+
 #include <boost/shared_ptr.hpp>
 
 #include "bsm_core/interface/Object.h"
@@ -147,11 +149,13 @@ namespace bsm
                 HadronicDecay();
                 HadronicDecay(const HadronicDecay &);
 
-                double apply(const LorentzVector &w, const LorentzVector &b);
-
                 double dr() const;
                 double dr_w_top() const;
                 double dr_b_top() const;
+
+                double apply(const LorentzVector &w, const LorentzVector &b);
+
+                void reset();
 
                 // Object interface
                 //
@@ -194,14 +198,16 @@ namespace bsm
                 LeptonicDecay();
                 LeptonicDecay(const LeptonicDecay &);
 
-                double apply(const LorentzVector &l,
-                        const LorentzVector &nu,
-                        const LorentzVector &b);
-
                 double dr() const;
                 double dr_l_top() const;
                 double dr_nu_top() const;
                 double dr_b_top() const;
+
+                double apply(const LorentzVector &l,
+                        const LorentzVector &nu,
+                        const LorentzVector &b);
+
+                void reset();
 
                 // Object interface
                 //
@@ -223,6 +229,59 @@ namespace bsm
                 double _dr_l_top;
                 double _dr_nu_top;
                 double _dr_b_top;
+        };
+
+        class TTbarDeltaRReconstruct : public core::Object
+        {
+            public:
+                typedef std::vector<Jet *> Jets;
+                typedef boost::shared_ptr<HadronicDecay> HadronicPtr;
+                typedef boost::shared_ptr<LeptonicDecay> LeptonicPtr;
+
+                TTbarDeltaRReconstruct();
+                TTbarDeltaRReconstruct(const TTbarDeltaRReconstruct &);
+
+                double dr() const;
+
+                HadronicPtr hadronicDecay() const;
+                LeptonicPtr leptonicDecay() const;
+
+                // Function will return combined DeltaR:
+                //
+                //  DR = DR_leptonic + DR_hadronic
+                //
+                double apply(const Jets &,
+                        const LorentzVector &lepton,
+                        const LorentzVector &missing_energy,
+                        const LorentzVector &wjet);
+
+                void reset();
+
+                // Object interface
+                //
+                virtual uint32_t id() const;
+
+                virtual ObjectPtr clone() const;
+                virtual void merge(const ObjectPtr &);
+
+                virtual void print(std::ostream &) const;
+
+            private:
+                // Prevent copying
+                //
+                TTbarDeltaRReconstruct &operator =(const TTbarDeltaRReconstruct &);
+
+                double minimize(const Jets &,
+                        const Jets::const_iterator &jet1,
+                        const Jets::const_iterator &jet2,
+                        const LorentzVector &lepton,
+                        const LorentzVector &missing_energy,
+                        const LorentzVector &wjet);
+
+                double _dr;
+                
+                HadronicPtr _hadronic;
+                LeptonicPtr _leptonic;
         };
     }
 
