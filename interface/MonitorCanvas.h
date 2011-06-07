@@ -14,17 +14,12 @@
 
 #include "bsm_core/interface/bsm_core_fwd.h"
 #include "bsm_stat/interface/bsm_stat_fwd.h"
+#include "interface/bsm_fwd.h"
+
+class TCanvas;
 
 namespace bsm
 {
-    class DeltaMonitor;
-    class ElectronsMonitor;
-    class JetsMonitor;
-    class LorentzVectorMonitor;
-    class MissingEnergyMonitor;
-    class MuonsMonitor;
-    class PrimaryVerticesMonitor;
-
     class DeltaCanvas
     {
         public:
