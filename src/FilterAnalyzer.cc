@@ -18,11 +18,11 @@
 #include "bsm_input/interface/Writer.h"
 #include "interface/FilterAnalyzer.h"
 #include "interface/Selector.h"
-/*
 
 using bsm::FilterAnalyzer;
 
 using boost::dynamic_pointer_cast;
+namespace fs = boost::filesystem;
 
 using std::ostream;
 using std::endl;
@@ -34,36 +34,37 @@ FilterAnalyzer::FilterAnalyzer()
 
     _pf_mu_selector.reset(new MuonSelector());
     _reco_mu_selector.reset(new MuonSelector());
+
+    monitor(_pf_el_selector);
+    monitor(_gsf_el_selector);
+
+    monitor(_pf_mu_selector);
+    monitor(_reco_mu_selector);
 }
 
-FilterAnalyzer::~FilterAnalyzer()
+FilterAnalyzer::FilterAnalyzer(const FilterAnalyzer &object)
 {
-}
+    _pf_el_selector = 
+        dynamic_pointer_cast<ElectronSelector>(object._pf_el_selector->clone());
 
-FilterAnalyzer::AnalyzerPtr FilterAnalyzer::clone() const
-{
-    return AnalyzerPtr(new FilterAnalyzer());
-}
+    _gsf_el_selector =
+        dynamic_pointer_cast<ElectronSelector>(object._gsf_el_selector->clone());
 
-void FilterAnalyzer::merge(const AnalyzerPtr &analyzer_ptr)
-{
-    boost::shared_ptr<FilterAnalyzer> analyzer =
-        dynamic_pointer_cast<FilterAnalyzer>(analyzer_ptr);
+    _pf_mu_selector =
+        dynamic_pointer_cast<MuonSelector>(object._pf_mu_selector->clone());
 
-    if (!analyzer)
-        return;
+    _reco_mu_selector =
+        dynamic_pointer_cast<MuonSelector>(object._reco_mu_selector->clone());
 
-    _pf_el_selector->merge(analyzer->_pf_el_selector);
-    _gsf_el_selector->merge(analyzer->_gsf_el_selector);
+    monitor(_pf_el_selector);
+    monitor(_gsf_el_selector);
 
-    _pf_mu_selector->merge(analyzer->_pf_mu_selector);
-    _reco_mu_selector->merge(analyzer->_reco_mu_selector);
+    monitor(_pf_mu_selector);
+    monitor(_reco_mu_selector);
 }
 
 void FilterAnalyzer::onFileOpen(const std::string &filename, const Input *input)
 {
-    namespace fs = boost::filesystem;
-
     fs::path path(filename);
 
 #if BOOST_VERSION < 104600
@@ -74,6 +75,14 @@ void FilterAnalyzer::onFileOpen(const std::string &filename, const Input *input)
                 + path.extension().generic_string()));
 #endif
 
+    _writer->open();
+    if (!_writer->isOpen())
+    {
+        _writer.reset();
+
+        return;
+    }
+
     *_writer->input() = *input;
 
     _event.reset(new Event());
@@ -82,46 +91,46 @@ void FilterAnalyzer::onFileOpen(const std::string &filename, const Input *input)
 void FilterAnalyzer::process(const Event *event)
 {
     if (!_writer
+            || !_event
             || !event->primary_vertices().size())
         return;
 
     primaryVertices(event);
     electrons(event);
     muons(event);
+    missing_energy(event);
 
-    _writer->write(*_event);
+    _writer->write(_event);
 
     _event->Clear();
+}
+
+uint32_t FilterAnalyzer::id() const
+{
+    return core::ID<FilterAnalyzer>::get();
+}
+
+FilterAnalyzer::ObjectPtr FilterAnalyzer::clone() const
+{
+    return ObjectPtr(new FilterAnalyzer(*this));
 }
 
 void FilterAnalyzer::print(std::ostream &out) const
 {
     out << "Particle-Flow Electrons" << endl;
-    out << "[Selector]" << endl;
     out << *_pf_el_selector << endl;
     out << endl;
 
     out << "Gsf Electrons" << endl;
-    out << "[Selector]" << endl;
     out << *_gsf_el_selector << endl;
     out << endl;
 
     out << "Particle-Flow Muons" << endl;
-    out << "[Selector]" << endl;
     out << *_pf_mu_selector << endl;
+    out << endl;
 
     out << "Reco Muons" << endl;
-    out << "[Selector]" << endl;
-    out << *_reco_mu_selector << endl;
-    out << endl;
-}
-
-FilterAnalyzer::operator bool() const
-{
-    return _pf_el_selector
-        && _gsf_el_selector
-        && _pf_mu_selector
-        && _reco_mu_selector;
+    out << *_reco_mu_selector;
 }
 
 // Private
@@ -148,12 +157,12 @@ void FilterAnalyzer::electrons(const Event *event)
 
     if (event->pf_electrons().size())
     {
-        selector::LockSelectorEventCounterOnUpdate lock(*_pf_el_selector);
+        LockSelectorEventCounterOnUpdate lock(*_pf_el_selector);
         for(Electrons::const_iterator el = event->pf_electrons().begin();
                 event->pf_electrons().end() != el;
                 ++el)
         {
-            if ((*_pf_el_selector)(*el, pv))
+            if (_pf_el_selector->apply(*el, pv))
             {
                 bsm::Electron *electron = _event->add_pf_electrons();
 
@@ -164,12 +173,12 @@ void FilterAnalyzer::electrons(const Event *event)
 
     if (event->gsf_electrons().size())
     {
-        selector::LockSelectorEventCounterOnUpdate lock(*_gsf_el_selector);
+        LockSelectorEventCounterOnUpdate lock(*_gsf_el_selector);
         for(Electrons::const_iterator el = event->gsf_electrons().begin();
                 event->gsf_electrons().end() != el;
                 ++el)
         {
-            if ((*_gsf_el_selector)(*el, pv))
+            if (_gsf_el_selector->apply(*el, pv))
             {
                 bsm::Electron *electron = _event->add_gsf_electrons();
 
@@ -187,12 +196,12 @@ void FilterAnalyzer::muons(const Event *event)
 
     if (event->pf_muons().size())
     {
-        selector::LockSelectorEventCounterOnUpdate lock(*_pf_mu_selector);
+        LockSelectorEventCounterOnUpdate lock(*_pf_mu_selector);
         for(Muons::const_iterator mu = event->pf_muons().begin();
                 event->pf_muons().end() != mu;
                 ++mu)
         {
-            if ((*_pf_mu_selector)(*mu, pv))
+            if (_pf_mu_selector->apply(*mu, pv))
             {
                 bsm::Muon *muon = _event->add_pf_muons();
 
@@ -203,12 +212,12 @@ void FilterAnalyzer::muons(const Event *event)
 
     if (event->reco_muons().size())
     {
-        selector::LockSelectorEventCounterOnUpdate lock(*_reco_mu_selector);
+        LockSelectorEventCounterOnUpdate lock(*_reco_mu_selector);
         for(Muons::const_iterator mu = event->reco_muons().begin();
                 event->reco_muons().end() != mu;
                 ++mu)
         {
-            if ((*_reco_mu_selector)(*mu, pv))
+            if (_reco_mu_selector->apply(*mu, pv))
             {
                 bsm::Muon *muon = _event->add_reco_muons();
 
@@ -217,4 +226,7 @@ void FilterAnalyzer::muons(const Event *event)
         }
     }
 }
-*/
+
+void FilterAnalyzer::missing_energy(const Event *event)
+{
+}

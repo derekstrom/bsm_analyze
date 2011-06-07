@@ -19,10 +19,10 @@ using std::endl;
 
 using boost::shared_ptr;
 
-//using bsm::FilterAnalyzer;
+using bsm::FilterAnalyzer;
 using bsm::ThreadController;
 
-//typedef shared_ptr<FilterAnalyzer> FilterAnalyzerPtr;
+typedef shared_ptr<FilterAnalyzer> FilterAnalyzerPtr;
 typedef shared_ptr<ThreadController> ControllerPtr;
 
 void run(ControllerPtr &);
@@ -64,7 +64,6 @@ int main(int argc, char *argv[])
 void run(ControllerPtr &controller)
 try
 {
-    /*
     // Prepare Analysis
     //
     FilterAnalyzerPtr analyzer(new FilterAnalyzer());
@@ -75,7 +74,6 @@ try
     controller->start();
 
     cout << *analyzer << endl;
-    */
 }
 catch(...)
 {

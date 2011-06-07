@@ -256,7 +256,11 @@ AnalyzerOperation::ReaderPtr AnalyzerOperation::createReader()
     ReaderPtr reader(new Reader(_file_name));
     _file_name.clear();
 
-    _analyzer->onFileOpen(reader->filename(), reader->input().get());
+    reader->open();
+    if (reader->isOpen())
+        _analyzer->onFileOpen(reader->filename(), reader->input().get());
+    else
+        reader.reset();
 
     return reader;
 }
@@ -267,9 +271,12 @@ void AnalyzerOperation::processFile()
         return;
 
     ReaderPtr reader = createReader();
+    if (!reader)
+        return;
+
     for(shared_ptr<Event> event(new Event());
             isContinue()
-            && reader->read(*event);
+                && reader->read(event);
             event->Clear())
     {
         Lock lock(thread()->condition());
@@ -278,8 +285,6 @@ void AnalyzerOperation::processFile()
 
         ++_events_processed;
     }
-
-    _total_events_size = reader->totalEventsSize();
 }
 
 void AnalyzerOperation::waitForInstructions()
