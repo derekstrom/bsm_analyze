@@ -41,6 +41,7 @@ namespace bsm
             void electrons(const Event *);
             void muons(const Event *);
             void missing_energy(const Event *);
+            void jets(const Event *);
 
             boost::shared_ptr<Writer> _writer;
 

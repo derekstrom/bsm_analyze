@@ -14,6 +14,7 @@
 #include "bsm_input/interface/Electron.pb.h"
 #include "bsm_input/interface/Event.pb.h"
 #include "bsm_input/interface/Input.pb.h"
+#include "bsm_input/interface/MissingEnergy.pb.h"
 #include "bsm_input/interface/Muon.pb.h"
 #include "bsm_input/interface/Writer.h"
 #include "interface/FilterAnalyzer.h"
@@ -99,6 +100,7 @@ void FilterAnalyzer::process(const Event *event)
     electrons(event);
     muons(event);
     missing_energy(event);
+    jets(event);
 
     _writer->write(_event);
 
@@ -229,4 +231,24 @@ void FilterAnalyzer::muons(const Event *event)
 
 void FilterAnalyzer::missing_energy(const Event *event)
 {
+    if (!event->has_missing_energy())
+        return;
+
+    bsm::MissingEnergy *met = _event->mutable_missing_energy();
+
+    *met = event->missing_energy();
+}
+
+void FilterAnalyzer::jets(const Event *event)
+{
+    typedef ::google::protobuf::RepeatedPtrField<Jet> Jets;
+
+    for(Jets::const_iterator jet = event->jets().begin();
+            event->jets().end() != jet;
+            ++jet)
+    {
+        bsm::Jet *pb_jet = _event->add_jets();
+
+        *pb_jet = *jet;
+    }
 }
