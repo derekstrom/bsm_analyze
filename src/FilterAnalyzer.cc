@@ -5,11 +5,14 @@
 // Created by Samvel Khalatyan, May 20, 2011
 // Copyright 2011, All rights reserved
 
+#include <iostream>
 #include <ostream>
+#include <sstream>
 
-#include <boost/version.hpp>
+#include <boost/functional/hash.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/pointer_cast.hpp>
+#include <boost/version.hpp>
 
 #include "bsm_input/interface/Electron.pb.h"
 #include "bsm_input/interface/Event.pb.h"
@@ -20,13 +23,12 @@
 #include "interface/FilterAnalyzer.h"
 #include "interface/Selector.h"
 
-using bsm::FilterAnalyzer;
+using namespace std;
 
 using boost::dynamic_pointer_cast;
 namespace fs = boost::filesystem;
 
-using std::ostream;
-using std::endl;
+using bsm::FilterAnalyzer;
 
 FilterAnalyzer::FilterAnalyzer()
 {
@@ -68,14 +70,19 @@ void FilterAnalyzer::onFileOpen(const std::string &filename, const Input *input)
 {
     fs::path path(filename);
 
+    ostringstream file_name;
+
+    boost::hash<std::string> make_hash;
+
+    file_name << make_hash(filename);
+
 #if BOOST_VERSION < 104600
-    _writer.reset(new Writer(path.stem() + std::string("_filtered")
-                + path.extension()));
+    file_name << path.extension();
 #else
-    _writer.reset(new Writer(path.stem().generic_string() + std::string("_filtered")
-                + path.extension().generic_string()));
+    file_name << path.extension();
 #endif
 
+    _writer.reset(new Writer(file_name.str()));
     _writer->open();
     if (!_writer->isOpen())
     {
