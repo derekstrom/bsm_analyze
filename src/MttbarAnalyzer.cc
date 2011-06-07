@@ -21,6 +21,7 @@
 #include "bsm_input/interface/Muon.pb.h"
 #include "bsm_stat/interface/H1.h"
 #include "interface/Algorithm.h"
+#include "interface/Monitor.h"
 #include "interface/Selector.h"
 #include "interface/StatProxy.h"
 #include "interface/Utility.h"
@@ -38,6 +39,7 @@ MttbarAnalyzer::MttbarAnalyzer()
 {
     _el_selector.reset(new ElectronSelector());
     _el_multiplicity.reset(new MultiplicityCutflow(4));
+    _el_monitor.reset(new LorentzVectorMonitor());
 
     _mu_selector.reset(new MuonSelector());
     _mu_multiplicity.reset(new MultiplicityCutflow(4));
@@ -46,6 +48,7 @@ MttbarAnalyzer::MttbarAnalyzer()
 
     monitor(_el_selector);
     monitor(_el_multiplicity);
+    monitor(_el_monitor);
 
     monitor(_mu_selector);
     monitor(_mu_multiplicity);
@@ -59,6 +62,8 @@ MttbarAnalyzer::MttbarAnalyzer(const MttbarAnalyzer &object)
         dynamic_pointer_cast<ElectronSelector>(object._el_selector->clone());
     _el_multiplicity =
         dynamic_pointer_cast<MultiplicityCutflow>(object._el_multiplicity->clone());
+    _el_monitor =
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._el_monitor->clone());
 
     _mu_selector =
         dynamic_pointer_cast<MuonSelector>(object._mu_selector->clone());
@@ -69,6 +74,7 @@ MttbarAnalyzer::MttbarAnalyzer(const MttbarAnalyzer &object)
 
     monitor(_el_selector);
     monitor(_el_multiplicity);
+    monitor(_el_monitor);
 
     monitor(_mu_selector);
     monitor(_mu_multiplicity);
@@ -79,6 +85,11 @@ MttbarAnalyzer::MttbarAnalyzer(const MttbarAnalyzer &object)
 const MttbarAnalyzer::H1Ptr MttbarAnalyzer::mttbar() const
 {
     return _mttbar->histogram();
+}
+
+const MttbarAnalyzer::P4MonitorPtr MttbarAnalyzer::electronMonitor() const
+{
+    return _el_monitor;
 }
 
 void MttbarAnalyzer::onFileOpen(const std::string &filename, const Input *input)
@@ -123,6 +134,10 @@ void MttbarAnalyzer::print(std::ostream &out) const
 
     out << "PF Electrons Multiplcitiy" << endl;
     out << *_el_multiplicity << endl;
+    out << endl;
+
+    out << "PF Electron P4" << endl;
+    out << *_el_monitor << endl;
     out << endl;
 
     out << "Mttbar" << endl;
@@ -180,4 +195,23 @@ void MttbarAnalyzer::electrons(const Event *event)
         return;
 
     // Continue Processing
+    //
+    jets(event, electron);
+}
+
+void MttbarAnalyzer::jets(const Event *event, const Electron *electron)
+{
+    _el_monitor->fill(electron->physics_object().p4());
+
+    if (3 > event->jets().size())
+        return;
+
+    // Take all permutations of jets and select the one that has minimum
+    // leptonic decay DR and hadronic decay DR
+    //
+    for(Jets::const_iterator jet = event->jets().begin();
+            event->jets().end() != jet;
+            ++jet)
+    {
+    }
 }

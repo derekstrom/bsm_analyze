@@ -7,21 +7,22 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <TRint.h>
+#include <TCanvas.h>
 #include <TH1.h>
+#include <TRint.h>
 
 #include "bsm_input/interface/Event.pb.h"
 #include "bsm_stat/interface/bsm_stat_fwd.h"
 #include "bsm_stat/interface/Utility.h"
+#include "interface/MonitorCanvas.h"
 #include "interface/MttbarAnalyzer.h"
 #include "interface/Thread.h"
 
-using std::cerr;
-using std::cout;
-using std::endl;
+using namespace std;
 
 using boost::shared_ptr;
 
+using bsm::LorentzVectorCanvas;
 using bsm::MttbarAnalyzer;
 using bsm::ThreadController;
 
@@ -90,6 +91,10 @@ try
         TH1Ptr mttbar = convert(*analyzer->mttbar());
         mttbar->GetXaxis()->SetTitle("m_{t#bar{t}} [GeV/c^{2}]");
         mttbar->Draw();
+
+        boost::shared_ptr<LorentzVectorCanvas> el_p4(
+                new LorentzVectorCanvas("Selected PF Electron"));
+        el_p4->draw(*analyzer->electronMonitor());
 
         app->Run();
     }

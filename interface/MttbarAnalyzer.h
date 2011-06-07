@@ -25,6 +25,7 @@ namespace bsm
     {
         public:
             typedef boost::shared_ptr<stat::H1> H1Ptr;
+            typedef boost::shared_ptr<LorentzVectorMonitor> P4MonitorPtr;
 
             MttbarAnalyzer();
             MttbarAnalyzer(const MttbarAnalyzer &);
@@ -32,6 +33,7 @@ namespace bsm
             // Getters
             //
             const H1Ptr mttbar() const;
+            const P4MonitorPtr electronMonitor() const;
 
             // Analyzer interface
             //
@@ -57,9 +59,11 @@ namespace bsm
 
             bool muons(const Event *);
             void electrons(const Event *);
+            void jets(const Event *, const Electron *);
 
             boost::shared_ptr<ElectronSelector> _el_selector;
             boost::shared_ptr<MultiplicityCutflow> _el_multiplicity;
+            P4MonitorPtr _el_monitor;
 
             boost::shared_ptr<MuonSelector> _mu_selector;
             boost::shared_ptr<MultiplicityCutflow> _mu_multiplicity;
