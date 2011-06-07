@@ -31,12 +31,12 @@ using namespace bsm;
 using bsm::stat::convert;
 using bsm::stat::TH1Ptr;
 
-shared_ptr<ElectronMonitor> electrons;
+shared_ptr<ElectronsMonitor> electrons;
 shared_ptr<GenParticleMonitor> gen_particles;
-shared_ptr<JetMonitor> jets;
+shared_ptr<JetsMonitor> jets;
 shared_ptr<MissingEnergyMonitor> missing_energy;
-shared_ptr<MuonMonitor> muons;
-shared_ptr<PrimaryVertexMonitor> primary_vertices;
+shared_ptr<MuonsMonitor> muons;
+shared_ptr<PrimaryVerticesMonitor> primary_vertices;
 
 void plot();
 
@@ -52,25 +52,30 @@ try
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    electrons.reset(new ElectronMonitor());
+    electrons.reset(new ElectronsMonitor());
     gen_particles.reset(new GenParticleMonitor());
-    jets.reset(new JetMonitor());
+    jets.reset(new JetsMonitor());
     missing_energy.reset(new MissingEnergyMonitor());
-    muons.reset(new MuonMonitor());
-    primary_vertices.reset(new PrimaryVertexMonitor());
+    muons.reset(new MuonsMonitor());
+    primary_vertices.reset(new PrimaryVerticesMonitor());
 
     {
         for(int i = 1; argc > i; ++i)
         {
             shared_ptr<Reader> reader(new Reader(argv[i]));
+            reader->open();
+
+            if (!reader->isOpen())
+                continue;
+
             uint32_t events_read = 0;
             for(shared_ptr<Event> event(new Event());
-                    reader->read(*event);
+                    reader->read(event);
                     ++events_read)
             {
                 jets->fill(event->jets());
 
-                for(JetMonitor::Jets::const_iterator jet = event->jets().begin();
+                for(JetsMonitor::Jets::const_iterator jet = event->jets().begin();
                         event->jets().end() != jet;
                         ++jet)
                 {

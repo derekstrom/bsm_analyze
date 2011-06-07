@@ -7,22 +7,18 @@
 
 #include <iostream>
 
+#include <boost/pointer_cast.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "bsm_input/interface/Reader.h"
 #include "bsm_input/interface/Event.pb.h"
 #include "interface/MonitorAnalyzer.h"
 
-using std::cerr;
-using std::cout;
-using std::endl;
+using namespace std;
+using namespace boost;
+using namespace bsm;
 
-using boost::shared_ptr;
-
-using bsm::Reader;
-using bsm::Event;
-using bsm::MonitorAnalyzer;
-typedef bsm::MonitorAnalyzer::AnalyzerPtr AnalyzerPtr;
+typedef shared_ptr<MonitorAnalyzer> AnalyzerPtr;
 
 int main(int argc, char *argv[])
 try
@@ -36,8 +32,8 @@ try
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    shared_ptr<MonitorAnalyzer> monitor(new MonitorAnalyzer());
-    AnalyzerPtr monitor_copy_1 = monitor->clone();
+    AnalyzerPtr monitor(new MonitorAnalyzer());
+    AnalyzerPtr monitor_copy_1 = dynamic_pointer_cast<MonitorAnalyzer>(monitor->clone());
 
     cout << "monitor: " << monitor << endl;
     cout << "copye  : " << monitor_copy_1 << endl;
@@ -51,17 +47,22 @@ try
 
     {
         shared_ptr<Reader> reader(new Reader(argv[1]));
-        uint32_t events_read = 0;
-        for(shared_ptr<Event> event(new Event());
-                reader->read(*event);
-                ++events_read)
+        reader->open();
+
+        if (reader->isOpen())
         {
-            monitor_copy_1->process(event.get());
+            uint32_t events_read = 0;
+            for(shared_ptr<Event> event(new Event());
+                    reader->read(event);
+                    ++events_read)
+            {
+                monitor_copy_1->process(event.get());
 
-            event->Clear();
+                event->Clear();
+            }
+
+            cout << "Events Read: " << events_read << endl;
         }
-
-        cout << "Events Read: " << events_read << endl;
     }
 
     cout << "Original Monitor" << endl;

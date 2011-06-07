@@ -1,4 +1,5 @@
 // Filter BSM Input
+// }
 //
 // Read events, filter only GOOD physics objects: muons, electrons, jets, etc.
 //
@@ -41,11 +42,14 @@ try
             shared_ptr<Reader> reader(new Reader(argv[i]));
             reader->open();
 
+            if (!reader->isOpen())
+                continue;
+
             filter->onFileOpen(reader->filename(), reader->input().get());
 
             uint32_t events_read = 0;
             for(shared_ptr<Event> event(new Event());
-                    reader->read(*event);
+                    reader->read(event);
                     ++events_read)
             {
                 filter->process(event.get());

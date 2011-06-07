@@ -41,9 +41,13 @@ int main(int argc, char *argv[])
         for(int i = 1; argc > i; ++i)
         {
             shared_ptr<Reader> reader(new Reader(argv[i]));
+            reader->open();
+            if (!reader->isOpen())
+                continue;
+
             uint32_t events_read = 0;
             for(shared_ptr<Event> event(new Event());
-                    reader->read(*event);
+                    reader->read(event);
                     ++events_read)
             {
                 analyzer->process(event.get());

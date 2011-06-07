@@ -51,9 +51,14 @@ try
                 : clone2;
 
             shared_ptr<Reader> reader(new Reader(argv[i]));
+            reader->open();
+
+            if (!reader->isOpen())
+                continue;
+
             uint32_t events_read = 0;
             for(shared_ptr<Event> event(new Event());
-                    reader->read(*event);
+                    reader->read(event);
                     ++events_read)
             {
                 cutflow->apply(event->primary_vertices().size());

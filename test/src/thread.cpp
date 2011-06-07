@@ -10,9 +10,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "bsm_input/interface/Reader.h"
 #include "bsm_stat/interface/Utility.h"
 
+#include "bsm_input/interface/Event.pb.h"
 #include "interface/MonitorAnalyzer.h"
 #include "interface/Thread.h"
 

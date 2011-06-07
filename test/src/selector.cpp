@@ -21,27 +21,18 @@
 #include "interface/MonitorCanvas.h"
 #include "interface/Selector.h"
 
-using std::cerr;
-using std::cout;
-using std::endl;
-
-using boost::shared_ptr;
-
-using bsm::stat::convert;
-using bsm::stat::TH1Ptr;
-using bsm::selector::ElectronSelector;
-using bsm::selector::MuonSelector;
-
+using namespace std;
+using namespace boost;
 using namespace bsm;
 
-shared_ptr<ElectronMonitor> all_pf_electrons;
-shared_ptr<ElectronMonitor> selected_pf_electrons;
+shared_ptr<ElectronsMonitor> all_pf_electrons;
+shared_ptr<ElectronsMonitor> selected_pf_electrons;
 
-shared_ptr<MuonMonitor> all_pf_muons;
-shared_ptr<MuonMonitor> selected_pf_muons;
+shared_ptr<MuonsMonitor> all_pf_muons;
+shared_ptr<MuonsMonitor> selected_pf_muons;
 
-typedef ElectronMonitor::Electrons Electrons;
-typedef MuonMonitor::Muons Muons;
+typedef ElectronsMonitor::Electrons Electrons;
+typedef MuonsMonitor::Muons Muons;
 
 void plot();
 
@@ -57,11 +48,11 @@ try
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    all_pf_electrons.reset(new ElectronMonitor());
-    selected_pf_electrons.reset(new ElectronMonitor());
+    all_pf_electrons.reset(new ElectronsMonitor());
+    selected_pf_electrons.reset(new ElectronsMonitor());
 
-    all_pf_muons.reset(new MuonMonitor());
-    selected_pf_muons.reset(new MuonMonitor());
+    all_pf_muons.reset(new MuonsMonitor());
+    selected_pf_muons.reset(new MuonsMonitor());
 
     {
         shared_ptr<ElectronSelector> el_selector(new ElectronSelector());
@@ -76,9 +67,14 @@ try
             shared_ptr<MuonSelector> per_file_mu_selector(new MuonSelector());
 
             shared_ptr<Reader> reader(new Reader(argv[i]));
+            reader->open();
+
+            if (!reader->isOpen())
+                continue;
+
             uint32_t events_read = 0;
             for(shared_ptr<Event> event(new Event());
-                    reader->read(*event);
+                    reader->read(event);
                     ++events_read)
             {
                 if (!event->primary_vertices().size())
@@ -95,8 +91,8 @@ try
                             event->pf_electrons().end() != electron;
                             ++electron)
                     {
-                        per_file_el_selector->operator()(*electron, pv);
-                        if (el_selector->operator()(*electron, pv))
+                        per_file_el_selector->apply(*electron, pv);
+                        if (el_selector->apply(*electron, pv))
                             *selected_electrons.Add() = *electron;
                     }
 
@@ -115,8 +111,8 @@ try
                             event->pf_muons().end() != muon;
                             ++muon)
                     {
-                        per_file_mu_selector->operator()(*muon, pv);
-                        if (mu_selector->operator()(*muon, pv))
+                        per_file_mu_selector->apply(*muon, pv);
+                        if (mu_selector->apply(*muon, pv))
                             *selected_muons.Add() = *muon;
                     }
 
