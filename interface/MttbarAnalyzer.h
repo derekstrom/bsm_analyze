@@ -54,14 +54,9 @@ namespace bsm
 
             typedef boost::shared_ptr<H1Proxy> H1ProxyPtr;
             typedef std::vector<const Jet *> Jets;
-            typedef boost::shared_ptr<LorentzVector> PBP4;
 
             bool muons(const Event *);
             void electrons(const Event *);
-            void jets(const Event *, const Electron *);
-
-            PBP4 leptonicLeg(const Event *, const Electron *, const Jets &);
-            PBP4 hadronicLeg(const Event *, const Jet *wjet, const Jets &);
 
             boost::shared_ptr<ElectronSelector> _el_selector;
             boost::shared_ptr<MultiplicityCutflow> _el_multiplicity;
@@ -69,17 +64,7 @@ namespace bsm
             boost::shared_ptr<MuonSelector> _mu_selector;
             boost::shared_ptr<MultiplicityCutflow> _mu_multiplicity;
 
-            boost::shared_ptr<MultiplicityCutflow> _leptonic_multiplicity;
-            boost::shared_ptr<MultiplicityCutflow> _hadronic_multiplicity;
-
-            boost::shared_ptr<WJetSelector> _wjet_selector;
-            boost::shared_ptr<MultiplicityCutflow> _met_solutions;
-
-            boost::shared_ptr<algorithm::NeutrinoReconstruct> _met_reconstructor;
-
             H1ProxyPtr _mttbar;
-
-            boost::shared_ptr<TLorentzVector> _p4;
     };
 }
 
