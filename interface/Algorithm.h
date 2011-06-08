@@ -149,6 +149,8 @@ namespace bsm
                 HadronicDecay();
                 HadronicDecay(const HadronicDecay &);
 
+                const P4Ptr top() const;
+
                 double dr() const;
                 double dr_w_top() const;
                 double dr_b_top() const;
@@ -197,6 +199,8 @@ namespace bsm
 
                 LeptonicDecay();
                 LeptonicDecay(const LeptonicDecay &);
+
+                const P4Ptr top() const;
 
                 double dr() const;
                 double dr_l_top() const;

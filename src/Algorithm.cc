@@ -280,6 +280,11 @@ HadronicDecay::HadronicDecay(const HadronicDecay &object):
     *_top = *object._top;
 }
 
+const HadronicDecay::P4Ptr HadronicDecay::top() const
+{
+    return _top;
+}
+
 double HadronicDecay::dr() const
 {
     return _dr;
@@ -375,6 +380,11 @@ LeptonicDecay::LeptonicDecay(const LeptonicDecay &object):
     _top.reset(new LorentzVector());
 
     *_top = *object._top;
+}
+
+const LeptonicDecay::P4Ptr LeptonicDecay::top() const
+{
+    return _top;
 }
 
 double LeptonicDecay::dr() const
