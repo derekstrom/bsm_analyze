@@ -234,7 +234,7 @@ namespace bsm
         class TTbarDeltaRReconstruct : public core::Object
         {
             public:
-                typedef std::vector<Jet *> Jets;
+                typedef std::vector<const Jet *> Jets;
                 typedef boost::shared_ptr<HadronicDecay> HadronicPtr;
                 typedef boost::shared_ptr<LeptonicDecay> LeptonicPtr;
 
@@ -289,6 +289,7 @@ namespace bsm
     using algorithm::NeutrinoReconstruct;
     using algorithm::HadronicDecay;
     using algorithm::LeptonicDecay;
+    using algorithm::TTbarDeltaRReconstruct;
 }
 
 #endif
