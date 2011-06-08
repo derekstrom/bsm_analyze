@@ -268,9 +268,28 @@ void MttbarAnalyzer::jets(const Event *event, const Electron *electron)
     if (2 > jets.size())
         return;
 
-    /*
-    TTbarDeltaReconstruct ttbar;
+    // Reconstruct Neutrino pZ
+    //
+    NeutrinoReconstruct nu_reconstrutor(80.399, 0.00051099891);
+    uint32_t solutions = nu_reconstrutor.apply(electron->physics_object().p4(),
+            event->missing_energy().p4());
 
-    ttbar.apply(jets, electron->physics_object().p4(), event->missing_energy().p4(), wjet);
-    */
+    TTbarDeltaRReconstruct ttbar;
+
+    for(uint32_t solution = 0;
+            (solutions ? solutions : 1) > solution;
+            ++solution)
+    {
+        ttbar.apply(jets,
+                electron->physics_object().p4(),
+                *nu_reconstrutor.solution(solution),
+                wjet->physics_object().p4());
+    }
+
+    LorentzVector p4;
+
+    p4 += *ttbar.hadronicDecay()->top();
+    p4 += *ttbar.leptonicDecay()->top();
+
+    mttbar()->fill(bsm::mass(p4));
 }
