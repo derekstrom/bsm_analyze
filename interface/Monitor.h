@@ -190,6 +190,7 @@ namespace bsm
             const H1Ptr pt() const;
             const H1Ptr eta() const;
             const H1Ptr phi() const;
+            const H1Ptr mass() const;
 
             // Object interface
             //
@@ -215,6 +216,7 @@ namespace bsm
             H1ProxyPtr _pt;
             H1ProxyPtr _eta;
             H1ProxyPtr _phi;
+            H1ProxyPtr _mass;
 
             // Convert bsm::LorentzVector to TLorentzVector
             P4 _p4;

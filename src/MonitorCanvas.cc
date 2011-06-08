@@ -153,6 +153,11 @@ void LorentzVectorCanvas::draw(const LorentzVectorMonitor &monitor)
     _phi = convert(*monitor.phi());
     _phi->GetXaxis()->SetTitle("#phi [rad]");
     _phi->Draw("hist");
+
+    _canvas->cd(8);
+    _mass = convert(*monitor.mass());
+    _mass->GetXaxis()->SetTitle("Mass [GeV/c^{2}]");
+    _mass->Draw("hist");
 }
 
 

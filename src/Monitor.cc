@@ -405,9 +405,10 @@ LorentzVectorMonitor::LorentzVectorMonitor()
     _px.reset(new H1Proxy(100, 0, 100));
     _py.reset(new H1Proxy(100, 0, 100));
     _pz.reset(new H1Proxy(100, 0, 100));
-    _pt.reset(new H1Proxy(500, 0, 500));
+    _pt.reset(new H1Proxy(100, 0, 500));
     _eta.reset(new H1Proxy(100, -5, 5));
     _phi.reset(new H1Proxy(80, -4, 4));
+    _mass.reset(new H1Proxy(60, 0, 300));
 
     monitor(_energy);
     monitor(_px);
@@ -416,6 +417,7 @@ LorentzVectorMonitor::LorentzVectorMonitor()
     monitor(_pt);
     monitor(_eta);
     monitor(_phi);
+    monitor(_mass);
 
     _p4.reset(new TLorentzVector());
 }
@@ -429,6 +431,7 @@ LorentzVectorMonitor::LorentzVectorMonitor(const LorentzVectorMonitor &object)
     _pt.reset(new H1Proxy(*object._pt));
     _eta.reset(new H1Proxy(*object._eta));
     _phi.reset(new H1Proxy(*object._phi));
+    _mass.reset(new H1Proxy(*object._mass));
 
     monitor(_energy);
     monitor(_px);
@@ -437,6 +440,7 @@ LorentzVectorMonitor::LorentzVectorMonitor(const LorentzVectorMonitor &object)
     monitor(_pt);
     monitor(_eta);
     monitor(_phi);
+    monitor(_mass);
 
     _p4.reset(new TLorentzVector());
 }
@@ -452,6 +456,7 @@ void LorentzVectorMonitor::fill(const LorentzVector &p4)
     pt()->fill(_p4->Pt());
     eta()->fill(_p4->Eta());
     phi()->fill(_p4->Phi());
+    mass()->fill(_p4->M());
 }
 
 const H1Ptr LorentzVectorMonitor::energy() const
@@ -489,6 +494,11 @@ const H1Ptr LorentzVectorMonitor::phi() const
     return _phi->histogram();
 }
 
+const H1Ptr LorentzVectorMonitor::mass() const
+{
+    return _mass->histogram();
+}
+
 uint32_t LorentzVectorMonitor::id() const
 {
     return core::ID<LorentzVectorMonitor>::get();
@@ -507,7 +517,8 @@ void LorentzVectorMonitor::print(std::ostream &out) const
     out << setw(16) << left << " [pz]" << *pz() << endl;
     out << setw(16) << left << " [pt]" << *pt() << endl;
     out << setw(16) << left << " [eta]" << *eta() << endl;
-    out << setw(16) << left << " [phi]" << *phi();
+    out << setw(16) << left << " [phi]" << *phi() << endl;
+    out << setw(16) << left << " [mass]" << *mass();
 }
 
 

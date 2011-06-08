@@ -111,6 +111,7 @@ namespace bsm
             TH1Ptr _pt;
             TH1Ptr _eta;
             TH1Ptr _phi;
+            TH1Ptr _mass;
     };
 
     class MissingEnergyCanvas
