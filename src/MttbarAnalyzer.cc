@@ -44,6 +44,9 @@ MttbarAnalyzer::MttbarAnalyzer()
     _mu_selector.reset(new MuonSelector());
     _mu_multiplicity.reset(new MultiplicityCutflow(4));
 
+    _wjet_selector.reset(new WJetSelector());
+    _wjet_monitor.reset(new LorentzVectorMonitor());
+
     _mttbar.reset(new H1Proxy(25, 500, 3000));
 
     monitor(_el_selector);
@@ -52,6 +55,9 @@ MttbarAnalyzer::MttbarAnalyzer()
 
     monitor(_mu_selector);
     monitor(_mu_multiplicity);
+
+    monitor(_wjet_selector);
+    monitor(_wjet_monitor);
 
     monitor(_mttbar);
 }
@@ -70,6 +76,11 @@ MttbarAnalyzer::MttbarAnalyzer(const MttbarAnalyzer &object)
     _mu_multiplicity =
         dynamic_pointer_cast<MultiplicityCutflow>(object._mu_multiplicity->clone());
 
+    _wjet_selector =
+        dynamic_pointer_cast<WJetSelector>(object._wjet_selector->clone());
+    _wjet_monitor =
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._wjet_monitor->clone());
+
     _mttbar = dynamic_pointer_cast<H1Proxy>(object._mttbar->clone());
 
     monitor(_el_selector);
@@ -78,6 +89,9 @@ MttbarAnalyzer::MttbarAnalyzer(const MttbarAnalyzer &object)
 
     monitor(_mu_selector);
     monitor(_mu_multiplicity);
+
+    monitor(_wjet_selector);
+    monitor(_wjet_monitor);
 
     monitor(_mttbar);
 }
@@ -90,6 +104,11 @@ const MttbarAnalyzer::H1Ptr MttbarAnalyzer::mttbar() const
 const MttbarAnalyzer::P4MonitorPtr MttbarAnalyzer::electronMonitor() const
 {
     return _el_monitor;
+}
+
+const MttbarAnalyzer::P4MonitorPtr MttbarAnalyzer::wjetMonitor() const
+{
+    return _wjet_monitor;
 }
 
 void MttbarAnalyzer::onFileOpen(const std::string &filename, const Input *input)
@@ -138,6 +157,14 @@ void MttbarAnalyzer::print(std::ostream &out) const
 
     out << "PF Electron P4" << endl;
     out << *_el_monitor << endl;
+    out << endl;
+
+    out << "WJets" << endl;
+    out << *_wjet_selector << endl;
+    out << endl;
+
+    out << "WJet monitor" << endl;
+    out << *_wjet_monitor << endl;
     out << endl;
 
     out << "Mttbar" << endl;
@@ -206,12 +233,44 @@ void MttbarAnalyzer::jets(const Event *event, const Electron *electron)
     if (3 > event->jets().size())
         return;
 
+    typedef TTbarDeltaRReconstruct::Jets JetPtrs;
+
+    JetPtrs jets;
+
+    const Jet *wjet = 0;
+    uint32_t wjets = 0;
+
+    LockSelectorEventCounterOnUpdate lock(*_wjet_selector);
     // Take all permutations of jets and select the one that has minimum
     // leptonic decay DR and hadronic decay DR
     //
-    for(Jets::const_iterator jet = event->jets().begin();
+    typedef ::google::protobuf::RepeatedPtrField<Jet> PBJets;
+    for(PBJets::const_iterator jet = event->jets().begin();
             event->jets().end() != jet;
             ++jet)
     {
+        if (!_wjet_selector->apply(*jet))
+        {
+            jets.push_back(&*jet);
+
+            continue;
+        }
+
+        wjet = &*jet;
+        ++wjets;
     }
+
+    if (1 != wjets)
+        return;
+
+    _wjet_monitor->fill(wjet->physics_object().p4());
+
+    if (2 > jets.size())
+        return;
+
+    /*
+    TTbarDeltaReconstruct ttbar;
+
+    ttbar.apply(jets, electron->physics_object().p4(), event->missing_energy().p4(), wjet);
+    */
 }

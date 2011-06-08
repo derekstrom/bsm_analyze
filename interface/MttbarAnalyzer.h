@@ -34,6 +34,7 @@ namespace bsm
             //
             const H1Ptr mttbar() const;
             const P4MonitorPtr electronMonitor() const;
+            const P4MonitorPtr wjetMonitor() const;
 
             // Analyzer interface
             //
@@ -55,7 +56,6 @@ namespace bsm
             MttbarAnalyzer &operator =(const MttbarAnalyzer &);
 
             typedef boost::shared_ptr<H1Proxy> H1ProxyPtr;
-            typedef std::vector<const Jet *> Jets;
 
             bool muons(const Event *);
             void electrons(const Event *);
@@ -67,6 +67,9 @@ namespace bsm
 
             boost::shared_ptr<MuonSelector> _mu_selector;
             boost::shared_ptr<MultiplicityCutflow> _mu_multiplicity;
+
+            boost::shared_ptr<WJetSelector> _wjet_selector;
+            P4MonitorPtr _wjet_monitor;
 
             H1ProxyPtr _mttbar;
     };

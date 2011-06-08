@@ -96,6 +96,10 @@ try
                 new LorentzVectorCanvas("Selected PF Electron"));
         el_p4->draw(*analyzer->electronMonitor());
 
+        boost::shared_ptr<LorentzVectorCanvas> wjet_p4(
+                new LorentzVectorCanvas("W-tagged Jet"));
+        wjet_p4->draw(*analyzer->wjetMonitor());
+
         app->Run();
     }
 }
