@@ -26,6 +26,7 @@ namespace bsm
         public:
             typedef boost::shared_ptr<stat::H1> H1Ptr;
             typedef boost::shared_ptr<LorentzVectorMonitor> P4MonitorPtr;
+            typedef boost::shared_ptr<DeltaMonitor> DeltaMonitorPtr;
 
             MttbarAnalyzer();
             MttbarAnalyzer(const MttbarAnalyzer &);
@@ -35,6 +36,9 @@ namespace bsm
             const H1Ptr mttbar() const;
             const P4MonitorPtr electronMonitor() const;
             const P4MonitorPtr wjetMonitor() const;
+            const P4MonitorPtr ltopMonitor() const;
+            const P4MonitorPtr htopMonitor() const;
+            const DeltaMonitorPtr topDeltaMonitor() const;
 
             // Analyzer interface
             //
@@ -70,6 +74,11 @@ namespace bsm
 
             boost::shared_ptr<WJetSelector> _wjet_selector;
             P4MonitorPtr _wjet_monitor;
+
+            P4MonitorPtr _ltop_monitor;
+            P4MonitorPtr _htop_monitor;
+
+            DeltaMonitorPtr _top_delta_monitor;
 
             H1ProxyPtr _mttbar;
     };

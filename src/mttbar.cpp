@@ -23,6 +23,7 @@ using namespace std;
 using boost::shared_ptr;
 
 using bsm::LorentzVectorCanvas;
+using bsm::DeltaCanvas;
 using bsm::MttbarAnalyzer;
 using bsm::ThreadController;
 
@@ -89,8 +90,11 @@ try
             app(new TRint("app", &empty_argc, empty_argv));
 
         TH1Ptr mttbar = convert(*analyzer->mttbar());
+        mttbar->SetName("mttbar");
         mttbar->GetXaxis()->SetTitle("m_{t#bar{t}} [GeV/c^{2}]");
         mttbar->Draw();
+
+        mttbar->SaveAs("mttbar.root");
 
         boost::shared_ptr<LorentzVectorCanvas> el_p4(
                 new LorentzVectorCanvas("Selected PF Electron"));
@@ -99,6 +103,18 @@ try
         boost::shared_ptr<LorentzVectorCanvas> wjet_p4(
                 new LorentzVectorCanvas("W-tagged Jet"));
         wjet_p4->draw(*analyzer->wjetMonitor());
+
+        boost::shared_ptr<LorentzVectorCanvas> ltop_p4(
+                new LorentzVectorCanvas("Leptonic Top"));
+        ltop_p4->draw(*analyzer->ltopMonitor());
+
+        boost::shared_ptr<LorentzVectorCanvas> htop_p4(
+                new LorentzVectorCanvas("Hadronic Top"));
+        htop_p4->draw(*analyzer->htopMonitor());
+
+        boost::shared_ptr<DeltaCanvas> top_delta(
+                new DeltaCanvas("Delta between Leptonic and Hadronic tops"));
+        top_delta->draw(*analyzer->topDeltaMonitor());
 
         app->Run();
     }

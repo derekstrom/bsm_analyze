@@ -47,6 +47,11 @@ MttbarAnalyzer::MttbarAnalyzer()
     _wjet_selector.reset(new WJetSelector());
     _wjet_monitor.reset(new LorentzVectorMonitor());
 
+    _ltop_monitor.reset(new LorentzVectorMonitor());
+    _htop_monitor.reset(new LorentzVectorMonitor());
+
+    _top_delta_monitor.reset(new DeltaMonitor());
+
     _mttbar.reset(new H1Proxy(25, 500, 3000));
 
     monitor(_el_selector);
@@ -58,6 +63,11 @@ MttbarAnalyzer::MttbarAnalyzer()
 
     monitor(_wjet_selector);
     monitor(_wjet_monitor);
+
+    monitor(_ltop_monitor);
+    monitor(_htop_monitor);
+
+    monitor(_top_delta_monitor);
 
     monitor(_mttbar);
 }
@@ -81,6 +91,14 @@ MttbarAnalyzer::MttbarAnalyzer(const MttbarAnalyzer &object)
     _wjet_monitor =
         dynamic_pointer_cast<LorentzVectorMonitor>(object._wjet_monitor->clone());
 
+    _ltop_monitor =
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._ltop_monitor->clone());
+    _htop_monitor =
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._htop_monitor->clone());
+
+    _top_delta_monitor =
+        dynamic_pointer_cast<DeltaMonitor>(object._top_delta_monitor->clone());
+
     _mttbar = dynamic_pointer_cast<H1Proxy>(object._mttbar->clone());
 
     monitor(_el_selector);
@@ -92,6 +110,11 @@ MttbarAnalyzer::MttbarAnalyzer(const MttbarAnalyzer &object)
 
     monitor(_wjet_selector);
     monitor(_wjet_monitor);
+
+    monitor(_ltop_monitor);
+    monitor(_htop_monitor);
+
+    monitor(_top_delta_monitor);
 
     monitor(_mttbar);
 }
@@ -109,6 +132,21 @@ const MttbarAnalyzer::P4MonitorPtr MttbarAnalyzer::electronMonitor() const
 const MttbarAnalyzer::P4MonitorPtr MttbarAnalyzer::wjetMonitor() const
 {
     return _wjet_monitor;
+}
+
+const MttbarAnalyzer::P4MonitorPtr MttbarAnalyzer::ltopMonitor() const
+{
+    return _ltop_monitor;
+}
+
+const MttbarAnalyzer::P4MonitorPtr MttbarAnalyzer::htopMonitor() const
+{
+    return _htop_monitor;
+}
+
+const MttbarAnalyzer::DeltaMonitorPtr MttbarAnalyzer::topDeltaMonitor() const
+{
+    return _top_delta_monitor;
 }
 
 void MttbarAnalyzer::onFileOpen(const std::string &filename, const Input *input)
@@ -165,6 +203,18 @@ void MttbarAnalyzer::print(std::ostream &out) const
 
     out << "WJet monitor" << endl;
     out << *_wjet_monitor << endl;
+    out << endl;
+
+    out << "Leptonic Top monitor" << endl;
+    out << *_ltop_monitor << endl;
+    out << endl;
+
+    out << "Hadronic Top monitor" << endl;
+    out << *_htop_monitor << endl;
+    out << endl;
+
+    out << "Top Delta Monitor" << endl;
+    out << *_top_delta_monitor << endl;
     out << endl;
 
     out << "Mttbar" << endl;
@@ -285,6 +335,12 @@ void MttbarAnalyzer::jets(const Event *event, const Electron *electron)
                 *nu_reconstrutor.solution(solution),
                 wjet->physics_object().p4());
     }
+
+    _ltop_monitor->fill(*ttbar.leptonicDecay()->top());
+    _htop_monitor->fill(*ttbar.hadronicDecay()->top());
+
+    _top_delta_monitor->fill(*ttbar.leptonicDecay()->top(),
+            *ttbar.hadronicDecay()->top());
 
     LorentzVector p4;
 
