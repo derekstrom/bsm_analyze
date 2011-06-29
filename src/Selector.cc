@@ -11,8 +11,6 @@
 
 #include <boost/pointer_cast.hpp>
 
-#include <TLorentzVector.h>
-
 #include "bsm_core/interface/ID.h"
 #include "bsm_input/interface/Algebra.h"
 #include "bsm_input/interface/Electron.pb.h"

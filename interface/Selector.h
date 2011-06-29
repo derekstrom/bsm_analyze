@@ -17,8 +17,6 @@
 #include "bsm_core/interface/Object.h"
 #include "interface/Cut.h"
 
-class TLorentzVector;
-
 namespace bsm
 {
     class Electron;
