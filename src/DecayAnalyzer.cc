@@ -26,8 +26,8 @@ using bsm::DecayAnalyzer;
 
 DecayAnalyzer::DecayAnalyzer()
 {
-    _decay_level_1.reset(new H2Proxy(20, -10, 10, 20, -10, 10));
-    _decay_level_2.reset(new H2Proxy(20, -10, 10, 20, -10, 10));
+    _decay_level_1.reset(new H2Proxy(200, -100, 100, 200, -100, 100));
+    _decay_level_2.reset(new H2Proxy(200, -100, 100, 200, -100, 100));
 
     monitor(_decay_level_1);
     monitor(_decay_level_2);
