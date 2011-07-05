@@ -36,6 +36,7 @@ using bsm::ElectronSelector;
 using bsm::JetSelector;
 using bsm::MultiplicityCutflow;
 using bsm::MuonSelector;
+using bsm::PrimaryVertexSelector;
 using bsm::WJetSelector;
 using bsm::LockSelectorEventCounterOnUpdate;
 
@@ -466,6 +467,88 @@ void MuonSelector::print(std::ostream &out) const
     out << " [+]        Pixel Hits > " << *_pixel_hits << endl;
     out << " [+]          |d0_bsp| < " << *_d0_bsp << endl;
     out << " [+] |mu.z() - pv.z()| < " << *_primary_vertex;
+}
+
+
+
+// PrimaryVertex Selector
+//
+PrimaryVertexSelector::PrimaryVertexSelector()
+{
+    _ndof.reset(new Comparator<std::greater_equal<float> >(4));
+    _vertex_z.reset(new Comparator<std::less_equal<float> >(24));
+    _rho.reset(new Comparator<std::less_equal<float> >(4.0));
+
+    monitor(_ndof);
+    monitor(_vertex_z);
+    monitor(_rho);
+}
+
+PrimaryVertexSelector::PrimaryVertexSelector(const PrimaryVertexSelector &object)
+{
+    _ndof = dynamic_pointer_cast<Cut>(object._ndof->clone());
+    _vertex_z = dynamic_pointer_cast<Cut>(object._vertex_z->clone());
+    _rho = dynamic_pointer_cast<Cut>(object._rho->clone());
+
+    monitor(_ndof);
+    monitor(_vertex_z);
+    monitor(_rho);
+}
+
+bool PrimaryVertexSelector::apply(const PrimaryVertex &pv)
+{
+    return _ndof->apply(pv.extra().ndof())
+        && _vertex_z->apply(pv.vertex().z())
+        && _rho->apply(pv.extra().rho());
+}
+
+CutPtr PrimaryVertexSelector::ndof() const
+{
+    return _ndof;
+}
+
+CutPtr PrimaryVertexSelector::vertex_z() const
+{
+    return _vertex_z;
+}
+
+CutPtr PrimaryVertexSelector::rho() const
+{
+    return _rho;
+}
+
+void PrimaryVertexSelector::enable()
+{
+    ndof()->enable();
+    vertex_z()->enable();
+    rho()->enable();
+}
+
+void PrimaryVertexSelector::disable()
+{
+    ndof()->disable();
+    vertex_z()->disable();
+    rho()->disable();
+}
+
+uint32_t PrimaryVertexSelector::id() const
+{
+    return core::ID<PrimaryVertexSelector>::get();
+}
+
+PrimaryVertexSelector::ObjectPtr PrimaryVertexSelector::clone() const
+{
+    return ObjectPtr(new PrimaryVertexSelector(*this));
+}
+
+void PrimaryVertexSelector::print(std::ostream &out) const
+{
+    out << "     CUT                 " << setw(5) << " "
+        << " Objects Events" << endl;
+    out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
+    out << " [+]             ndof >= " << *_ndof << endl;
+    out << " [+]         |pv.z()| <= " << *_vertex_z << endl;
+    out << " [+]              rho <= " << *_rho;
 }
 
 

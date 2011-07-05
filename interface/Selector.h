@@ -209,6 +209,46 @@ namespace bsm
             CutPtr _primary_vertex;
     };
 
+    class PrimaryVertexSelector : public Selector
+    {
+        public:
+            PrimaryVertexSelector();
+            PrimaryVertexSelector(const PrimaryVertexSelector &);
+
+            // Test if muon passes the selector
+            //
+            virtual bool apply(const PrimaryVertex &);
+
+            // Cuts accessors
+            //
+            CutPtr ndof() const;
+            CutPtr vertex_z() const;
+            CutPtr rho() const;
+
+            // Selector interface
+            //
+            virtual void enable();
+            virtual void disable();
+
+            // Object interface
+            //
+            virtual uint32_t id() const;
+
+            virtual ObjectPtr clone() const;
+            using Object::merge;
+
+            virtual void print(std::ostream &) const;
+
+        private:
+            // Prevent copying
+            //
+            PrimaryVertexSelector &operator =(const PrimaryVertexSelector &);
+
+            CutPtr _ndof;
+            CutPtr _vertex_z;
+            CutPtr _rho;
+    };
+
     class WJetSelector : public Selector
     {
         public:
