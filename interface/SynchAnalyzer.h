@@ -19,7 +19,13 @@ namespace bsm
     class SynchJuly2011Analyzer : public Analyzer
     {
         public:
-            SynchJuly2011Analyzer();
+            enum LeptonMode
+            {
+                ELECTRON = 1,
+                MUON = 2
+            };
+
+            SynchJuly2011Analyzer(const LeptonMode & = ELECTRON);
             SynchJuly2011Analyzer(const SynchJuly2011Analyzer &);
 
             // Anlayzer interface
@@ -47,8 +53,23 @@ namespace bsm
                 LEPTON = 3
             };
 
+            bool jets(const Event *);
+            bool electron(const Event *);
+            bool muon(const Event *);
+
+            LeptonMode _lepton_mode;
+
             CutflowPtr _cutflow;
+
+            boost::shared_ptr<PrimaryVertexSelector> _primary_vertex_selector;
+            boost::shared_ptr<JetSelector> _jet_selector;
+            boost::shared_ptr<ElectronSelector> _electron_selector;
+            boost::shared_ptr<ElectronSelector> _electron_veto_selector;
+            boost::shared_ptr<MuonSelector> _muon_selector;
+            boost::shared_ptr<MuonSelector> _muon_veto_selector;
     };
+
+    std::ostream &operator <<(std::ostream &, const SynchJuly2011Analyzer::LeptonMode &);
 }
 
 #endif
