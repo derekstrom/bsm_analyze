@@ -9,7 +9,10 @@
 #ifndef BSM_SYNCHRONIZATION_ANALYZER
 #define BSM_SYNCHRONIZATION_ANALYZER
 
+#include <boost/shared_ptr.hpp>
+
 #include "interface/Analyzer.h"
+#include "interface/bsm_fwd.h"
 
 namespace bsm
 {
@@ -32,6 +35,19 @@ namespace bsm
             using Object::merge;
 
             virtual void print(std::ostream &) const;
+
+        private:
+            typedef boost::shared_ptr<MultiplicityCutflow> CutflowPtr;
+
+            enum
+            {
+                PRESELECTION = 0,
+                PRIMARY_VERTEX = 1,
+                JET = 2,
+                LEPTON = 3
+            };
+
+            CutflowPtr _cutflow;
     };
 }
 
