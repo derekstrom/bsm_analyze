@@ -230,7 +230,7 @@ bool SynchJuly2011Analyzer:: muon(const Event *event)
 
 // Helpers
 //
-std::ostream &operator <<(std::ostream &out, const SynchJuly2011Analyzer::LeptonMode &mode)
+std::ostream &bsm::operator <<(std::ostream &out, const SynchJuly2011Analyzer::LeptonMode &mode)
 {
     switch(mode)
     {
