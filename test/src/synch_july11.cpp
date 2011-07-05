@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     int result = 0;
     try
     {
-        SynchAnalyzerPtr analyzer(new SynchJuly2011Analyzer());
+        SynchAnalyzerPtr analyzer(new SynchJuly2011Analyzer(SynchJuly2011Analyzer::ELECTRON));
         for(int i = 1; argc > i; ++i)
         {
             shared_ptr<Reader> reader(new Reader(argv[i]));
