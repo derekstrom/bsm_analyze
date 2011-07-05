@@ -9,6 +9,7 @@
 
 #include <boost/pointer_cast.hpp>
 
+#include "bsm_core/interface/ID.h"
 #include "bsm_input/interface/Electron.pb.h"
 #include "bsm_input/interface/Event.pb.h"
 #include "bsm_input/interface/Jet.pb.h"
