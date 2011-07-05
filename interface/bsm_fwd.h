@@ -29,6 +29,7 @@ namespace bsm
     class JetSelector;
     class MultiplicityCutflow;
     class MuonSelector;
+    class PrimaryVertexSelector;
     class WJetSelector;
     class LockSelectorEventCounterOnUpdate;
 
