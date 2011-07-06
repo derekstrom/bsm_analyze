@@ -7,6 +7,7 @@
 // Copyright 2011, All rights reserved
 
 #include <ostream>
+#include <string>
 
 #include <boost/pointer_cast.hpp>
 
@@ -25,6 +26,14 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const LeptonMode &mode):
     _lepton_mode(mode)
 {
     _cutflow.reset(new MultiplicityCutflow(4));
+    _cutflow->cut(0)->setName("pre-selection");
+    _cutflow->cut(1)->setName("Good Primary Vertex");
+    _cutflow->cut(2)->setName("2 Good Jets");
+    _cutflow->cut(3)->setName(string("Good ")
+            + (ELECTRON == _lepton_mode ? "Electron" : "Muon"));
+    _cutflow->cut(4)->setName(string("Veto Good ")
+            + (ELECTRON == _lepton_mode ? "Muon" : "Electron"));
+
     _primary_vertex_selector.reset(new PrimaryVertexSelector());
     _jet_selector.reset(new JetSelector());
     _electron_selector.reset(new ElectronSelector());
@@ -118,6 +127,8 @@ void SynchJuly2011Analyzer::process(const Event *event)
         return;
 
     _cutflow->apply(VETO_SECOND_LEPTON);
+
+    _passed_events.push_back(event->extra());
 }
 
 uint32_t SynchJuly2011Analyzer::id() const
@@ -130,8 +141,39 @@ SynchJuly2011Analyzer::ObjectPtr SynchJuly2011Analyzer::clone() const
     return ObjectPtr(new SynchJuly2011Analyzer(*this));
 }
 
+void SynchJuly2011Analyzer::merge(const ObjectPtr &pointer)
+{
+    if (pointer->id() != id())
+        return;
+
+    Object::merge(pointer);
+
+    boost::shared_ptr<SynchJuly2011Analyzer> object =
+        dynamic_pointer_cast<SynchJuly2011Analyzer>(pointer);
+
+    if (!object)
+        return;
+
+    _passed_events.insert(_passed_events.end(),
+            object->_passed_events.begin(),
+            object->_passed_events.end());
+}
+
 void SynchJuly2011Analyzer::print(std::ostream &out) const
 {
+    out << "Survived Events" << endl;
+    out << " " << setw(10) << left << "Run" << setw(10) << "Lumi" << "Event" << endl;
+    for(std::vector<Event::Extra>::const_iterator extra = _passed_events.begin();
+            _passed_events.end() != extra;
+            ++extra)
+    {
+        out << " "
+            << setw(10) << left << extra->run()
+            << setw(10) << left << extra->lumi()
+            << extra->id() << endl;
+    }
+    out << endl;
+
     out << "Cutflow [" << _lepton_mode << " mode]" << endl;
     out << *_cutflow << endl;
     out << endl;

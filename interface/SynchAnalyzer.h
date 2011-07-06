@@ -9,8 +9,11 @@
 #ifndef BSM_SYNCHRONIZATION_ANALYZER
 #define BSM_SYNCHRONIZATION_ANALYZER
 
+#include <vector>
+
 #include <boost/shared_ptr.hpp>
 
+#include "bsm_input/interface/Event.pb.h"
 #include "interface/Analyzer.h"
 #include "interface/bsm_fwd.h"
 
@@ -38,7 +41,7 @@ namespace bsm
             virtual uint32_t id() const;
 
             virtual ObjectPtr clone() const;
-            using Object::merge;
+            virtual void merge(const ObjectPtr &);
 
             virtual void print(std::ostream &) const;
 
@@ -68,6 +71,8 @@ namespace bsm
             boost::shared_ptr<ElectronSelector> _electron_veto_selector;
             boost::shared_ptr<MuonSelector> _muon_selector;
             boost::shared_ptr<MuonSelector> _muon_veto_selector;
+
+            std::vector<Event::Extra> _passed_events;
     };
 
     std::ostream &operator <<(std::ostream &, const SynchJuly2011Analyzer::LeptonMode &);
