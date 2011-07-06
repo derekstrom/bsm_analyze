@@ -63,7 +63,7 @@ try
 {
     // Prepare Analysis
     //
-    SynchAnalyzerPtr analyzer(new SynchJuly2011Analyzer());
+    SynchAnalyzerPtr analyzer(new SynchJuly2011Analyzer(SynchJuly2011Analyzer::ELECTRON));
 
     // Process inputs
     //
