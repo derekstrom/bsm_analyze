@@ -7,6 +7,8 @@
 
 #include "interface/Cut.h"
 
+using std::string;
+
 using bsm::Counter;
 using bsm::CounterPtr;
 using bsm::Cut;
@@ -110,8 +112,9 @@ void Counter::update()
 
 // Cut
 //
-Cut::Cut(const double &value):
+Cut::Cut(const double &value, const string &name):
     _value(value),
+    _name(name),
     _is_disabled(false)
 {
     _objects.reset(new Counter());
@@ -123,6 +126,7 @@ Cut::Cut(const double &value):
 
 Cut::Cut(const Cut &object):
     _value(object._value),
+    _name(object._name),
     _is_disabled(object._is_disabled)
 {
     _objects.reset(new Counter(*object._objects));
@@ -140,6 +144,16 @@ const CounterPtr Cut::objects() const
 const CounterPtr Cut::events() const
 {
     return _events;
+}
+
+string Cut::name() const
+{
+    return _name;
+}
+
+void Cut::setName(const string &name)
+{
+    _name = name;
 }
 
 double Cut::value() const
@@ -195,7 +209,8 @@ void Cut::merge(const ObjectPtr &object_pointer)
         boost::dynamic_pointer_cast<Cut>(object_pointer);
 
     if (!object
-            || _value != object->_value)
+            || _value != object->_value
+            || _name != object->_name)
         return;
 
     _is_disabled = object->_is_disabled;

@@ -6,6 +6,9 @@
 #ifndef BSM_CUT
 #define BSM_CUT
 
+#include <iomanip>
+#include <string>
+
 #include <boost/shared_ptr.hpp>
 
 #include "bsm_core/interface/ID.h"
@@ -71,7 +74,7 @@ namespace bsm
     class Cut : public core::Object
     {
         public:
-            Cut(const double &value);
+            Cut(const double &value, const std::string &name = "");
             Cut(const Cut &);
 
             const CounterPtr objects() const;
@@ -81,6 +84,11 @@ namespace bsm
             //
             double value() const;
             void setValue(const double &);
+
+            // Get name of the cut
+            //
+            std::string name() const;
+            void setName(const std::string &);
 
             // apply cut: implicitly count number of success
             //
@@ -111,6 +119,7 @@ namespace bsm
             virtual bool isPass(const double &) = 0;
 
             double _value;
+            std::string _name;
             bool _is_disabled;
 
             CounterPtr _objects;
@@ -141,7 +150,7 @@ namespace bsm
         class Comparator : public Cut
         {
             public:
-                Comparator(const double &value);
+                Comparator(const double &value, const std::string &name = "");
 
                 virtual uint32_t id() const;
 
@@ -175,8 +184,9 @@ namespace bsm
 // Template(s) implementation
 //
 template<class Compare>
-    bsm::Comparator<Compare>::Comparator(const double &value):
-        Cut(value)
+    bsm::Comparator<Compare>::Comparator(const double &value,
+            const std::string &name):
+        Cut(value, name)
 {
 }
 
@@ -202,7 +212,7 @@ template<class Compare>
 template<class Compare>
     void bsm::Comparator<Compare>::print(std::ostream &out) const
 {
-    out << _functor << " ";
+    out << " [+] " << std::setw(20) << std::right << name() << " " << _functor << " ";
 
     Cut::print(out);
 }

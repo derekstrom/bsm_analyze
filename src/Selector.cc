@@ -45,9 +45,9 @@ using bsm::LockSelectorEventCounterOnUpdate;
 //
 ElectronSelector::ElectronSelector()
 {
-    _et.reset(new Comparator<>(30));
-    _eta.reset(new Comparator<std::less<double> >(2.5));
-    _primary_vertex.reset(new Comparator<std::less<double> >(1));
+    _et.reset(new Comparator<>(30, "Et"));
+    _eta.reset(new Comparator<std::less<double> >(2.5, "|eta|"));
+    _primary_vertex.reset(new Comparator<std::less<double> >(1, "|el.z() - pv.z()|"));
 
     monitor(_et);
     monitor(_eta);
@@ -117,9 +117,9 @@ void ElectronSelector::print(std::ostream &out) const
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    out << " [+]                Et " << *_et << endl;
-    out << " [+]             |eta| " << *_eta << endl;
-    out << " [+] |el.z() - pv.z()| " << *_primary_vertex;
+    out << *_et << endl;
+    out << *_eta << endl;
+    out << *_primary_vertex;
 }
 
 
@@ -128,8 +128,8 @@ void ElectronSelector::print(std::ostream &out) const
 //
 JetSelector::JetSelector()
 {
-    _pt.reset(new Comparator<>(50));
-    _eta.reset(new Comparator<std::less<double> >(2.4));
+    _pt.reset(new Comparator<>(50, "Pt"));
+    _eta.reset(new Comparator<std::less<double> >(2.4, "|eta|"));
 
     monitor(_pt);
     monitor(_eta);
@@ -187,8 +187,8 @@ void JetSelector::print(std::ostream &out) const
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    out << " [+]                Pt " << *_pt << endl;
-    out << " [+]             |eta| " << *_eta;
+    out << *_pt << endl;
+    out << *_eta;
 }
 
 
@@ -278,10 +278,9 @@ void MultiplicityCutflow::print(std::ostream &out) const
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
     for(uint32_t cut = 0, max = _cuts.size() - 1; max > cut; ++cut)
     {
-        out << " [+] " << setw(18) << right << " " << *_cuts[cut] << endl;
+        out << *_cuts[cut] << endl;
     }
-    out << " [+] " << setw(18) << right << " "
-        << **(_cuts.end() - 1);
+    out << **(_cuts.end() - 1);
 }
 
 
@@ -290,17 +289,17 @@ void MultiplicityCutflow::print(std::ostream &out) const
 //
 MuonSelector::MuonSelector()
 {
-    _pt.reset(new Comparator<>(30));
-    _eta.reset(new Comparator<std::less<double> >(2.1));
-    _is_global.reset(new Comparator<std::logical_and<bool> >(true));
-    _is_tracker.reset(new Comparator<std::logical_and<bool> >(true));
-    _muon_segments.reset(new Comparator<>(1));
-    _muon_hits.reset(new Comparator<>(0));
-    _muon_normalized_chi2.reset(new Comparator<std::less<double> >(10));
-    _tracker_hits.reset(new Comparator<>(10));
-    _pixel_hits.reset(new Comparator<>(0));
-    _d0_bsp.reset(new Comparator<std::less<double> >(0.02));
-    _primary_vertex.reset(new Comparator<std::less<double> >(1));
+    _pt.reset(new Comparator<>(30, "pT"));
+    _eta.reset(new Comparator<std::less<double> >(2.1, "|eta|"));
+    _is_global.reset(new Comparator<std::logical_and<bool> >(true, "is Global"));
+    _is_tracker.reset(new Comparator<std::logical_and<bool> >(true, "is Tracker"));
+    _muon_segments.reset(new Comparator<>(1, "Muon Segments"));
+    _muon_hits.reset(new Comparator<>(0, "Muon Hits"));
+    _muon_normalized_chi2.reset(new Comparator<std::less<double> >(10, "Muon Chi2 / ndof"));
+    _tracker_hits.reset(new Comparator<>(10, "Tracker hits"));
+    _pixel_hits.reset(new Comparator<>(0, "Pixel hits"));
+    _d0_bsp.reset(new Comparator<std::less<double> >(0.02, "|d0_bsp|"));
+    _primary_vertex.reset(new Comparator<std::less<double> >(1, "|mu.z() - pv.z()|"));
 
     monitor(_pt);
     monitor(_eta);
@@ -457,17 +456,17 @@ void MuonSelector::print(std::ostream &out) const
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    out << " [+]                pT " << *_pt << endl;
-    out << " [+]             |eta| " << *_eta << endl;
-    out << " [+] is Global         " << *_is_global << endl;
-    out << " [+] is Tracker        " << *_is_tracker << endl;
-    out << " [+]     Muon Segments " << *_muon_segments << endl;
-    out << " [+]         Muon Hits " << *_muon_hits << endl;
-    out << " [+]  Muon Chi2 / ndof " << *_muon_normalized_chi2 << endl;
-    out << " [+]      Tracker Hits " << *_tracker_hits << endl;
-    out << " [+]        Pixel Hits " << *_pixel_hits << endl;
-    out << " [+]          |d0_bsp| " << *_d0_bsp << endl;
-    out << " [+] |mu.z() - pv.z()| " << *_primary_vertex;
+    out << *_pt << endl;
+    out << *_eta << endl;
+    out << *_is_global << endl;
+    out << *_is_tracker << endl;
+    out << *_muon_segments << endl;
+    out << *_muon_hits << endl;
+    out << *_muon_normalized_chi2 << endl;
+    out << *_tracker_hits << endl;
+    out << *_pixel_hits << endl;
+    out << *_d0_bsp << endl;
+    out << *_primary_vertex;
 }
 
 
@@ -476,9 +475,9 @@ void MuonSelector::print(std::ostream &out) const
 //
 PrimaryVertexSelector::PrimaryVertexSelector()
 {
-    _ndof.reset(new Comparator<std::greater_equal<float> >(4));
-    _vertex_z.reset(new Comparator<std::less_equal<float> >(24));
-    _rho.reset(new Comparator<std::less_equal<float> >(4.0));
+    _ndof.reset(new Comparator<std::greater_equal<float> >(4, "ndof"));
+    _vertex_z.reset(new Comparator<std::less_equal<float> >(24, "|pv.z()|"));
+    _rho.reset(new Comparator<std::less_equal<float> >(4.0, "|pv.rho()|"));
 
     monitor(_ndof);
     monitor(_vertex_z);
@@ -547,9 +546,9 @@ void PrimaryVertexSelector::print(std::ostream &out) const
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    out << " [+]             ndof " << *_ndof << endl;
-    out << " [+]         |pv.z()| " << *_vertex_z << endl;
-    out << " [+]              rho " << *_rho;
+    out << *_ndof << endl;
+    out << *_vertex_z << endl;
+    out << *_rho;
 }
 
 
@@ -558,11 +557,11 @@ void PrimaryVertexSelector::print(std::ostream &out) const
 //
 WJetSelector::WJetSelector()
 {
-    _children.reset(new Comparator<std::equal_to<uint32_t> >(2));
-    _pt.reset(new Comparator<>(200));
-    _mass_drop.reset(new Comparator<std::less<double> >(0.4));
-    _mass_lower_bound.reset(new Comparator<>(60));
-    _mass_upper_bound.reset(new Comparator<std::less<double> >(130));
+    _children.reset(new Comparator<std::equal_to<uint32_t> >(2, "Children"));
+    _pt.reset(new Comparator<>(200, "pT"));
+    _mass_drop.reset(new Comparator<std::less<double> >(0.4, "Mass drop"));
+    _mass_lower_bound.reset(new Comparator<>(60, "Mass lower bound"));
+    _mass_upper_bound.reset(new Comparator<std::less<double> >(130, "Mass upper bound"));
 
     monitor(_children);
     monitor(_pt);
@@ -663,11 +662,11 @@ void WJetSelector::print(std::ostream &out) const
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    out << " [+]          Children " << *_children << endl;
-    out << " [+]                Pt " << *_pt << endl;
-    out << " [+]         Mass Drop " << *_mass_drop << endl;
-    out << " [+]  Mass Lower Bound " << *_mass_lower_bound << endl;
-    out << " [+]  Mass Upper Bound " << *_mass_upper_bound;
+    out << *_children << endl;
+    out << *_pt << endl;
+    out << *_mass_drop << endl;
+    out << *_mass_lower_bound << endl;
+    out << *_mass_upper_bound;
 }
 
 
