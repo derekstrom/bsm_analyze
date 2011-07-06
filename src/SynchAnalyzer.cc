@@ -32,6 +32,12 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const LeptonMode &mode):
     _muon_selector.reset(new MuonSelector());
     _muon_veto_selector.reset(new MuonSelector());
 
+    _electron_selector->primary_vertex()->disable();
+    _electron_veto_selector->primary_vertex()->disable();
+
+    _muon_selector->primary_vertex()->disable();
+    _muon_veto_selector->primary_vertex()->disable();
+
     _muon_selector->pt()->setValue(35);
     _muon_veto_selector->pt()->setValue(35);
 
@@ -111,7 +117,7 @@ void SynchJuly2011Analyzer::process(const Event *event)
     if (!lepton_cut)
         return;
 
-    _cutflow->apply(LEPTON);
+    _cutflow->apply(VETO_SECOND_LEPTON);
 }
 
 uint32_t SynchJuly2011Analyzer::id() const
@@ -127,19 +133,25 @@ SynchJuly2011Analyzer::ObjectPtr SynchJuly2011Analyzer::clone() const
 void SynchJuly2011Analyzer::print(std::ostream &out) const
 {
     out << "Cutflow [" << _lepton_mode << " mode]" << endl;
-    out << *_cutflow;
+    out << *_cutflow << endl;
+    out << endl;
+
+    out << "Jet Selector" << endl;
+    out << *_jet_selector << endl;
     out << endl;
 
     switch(_lepton_mode)
     {
         case ELECTRON: out << "Electron Selector" << endl;
                        out << *_electron_selector << endl;
+                       out << endl;
                        out << "Muon Veto" << endl;
                        out << *_muon_veto_selector << endl;
                        break;
 
         case MUON:     out << "Muon Selector" << endl;
                        out << *_muon_selector << endl;
+                       out << endl;
                        out << "Electron Veto" << endl;
                        out << *_electron_veto_selector << endl;
                        break;
@@ -195,6 +207,8 @@ bool SynchJuly2011Analyzer::electron(const Event *event)
     if (1 != selected_electrons)
         return false;
 
+    _cutflow->apply(LEPTON);
+
     uint32_t selected_muons = 0;
     LockSelectorEventCounterOnUpdate muon_lock(*_muon_veto_selector);
     for(Muons::const_iterator muon = event->pf_muons().begin();
@@ -232,6 +246,8 @@ bool SynchJuly2011Analyzer::muon(const Event *event)
 
     if (1 != selected_muons)
         return false;
+
+    _cutflow->apply(LEPTON);
 
     uint32_t selected_electrons = 0;
     LockSelectorEventCounterOnUpdate electron_lock(*_electron_veto_selector);

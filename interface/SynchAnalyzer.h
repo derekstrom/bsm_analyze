@@ -50,7 +50,8 @@ namespace bsm
                 PRESELECTION = 0,
                 PRIMARY_VERTEX = 1,
                 JET = 2,
-                LEPTON = 3
+                LEPTON = 3,
+                VETO_SECOND_LEPTON = 4
             };
 
             bool jets(const Event *);
