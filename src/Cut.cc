@@ -147,6 +147,11 @@ double Cut::value() const
     return _value;
 }
 
+void Cut::setValue(const double &value)
+{
+    _value = value;
+}
+
 bool Cut::apply(const double &value)
 {
     if (isDisabled())

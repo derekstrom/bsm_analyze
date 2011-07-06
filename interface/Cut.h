@@ -80,6 +80,7 @@ namespace bsm
             // Get actual cut value
             //
             double value() const;
+            void setValue(const double &);
 
             // apply cut: implicitly count number of success
             //
@@ -146,6 +147,8 @@ namespace bsm
 
                 virtual ObjectPtr clone() const;
 
+                virtual void print(std::ostream &out) const;
+
             protected:
                 virtual bool isPass(const double &number);
 
@@ -194,6 +197,14 @@ template<class Compare>
     bool bsm::Comparator<Compare>::isPass(const double &number)
 {
     return _functor(number, value());
+}
+
+template<class Compare>
+    void bsm::Comparator<Compare>::print(std::ostream &out) const
+{
+    out << _functor << " ";
+
+    Cut::print(out);
 }
 
 #endif

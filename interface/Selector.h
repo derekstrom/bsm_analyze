@@ -15,15 +15,11 @@
 #include <boost/shared_ptr.hpp>
 
 #include "bsm_core/interface/Object.h"
+#include "bsm_input/interface/bsm_input_fwd.h"
 #include "interface/Cut.h"
 
 namespace bsm
 {
-    class Electron;
-    class Jet;
-    class Muon;
-    class PrimaryVertex;
-
     typedef boost::shared_ptr<Cut> CutPtr;
 
     // Common interface for all selectors. Each selector knows how to:

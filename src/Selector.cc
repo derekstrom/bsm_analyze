@@ -6,6 +6,7 @@
 // Copyright 2011, All rights reserved
 
 #include <cmath>
+#include <functional>
 #include <iomanip>
 #include <ostream>
 
@@ -116,9 +117,9 @@ void ElectronSelector::print(std::ostream &out) const
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    out << " [+]                Et > " << *_et << endl;
-    out << " [+]             |eta| < " << *_eta << endl;
-    out << " [+] |el.z() - pv.z()| < " << *_primary_vertex;
+    out << " [+]                Et " << *_et << endl;
+    out << " [+]             |eta| " << *_eta << endl;
+    out << " [+] |el.z() - pv.z()| " << *_primary_vertex;
 }
 
 
@@ -186,8 +187,8 @@ void JetSelector::print(std::ostream &out) const
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    out << " [+]                Pt > " << *_pt << endl;
-    out << " [+]             |eta| < " << *_eta;
+    out << " [+]                Pt " << *_pt << endl;
+    out << " [+]             |eta| " << *_eta;
 }
 
 
@@ -277,9 +278,9 @@ void MultiplicityCutflow::print(std::ostream &out) const
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
     for(uint32_t cut = 0, max = _cuts.size() - 1; max > cut; ++cut)
     {
-        out << " [+] " << setw(20) << right << " = " << *_cuts[cut] << endl;
+        out << " [+] " << setw(18) << right << " " << *_cuts[cut] << endl;
     }
-    out << " [+] " << setw(20) << right << " >= "
+    out << " [+] " << setw(18) << right << " "
         << **(_cuts.end() - 1);
 }
 
@@ -352,7 +353,7 @@ bool MuonSelector::apply(const Muon &muon, const PrimaryVertex &pv)
         && _muon_normalized_chi2->apply(muon.global_track().normalized_chi2())
         && _tracker_hits->apply(muon.inner_track().hits())
         && _pixel_hits->apply(muon.extra().pixel_hits())
-        && _d0_bsp->apply(muon.extra().d0_bsp())
+        && _d0_bsp->apply(fabs(muon.extra().d0_bsp()))
         && _primary_vertex->apply(fabs(muon.physics_object().vertex().z() - pv.vertex().z()));
 }
 
@@ -456,17 +457,17 @@ void MuonSelector::print(std::ostream &out) const
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    out << " [+]                pT > " << *_pt << endl;
-    out << " [+]             |eta| < " << *_eta << endl;
-    out << " [+] is Global           " << *_is_global << endl;
-    out << " [+] is Tracker          " << *_is_tracker << endl;
-    out << " [+]     Muon Segments > " << *_muon_segments << endl;
-    out << " [+]         Muon Hits > " << *_muon_hits << endl;
-    out << " [+]  Muon Chi2 / ndof < " << *_muon_normalized_chi2 << endl;
-    out << " [+]      Tracker Hits > " << *_tracker_hits << endl;
-    out << " [+]        Pixel Hits > " << *_pixel_hits << endl;
-    out << " [+]          |d0_bsp| < " << *_d0_bsp << endl;
-    out << " [+] |mu.z() - pv.z()| < " << *_primary_vertex;
+    out << " [+]                pT " << *_pt << endl;
+    out << " [+]             |eta| " << *_eta << endl;
+    out << " [+] is Global         " << *_is_global << endl;
+    out << " [+] is Tracker        " << *_is_tracker << endl;
+    out << " [+]     Muon Segments " << *_muon_segments << endl;
+    out << " [+]         Muon Hits " << *_muon_hits << endl;
+    out << " [+]  Muon Chi2 / ndof " << *_muon_normalized_chi2 << endl;
+    out << " [+]      Tracker Hits " << *_tracker_hits << endl;
+    out << " [+]        Pixel Hits " << *_pixel_hits << endl;
+    out << " [+]          |d0_bsp| " << *_d0_bsp << endl;
+    out << " [+] |mu.z() - pv.z()| " << *_primary_vertex;
 }
 
 
@@ -546,9 +547,9 @@ void PrimaryVertexSelector::print(std::ostream &out) const
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    out << " [+]             ndof >= " << *_ndof << endl;
-    out << " [+]         |pv.z()| <= " << *_vertex_z << endl;
-    out << " [+]              rho <= " << *_rho;
+    out << " [+]             ndof " << *_ndof << endl;
+    out << " [+]         |pv.z()| " << *_vertex_z << endl;
+    out << " [+]              rho " << *_rho;
 }
 
 
@@ -662,11 +663,11 @@ void WJetSelector::print(std::ostream &out) const
     out << "     CUT                 " << setw(5) << " "
         << " Objects Events" << endl;
     out << setw(45) << setfill('-') << left << " " << setfill(' ') << endl;
-    out << " [+]          Children = " << *_children << endl;
-    out << " [+]                Pt > " << *_pt << endl;
-    out << " [+]         Mass Drop < " << *_mass_drop << endl;
-    out << " [+]  Mass Lower Bound > " << *_mass_lower_bound << endl;
-    out << " [+]  Mass Upper Bound < " << *_mass_upper_bound;
+    out << " [+]          Children " << *_children << endl;
+    out << " [+]                Pt " << *_pt << endl;
+    out << " [+]         Mass Drop " << *_mass_drop << endl;
+    out << " [+]  Mass Lower Bound " << *_mass_lower_bound << endl;
+    out << " [+]  Mass Upper Bound " << *_mass_upper_bound;
 }
 
 
