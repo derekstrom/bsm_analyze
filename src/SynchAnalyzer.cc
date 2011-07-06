@@ -32,6 +32,9 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const LeptonMode &mode):
     _muon_selector.reset(new MuonSelector());
     _muon_veto_selector.reset(new MuonSelector());
 
+    _muon_selector->pt()->setValue(35);
+    _muon_veto_selector->pt()->setValue(35);
+
     monitor(_cutflow);
     monitor(_primary_vertex_selector);
     monitor(_jet_selector);
@@ -125,6 +128,24 @@ void SynchJuly2011Analyzer::print(std::ostream &out) const
 {
     out << "Cutflow [" << _lepton_mode << " mode]" << endl;
     out << *_cutflow;
+    out << endl;
+
+    switch(_lepton_mode)
+    {
+        case ELECTRON: out << "Electron Selector" << endl;
+                       out << *_electron_selector << endl;
+                       out << "Muon Veto" << endl;
+                       out << *_muon_veto_selector << endl;
+                       break;
+
+        case MUON:     out << "Muon Selector" << endl;
+                       out << *_muon_selector << endl;
+                       out << "Electron Veto" << endl;
+                       out << *_electron_veto_selector << endl;
+                       break;
+
+        default: break;
+    }
 }
 
 // Private
@@ -188,9 +209,9 @@ bool SynchJuly2011Analyzer::electron(const Event *event)
     return !selected_muons;
 }
 
-bool SynchJuly2011Analyzer:: muon(const Event *event)
+bool SynchJuly2011Analyzer::muon(const Event *event)
 {
-    if (!event->pf_electrons().size())
+    if (!event->pf_muons().size())
         return false;
 
     typedef ::google::protobuf::RepeatedPtrField<Electron> Electrons;
