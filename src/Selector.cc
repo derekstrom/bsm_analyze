@@ -343,7 +343,8 @@ MuonSelector::MuonSelector(const MuonSelector &object)
 
 bool MuonSelector::apply(const Muon &muon, const PrimaryVertex &pv)
 {
-    return _pt->apply(bsm::pt(muon.physics_object().p4()))
+    return muon.has_extra()
+        && _pt->apply(bsm::pt(muon.physics_object().p4()))
         && _eta->apply(fabs(bsm::eta(muon.physics_object().p4())))
         && _is_global->apply(muon.extra().is_global())
         && _is_tracker->apply(muon.extra().is_tracker())
@@ -497,7 +498,8 @@ PrimaryVertexSelector::PrimaryVertexSelector(const PrimaryVertexSelector &object
 
 bool PrimaryVertexSelector::apply(const PrimaryVertex &pv)
 {
-    return _ndof->apply(pv.extra().ndof())
+    return pv.has_extra()
+        && _ndof->apply(pv.extra().ndof())
         && _vertex_z->apply(pv.vertex().z())
         && _rho->apply(pv.extra().rho());
 }
