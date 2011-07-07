@@ -35,9 +35,11 @@ else
 endif
 
 # Rules to be always executed: empty ones
-.PHONY: $(SUBMOD) all
+.PHONY: $(SUBMOD) lib
 
-all: $(SUBMOD) obj lib prog
+lib: $(LIB)
+
+all: submod obj lib prog
 
 help:
 	@echo "make <rule>"
@@ -49,9 +51,10 @@ help:
 	@echo "  lib        compile shared library"
 	@echo
 
-obj: $(OBJS)
 
-lib: $(LIB)
+submod: $(SUBMOD)
+
+obj: $(OBJS)
 
 prog: $(PROGS)
 
