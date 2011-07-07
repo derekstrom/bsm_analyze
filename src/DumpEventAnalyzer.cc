@@ -169,7 +169,7 @@ void DumpEventAnalyzer::dumpPrimaryVertices(const Event *event)
             event->primary_vertices().end() != pv;
             ++pv, ++id)
     {
-        _out << "[" << setw(2) << id << "] "
+        _out << "[" << setw(2) << right << id << "] "
             << setw(4) << left << (_primary_vertex_selector->apply(*pv)
                     ? "->"
                     : "-x")
@@ -202,7 +202,7 @@ void DumpEventAnalyzer::dumpJets(const Event *event)
             ++jet, ++id)
     {
         const LorentzVector &p4 = jet->physics_object().p4();
-        _out << "[" << setw(2) << id << "] "
+        _out << "[" << setw(2) << right << id << "] "
             << setw(4) << left << (_jet_selector->apply(*jet)
                     ? "->"
                     : "-x")
@@ -232,7 +232,7 @@ void DumpEventAnalyzer::dumpElectrons(const Event *event)
     {
         const LorentzVector &p4 = electron->physics_object().p4();
 
-        _out << "[" << setw(2) << id << "] "
+        _out << "[" << setw(2) << right << id << "] "
             << setw(4) << left << (_electron_selector->apply(*electron, pv)
                     ? "->"
                     : "-x")
@@ -265,7 +265,7 @@ void DumpEventAnalyzer::dumpMuons(const Event *event)
     {
         const LorentzVector &p4 = muon->physics_object().p4();
 
-        _out << "[" << setw(2) << id << "] "
+        _out << "[" << setw(2) << right << id << "] "
             << setw(4) << left << (_muon_selector->apply(*muon, pv)
                     ? "->"
                     : "-x")
