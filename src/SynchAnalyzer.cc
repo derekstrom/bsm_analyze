@@ -146,13 +146,13 @@ void SynchJuly2011Analyzer::merge(const ObjectPtr &pointer)
     if (pointer->id() != id())
         return;
 
-    Object::merge(pointer);
-
     boost::shared_ptr<SynchJuly2011Analyzer> object =
         dynamic_pointer_cast<SynchJuly2011Analyzer>(pointer);
 
     if (!object)
         return;
+
+    Object::merge(pointer);
 
     _passed_events.insert(_passed_events.end(),
             object->_passed_events.begin(),
