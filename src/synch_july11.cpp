@@ -10,7 +10,11 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/program_options.hpp>
 
+#include <TRint.h>
+#include <TFile.h>
+
 #include "bsm_input/interface/Event.pb.h"
+#include "interface/MonitorCanvas.h"
 #include "interface/SynchAnalyzer.h"
 #include "interface/Thread.h"
 
@@ -26,7 +30,7 @@ using bsm::ThreadController;
 typedef shared_ptr<SynchJuly2011Analyzer> SynchAnalyzerPtr;
 typedef shared_ptr<ThreadController> ControllerPtr;
 
-void run(const po::variables_map &, ControllerPtr &);
+void run(char *[], const po::variables_map &, ControllerPtr &);
 
 int main(int argc, char *argv[])
 {
@@ -52,6 +56,9 @@ int main(int argc, char *argv[])
             ("mode,m",
              po::value<string>(),
              "Synchronizatin mode: muon, electron")
+
+            ("interactive",
+             "Interactive session: view plots")
         ;
 
         po::options_description hidden_options("Hidden Options");
@@ -94,7 +101,7 @@ int main(int argc, char *argv[])
                 controller->push(*input);
             }
 
-            run(arguments, controller);
+            run(argv, arguments, controller);
         }
     }
     catch(...)
@@ -111,9 +118,13 @@ int main(int argc, char *argv[])
     return result;
 }
 
-void run(const po::variables_map &arguments, ControllerPtr &controller)
+void run(char *argv[],
+        const po::variables_map &arguments,
+        ControllerPtr &controller)
 try
 {
+    using namespace bsm;
+
     SynchJuly2011Analyzer::LeptonMode mode = SynchJuly2011Analyzer::ELECTRON;
 
     if (arguments.count("mode"))
@@ -137,6 +148,79 @@ try
     controller->start();
 
     cout << *analyzer << endl;
+
+    if (arguments.count("interactive"))
+    {
+        // Start ROOT interactive session
+        //
+        int empty_argc = 1;
+        char *empty_argv[] = { argv[0] };
+        shared_ptr<TRint> app(new TRint("app", &empty_argc, empty_argv));
+
+        shared_ptr<LorentzVectorCanvas> leading_jet(new LorentzVectorCanvas("Leading Jet P4"));
+        leading_jet->draw(*analyzer->leadingJet());
+
+        if (SynchJuly2011Analyzer::ELECTRON == mode)
+        {
+            shared_ptr<LorentzVectorCanvas> electron_before_veto(new LorentzVectorCanvas("Electron Before Veto P4"));
+            electron_before_veto->draw(*analyzer->electronBeforeVeto());
+
+            shared_ptr<LorentzVectorCanvas> muon_to_veto(new LorentzVectorCanvas("Muon To Veto P4"));
+            muon_to_veto->draw(*analyzer->electronToVeto());
+
+            shared_ptr<LorentzVectorCanvas> electron_after_veto(new LorentzVectorCanvas("Electron After Veto P4"));
+            electron_after_veto->draw(*analyzer->electronAfterVeto());
+        }
+        else
+        {
+            shared_ptr<LorentzVectorCanvas> muon_before_veto(new LorentzVectorCanvas("Muon Before Veto P4"));
+            muon_before_veto->draw(*analyzer->electronBeforeVeto());
+
+            shared_ptr<LorentzVectorCanvas> electron_to_veto(new LorentzVectorCanvas("Electron To Veto P4"));
+            electron_to_veto->draw(*analyzer->muonToVeto());
+
+            shared_ptr<LorentzVectorCanvas> muon_after_veto(new LorentzVectorCanvas("Muon After Veto P4"));
+            muon_after_veto->draw(*analyzer->electronAfterVeto());
+        }
+        
+        app->Run();
+    }
+    else
+    {
+        shared_ptr<TFile> output(new TFile("output.root", "RECREATE"));
+        if (!output->IsOpen())
+        {
+            cerr << "failed to open output file" << endl;
+
+            return;
+        }
+
+        shared_ptr<LorentzVectorCanvas> leading_jet(new LorentzVectorCanvas("Leading Jet P4"));
+        leading_jet->write(output.get(), *analyzer->leadingJet());
+
+        if (SynchJuly2011Analyzer::ELECTRON == mode)
+        {
+            shared_ptr<LorentzVectorCanvas> electron_before_veto(new LorentzVectorCanvas("Electron Before Veto P4"));
+            electron_before_veto->write(output.get(), *analyzer->electronBeforeVeto());
+
+            shared_ptr<LorentzVectorCanvas> muon_to_veto(new LorentzVectorCanvas("Muon To Veto P4"));
+            muon_to_veto->write(output.get(), *analyzer->muonToVeto());
+
+            shared_ptr<LorentzVectorCanvas> electron_after_veto(new LorentzVectorCanvas("Electron After Veto P4"));
+            electron_after_veto->write(output.get(), *analyzer->electronAfterVeto());
+        }
+        else
+        {
+            shared_ptr<LorentzVectorCanvas> muon_before_veto(new LorentzVectorCanvas("Muon Before Veto P4"));
+            muon_before_veto->write(output.get(), *analyzer->muonBeforeVeto());
+
+            shared_ptr<LorentzVectorCanvas> electron_to_veto(new LorentzVectorCanvas("Electron To Veto P4"));
+            electron_to_veto->write(output.get(), *analyzer->electronToVeto());
+
+            shared_ptr<LorentzVectorCanvas> muon_after_veto(new LorentzVectorCanvas("Muon After Veto P4"));
+            muon_after_veto->write(output.get(), *analyzer->muonAfterVeto());
+        }
+    }
 }
 catch(...)
 {
