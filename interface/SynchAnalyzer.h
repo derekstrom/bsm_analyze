@@ -22,6 +22,8 @@ namespace bsm
     class SynchJuly2011Analyzer : public Analyzer
     {
         public:
+            typedef boost::shared_ptr<LorentzVectorMonitor> P4MonitorPtr;
+
             enum LeptonMode
             {
                 ELECTRON = 1,
@@ -30,6 +32,16 @@ namespace bsm
 
             SynchJuly2011Analyzer(const LeptonMode & = ELECTRON);
             SynchJuly2011Analyzer(const SynchJuly2011Analyzer &);
+
+            const P4MonitorPtr leadingJet() const;
+
+            const P4MonitorPtr electronBeforeVeto() const;
+            const P4MonitorPtr muonToVeto() const;
+            const P4MonitorPtr electronAfterVeto() const;
+
+            const P4MonitorPtr muonBeforeVeto() const;
+            const P4MonitorPtr electronToVeto() const;
+            const P4MonitorPtr muonAfterVeto() const;
 
             // Anlayzer interface
             //
@@ -73,6 +85,16 @@ namespace bsm
             boost::shared_ptr<MuonSelector> _muon_veto_selector;
 
             std::vector<Event::Extra> _passed_events;
+
+            P4MonitorPtr _leading_jet;
+
+            P4MonitorPtr _electron_before_veto;
+            P4MonitorPtr _muon_to_veto;
+            P4MonitorPtr _electron_after_veto;
+
+            P4MonitorPtr _muon_before_veto;
+            P4MonitorPtr _electron_to_veto;
+            P4MonitorPtr _muon_after_veto;
     };
 
     std::ostream &operator <<(std::ostream &, const SynchJuly2011Analyzer::LeptonMode &);

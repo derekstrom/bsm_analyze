@@ -12,7 +12,9 @@
 #include <boost/pointer_cast.hpp>
 
 #include "bsm_core/interface/ID.h"
+#include "bsm_input/interface/Algebra.h"
 #include "bsm_input/interface/Event.pb.h"
+#include "interface/Monitor.h"
 #include "interface/Selector.h"
 #include "interface/SynchAnalyzer.h"
 
@@ -33,7 +35,10 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const LeptonMode &mode):
             + (ELECTRON == _lepton_mode ? "Electron" : "Muon"));
     _cutflow->cut(4)->setName(string("Veto Good ")
             + (ELECTRON == _lepton_mode ? "Muon" : "Electron"));
+    monitor(_cutflow);
 
+    // Selectrors
+    //
     _primary_vertex_selector.reset(new PrimaryVertexSelector());
     _jet_selector.reset(new JetSelector());
     _electron_selector.reset(new ElectronSelector());
@@ -50,13 +55,34 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const LeptonMode &mode):
     _muon_selector->pt()->setValue(35);
     _muon_veto_selector->pt()->setValue(35);
 
-    monitor(_cutflow);
     monitor(_primary_vertex_selector);
     monitor(_jet_selector);
     monitor(_electron_selector);
     monitor(_electron_veto_selector);
     monitor(_muon_selector);
     monitor(_muon_veto_selector);
+
+    // Monitors
+    //
+    _leading_jet.reset(new LorentzVectorMonitor());
+
+    _electron_before_veto.reset(new LorentzVectorMonitor());
+    _muon_to_veto.reset(new LorentzVectorMonitor());
+    _electron_after_veto.reset(new LorentzVectorMonitor());
+
+    _muon_before_veto.reset(new LorentzVectorMonitor());
+    _electron_to_veto.reset(new LorentzVectorMonitor());
+    _muon_after_veto.reset(new LorentzVectorMonitor());
+
+    monitor(_leading_jet);
+
+    monitor(_electron_before_veto);
+    monitor(_muon_to_veto);
+    monitor(_electron_after_veto);
+
+    monitor(_muon_before_veto);
+    monitor(_electron_to_veto);
+    monitor(_muon_after_veto);
 }
 
 SynchJuly2011Analyzer::SynchJuly2011Analyzer(const SynchJuly2011Analyzer &object):
@@ -65,6 +91,10 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const SynchJuly2011Analyzer &object
     _cutflow = 
         dynamic_pointer_cast<MultiplicityCutflow>(object._cutflow->clone());
 
+    monitor(_cutflow);
+
+    // Selectors
+    //
     _primary_vertex_selector = 
         dynamic_pointer_cast<PrimaryVertexSelector>(object._primary_vertex_selector->clone());
 
@@ -83,14 +113,84 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const SynchJuly2011Analyzer &object
     _muon_veto_selector = 
         dynamic_pointer_cast<MuonSelector>(object._muon_veto_selector->clone());
 
-    monitor(_cutflow);
     monitor(_primary_vertex_selector);
     monitor(_jet_selector);
     monitor(_electron_selector);
     monitor(_electron_veto_selector);
     monitor(_muon_selector);
     monitor(_muon_veto_selector);
+
+    // Monitors
+    //
+    // Monitors
+    //
+    _leading_jet = 
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._leading_jet->clone());
+
+    _electron_before_veto = 
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._electron_before_veto->clone());
+
+    _muon_to_veto = 
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._muon_to_veto->clone());
+
+    _electron_after_veto = 
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._electron_after_veto->clone());
+
+    _muon_before_veto = 
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._muon_before_veto->clone());
+
+    _electron_to_veto = 
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._electron_to_veto->clone());
+
+    _muon_after_veto = 
+        dynamic_pointer_cast<LorentzVectorMonitor>(object._muon_after_veto->clone());
+
+    monitor(_leading_jet);
+
+    monitor(_electron_before_veto);
+    monitor(_muon_to_veto);
+    monitor(_electron_after_veto);
+
+    monitor(_muon_before_veto);
+    monitor(_electron_to_veto);
+    monitor(_muon_after_veto);
 }
+
+const SynchJuly2011Analyzer::P4MonitorPtr SynchJuly2011Analyzer::leadingJet() const
+{
+    return _leading_jet;
+}
+
+const SynchJuly2011Analyzer::P4MonitorPtr SynchJuly2011Analyzer::electronBeforeVeto() const
+{
+    return _electron_before_veto;
+}
+
+const SynchJuly2011Analyzer::P4MonitorPtr SynchJuly2011Analyzer::muonToVeto() const
+{
+    return _muon_to_veto;
+}
+
+const SynchJuly2011Analyzer::P4MonitorPtr SynchJuly2011Analyzer::electronAfterVeto() const
+{
+    return _electron_after_veto;
+}
+
+const SynchJuly2011Analyzer::P4MonitorPtr SynchJuly2011Analyzer::muonBeforeVeto() const
+{
+    return _muon_before_veto;
+}
+
+const SynchJuly2011Analyzer::P4MonitorPtr SynchJuly2011Analyzer::electronToVeto() const
+{
+    return _electron_to_veto;
+}
+
+const SynchJuly2011Analyzer::P4MonitorPtr SynchJuly2011Analyzer::muonAfterVeto() const
+{
+    return _muon_after_veto;
+}
+
 
 void SynchJuly2011Analyzer::onFileOpen(const std::string &filename, const Input *)
 {
@@ -189,6 +289,15 @@ void SynchJuly2011Analyzer::print(std::ostream &out) const
                        out << endl;
                        out << "Muon Veto" << endl;
                        out << *_muon_veto_selector << endl;
+                       out << endl;
+                       out << "Electron before Veto" << endl;
+                       out << *electronBeforeVeto() << endl;
+                       out << endl;
+                       out << "Muon to Veto" << endl;
+                       out << *muonToVeto() << endl;
+                       out << endl;
+                       out << "Electron after Veto" << endl;
+                       out << *electronAfterVeto();
                        break;
 
         case MUON:     out << "Muon Selector" << endl;
@@ -196,6 +305,15 @@ void SynchJuly2011Analyzer::print(std::ostream &out) const
                        out << endl;
                        out << "Electron Veto" << endl;
                        out << *_electron_veto_selector << endl;
+                       out << endl;
+                       out << "Muon before Veto" << endl;
+                       out << *muonBeforeVeto() << endl;
+                       out << endl;
+                       out << "Electron to Veto" << endl;
+                       out << *electronToVeto() << endl;
+                       out << endl;
+                       out << "Muon after Veto" << endl;
+                       out << *muonAfterVeto();
                        break;
 
         default: break;
@@ -212,6 +330,8 @@ bool SynchJuly2011Analyzer::jets(const Event *event)
     typedef ::google::protobuf::RepeatedPtrField<Jet> Jets;
 
     uint32_t selected_jets = 0;
+    const Jet *leading_jet = 0;
+    double leading_jet_pt = 0;
     LockSelectorEventCounterOnUpdate lock(*_jet_selector);
     for(Jets::const_iterator jet = event->jets().begin();
             event->jets().end() != jet
@@ -219,8 +339,22 @@ bool SynchJuly2011Analyzer::jets(const Event *event)
             ++jet)
     {
         if (_jet_selector->apply(*jet))
+        {
             ++selected_jets;
+
+            const double jet_pt = pt(jet->physics_object().p4());
+            if (!leading_jet
+                    || jet_pt > leading_jet_pt)
+            {
+                leading_jet = &*jet;
+                leading_jet_pt = jet_pt;
+            }
+        }
     }
+
+    if (1 < selected_jets
+            && leading_jet)
+        _leading_jet->fill(leading_jet->physics_object().p4());
 
     return 1 < selected_jets;
 }
@@ -236,6 +370,7 @@ bool SynchJuly2011Analyzer::electron(const Event *event)
     const PrimaryVertex &pv = *event->primary_vertices().begin();
 
     uint32_t selected_electrons = 0;
+    const Electron *selected_electron = 0;
     LockSelectorEventCounterOnUpdate electron_lock(*_electron_selector);
     for(Electrons::const_iterator electron = event->pf_electrons().begin();
             event->pf_electrons().end() != electron
@@ -243,7 +378,12 @@ bool SynchJuly2011Analyzer::electron(const Event *event)
             ++electron)
     {
         if (_electron_selector->apply(*electron, pv))
+        {
             ++selected_electrons;
+
+            if (!selected_electron)
+                selected_electron = &*electron;
+        }
     }
 
     if (1 != selected_electrons)
@@ -251,7 +391,11 @@ bool SynchJuly2011Analyzer::electron(const Event *event)
 
     _cutflow->apply(LEPTON);
 
+    if (selected_electron)
+        _electron_before_veto->fill(selected_electron->physics_object().p4());
+
     uint32_t selected_muons = 0;
+    const Muon *selected_muon = 0;
     LockSelectorEventCounterOnUpdate muon_lock(*_muon_veto_selector);
     for(Muons::const_iterator muon = event->pf_muons().begin();
             event->pf_muons().end() != muon
@@ -259,8 +403,18 @@ bool SynchJuly2011Analyzer::electron(const Event *event)
             ++muon)
     {
         if (_muon_veto_selector->apply(*muon, pv))
+        {
             ++selected_muons;
+
+            if (!selected_muon)
+                selected_muon = &*muon;
+        }
     }
+
+    if (selected_muon)
+        _muon_to_veto->fill(selected_muon->physics_object().p4());
+    else if (selected_electron)
+        _electron_after_veto->fill(selected_electron->physics_object().p4());
 
     return !selected_muons;
 }
@@ -276,6 +430,7 @@ bool SynchJuly2011Analyzer::muon(const Event *event)
     const PrimaryVertex &pv = *event->primary_vertices().begin();
 
     uint32_t selected_muons = 0;
+    const Muon *selected_muon = 0;
     LockSelectorEventCounterOnUpdate muon_lock(*_muon_selector);
     for(Muons::const_iterator muon = event->pf_muons().begin();
             event->pf_muons().end() != muon
@@ -283,15 +438,24 @@ bool SynchJuly2011Analyzer::muon(const Event *event)
             ++muon)
     {
         if (_muon_selector->apply(*muon, pv))
+        {
             ++selected_muons;
+
+            if (!selected_muon)
+                selected_muon = &*muon;
+        }
     }
 
     if (1 != selected_muons)
         return false;
 
     _cutflow->apply(LEPTON);
+    
+    if (selected_muon)
+        _muon_before_veto->fill(selected_muon->physics_object().p4());
 
     uint32_t selected_electrons = 0;
+    const Electron *selected_electron = 0;
     LockSelectorEventCounterOnUpdate electron_lock(*_electron_veto_selector);
     for(Electrons::const_iterator electron = event->pf_electrons().begin();
             event->pf_electrons().end() != electron
@@ -299,8 +463,18 @@ bool SynchJuly2011Analyzer::muon(const Event *event)
             ++electron)
     {
         if (_electron_veto_selector->apply(*electron, pv))
+        {
             ++selected_electrons;
+
+            if (!selected_electron)
+                selected_electron = &*electron;
+        }
     }
+
+    if (selected_electron)
+        _electron_to_veto->fill(selected_electron->physics_object().p4());
+    else if (selected_muon)
+        _muon_after_veto->fill(selected_muon->physics_object().p4());
 
     return !selected_electrons;
 }
