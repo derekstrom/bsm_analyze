@@ -17,6 +17,7 @@
 #include "interface/bsm_fwd.h"
 
 class TCanvas;
+class TDirectory;
 
 namespace bsm
 {
@@ -71,6 +72,7 @@ namespace bsm
             JetCanvas(const std::string &title = "");
 
             void draw(const JetsMonitor &);
+            void write(TDirectory *, const JetsMonitor &);
 
         private:
             typedef boost::shared_ptr<core::IDCounter> IDPtr;
@@ -85,6 +87,9 @@ namespace bsm
             TH1Ptr _leading_pt;
             TH1Ptr _pt;
             TH1Ptr _children;
+
+            std::string _name;
+            std::string _title;
     };
 
     class LorentzVectorCanvas
@@ -93,6 +98,7 @@ namespace bsm
             LorentzVectorCanvas(const std::string &title = "");
 
             void draw(const LorentzVectorMonitor &);
+            void write(TDirectory *, const LorentzVectorMonitor &);
 
         private:
             typedef boost::shared_ptr<core::IDCounter> IDPtr;
@@ -112,6 +118,9 @@ namespace bsm
             TH1Ptr _eta;
             TH1Ptr _phi;
             TH1Ptr _mass;
+
+            std::string _name;
+            std::string _title;
     };
 
     class MissingEnergyCanvas
