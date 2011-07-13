@@ -151,7 +151,9 @@ namespace bsm
 
             const H1Ptr multiplicity() const;
             const H1Ptr pt() const;
+            const H1Ptr uncorrected_pt() const;
             const H1Ptr leading_pt() const;
+            const H1Ptr leading_uncorrected_pt() const;
             const H1Ptr children() const;
 
             // Object interface
@@ -170,7 +172,9 @@ namespace bsm
 
             H1ProxyPtr _multiplicity;
             H1ProxyPtr _pt;
+            H1ProxyPtr _uncorrected_pt;
             H1ProxyPtr _leading_pt;
+            H1ProxyPtr _leading_uncorrected_pt;
             H1ProxyPtr _children;
     };
 
