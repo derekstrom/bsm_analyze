@@ -10,13 +10,17 @@
 #ifndef BSM_JET_ENERGY_CORRECTIONS_ANALYZER
 #define BSM_JET_ENERGY_CORRECTIONS_ANALYZER
 
-#include <vector>
+#include <string>
+#include <sstream>
 
 #include <boost/shared_ptr.hpp>
 
-#include "bsm_input/interface/Event.pb.h"
+#include "JetMETObjects/interface/FactorizedJetCorrector.h"
+#include "JetMETObjects/interface/JetCorrectorParameters.h"
 #include "interface/Analyzer.h"
 #include "interface/bsm_fwd.h"
+
+class JetCorrectorParameters;
 
 namespace bsm
 {
@@ -27,6 +31,9 @@ namespace bsm
 
             JetEnergyCorrectionsAnalyzer();
             JetEnergyCorrectionsAnalyzer(const JetEnergyCorrectionsAnalyzer &);
+
+            void loadCorrections(const std::string &);
+            bool didCorrectionsLoad() const;
 
             const P4MonitorPtr jetCmsswCorrectedP4() const;
             const P4MonitorPtr jetUncorrectedP4() const;
@@ -42,7 +49,7 @@ namespace bsm
             virtual uint32_t id() const;
 
             virtual ObjectPtr clone() const;
-            using Object::merge;
+            virtual void merge(const ObjectPtr &);
 
             virtual void print(std::ostream &) const;
 
@@ -54,6 +61,11 @@ namespace bsm
             P4MonitorPtr _jet_cmssw_corrected_p4;
             P4MonitorPtr _jet_uncorrected_p4;
             P4MonitorPtr _jet_offline_corrected_p4;
+
+            std::vector<JetCorrectorParameters> _parameters;
+            boost::shared_ptr<FactorizedJetCorrector> _jec;
+
+            std::ostringstream _out;
     };
 }
 
