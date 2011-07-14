@@ -1,7 +1,7 @@
 CCC      = g++
 
 # Subsystems that have compilable libraries
-SUBMOD   = bsm_core bsm_input bsm_stat
+SUBMOD   = bsm_core bsm_input bsm_stat JetMETObjects
 LIB		 = libbsm_analyze.so.1.2
 
 # Get list of all heads, sources and objects. Each source (%.cc) whould have
@@ -24,7 +24,7 @@ else
 	DEBUG = -O0 -g
 endif
 
-CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -I./ -I/opt/local/include -I${ROOTSYS}/include -I${BOOST_ROOT}/include -I./bsm_input/message
+CXXFLAGS = ${DEBUG} -fPIC -pipe -Wall -DSTANDALONE -I./ -I/opt/local/include -I${ROOTSYS}/include -I${BOOST_ROOT}/include -I./bsm_input/message
 
 ifeq ($(shell uname),Linux)
 	LIBS     = -L/opt/local/lib -lprotobuf -L${BOOST_ROOT}/lib -L./lib $(foreach mod,$(SUBMOD),$(addprefix -l,$(mod))) -lboost_thread -lboost_filesystem -lboost_system -lboost_program_options -lboost_regex
@@ -62,7 +62,9 @@ prog: $(PROGS)
 
 # Compile modules
 $(SUBMOD):
-	$(MAKE) -C $@ 
+	@CXXFLAGS=-DSTANDALONE
+	@export CXXFLAGS
+	$(MAKE) -C $@
 	@for lib in `find ./$@/lib -name lib$@.so\*`; do ln -fs ../$@/lib/`basename $${lib}` ./lib/; done
 
 # Object files depend on all sources and headers but only sources should be
