@@ -14,6 +14,9 @@
 #include "bsm_core/interface/ID.h"
 #include "bsm_input/interface/Algebra.h"
 #include "bsm_input/interface/Event.pb.h"
+#include "bsm_input/interface/Input.pb.h"
+#include "bsm_input/interface/Trigger.pb.h"
+#include "interface/TriggerAnalyzer.h"
 #include "interface/Monitor.h"
 #include "interface/Selector.h"
 #include "interface/SynchAnalyzer.h"
@@ -37,7 +40,7 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const LeptonMode &mode):
             + (ELECTRON == _lepton_mode ? "Muon" : "Electron"));
     monitor(_cutflow);
 
-    // Selectrors
+    // Selectors
     //
     _primary_vertex_selector.reset(new PrimaryVertexSelector());
     _jet_selector.reset(new JetSelector());
@@ -192,8 +195,23 @@ const SynchJuly2011Analyzer::P4MonitorPtr SynchJuly2011Analyzer::muonAfterVeto()
 }
 
 
-void SynchJuly2011Analyzer::onFileOpen(const std::string &filename, const Input *)
+void SynchJuly2011Analyzer::onFileOpen(const std::string &filename, const Input *input)
 {
+    if (!input->has_info())
+        return;
+
+
+
+    typedef ::google::protobuf::RepeatedPtrField<TriggerItem> TriggerItems;
+    for(TriggerItems::const_iterator hlt = input->info().triggers().begin();
+            input->info().triggers().end() != hlt;
+            ++hlt)
+    {
+        if (_hlt_map.end() != _hlt_map.find(hlt->hash()))
+            continue;
+
+        _hlt_map[hlt->hash()] = hlt->name();
+    }
 }
 
 void SynchJuly2011Analyzer::process(const Event *event)
@@ -227,7 +245,10 @@ void SynchJuly2011Analyzer::process(const Event *event)
         return;
 
     _cutflow->apply(VETO_SECOND_LEPTON);
-
+    
+    if (!trigger(event))
+      return;
+    
     _passed_events.push_back(event->extra());
 }
 
@@ -274,6 +295,7 @@ void SynchJuly2011Analyzer::print(std::ostream &out) const
     }
     out << endl;
 
+
     out << "Cutflow [" << _lepton_mode << " mode]" << endl;
     out << *_cutflow << endl;
     out << endl;
@@ -319,6 +341,9 @@ void SynchJuly2011Analyzer::print(std::ostream &out) const
         default: break;
     }
 }
+
+
+
 
 // Private
 //
@@ -479,6 +504,54 @@ bool SynchJuly2011Analyzer::muon(const Event *event)
     return !selected_electrons;
 }
 
+bool SynchJuly2011Analyzer::trigger(const Event *event)
+{
+  bool ispass = false;
+  if (!event->hlts().size())
+    return false;
+  
+  typedef ::google::protobuf::RepeatedPtrField<Trigger> Triggers;
+    
+  for(Triggers::const_iterator hlt = event->hlts().begin();
+      event->hlts().end() != hlt;
+      ++hlt)
+    {
+      
+
+
+
+      //      if (_hlt_map[hlt->hash()] == "hlt_ele10_caloidt_caloisovl_trkidt_trkisovl_ht200" && hlt->pass())  // 3  1   40568
+      //      if (_hlt_map[hlt->hash()] == "hlt_ele45_caloidvt_trkidt" && hlt->pass())                          // 2  1   27071
+      //if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraljet30" && hlt->pass())             // 2  1   35936
+      //if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraltrijet30" && hlt->pass())          // 2  1   30261
+      //if (_hlt_map[hlt->hash()] == "hlt_ele8_caloidl_caloisovl_jet40" && hlt->pass())                   // 2  1   59030
+      //if (_hlt_map[hlt->hash()] == "hlt_ele27_caloidvt_caloisot_trkidt_trkisot" && hlt->pass())         // 2  1   31390
+      //if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidl_caloisovl_ele8_caloidl_caloisovl" && hlt->pass()) // 2  1   6998
+      //if (_hlt_map[hlt->hash()] == "hlt_ele32_caloidl_caloisovl_sc17" && hlt->pass())                   // 2  1   17206
+      //if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraljet40_btagip" && hlt->pass())      // 2  1   30835
+      //if (_hlt_map[hlt->hash()] == "hlt_ele32_caloidvt_caloisot_trkidt_trkisot" && hlt->pass())         // 1  1   29449
+      //if (_hlt_map[hlt->hash()] == "hlt_ele15_caloidvt_trkidt_looseisopftau15" && hlt->pass())          // 2  1   29386
+      //if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidl_caloisovl_ele15_hfl" && hlt->pass())              // 2  1   311
+      //if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraldijet30" && hlt->pass())           // 2  1   34957
+      //if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidl_caloisovl" && hlt->pass())                        // 2  1   53099
+      if (_hlt_map[hlt->hash()] == "hlt_ele10_caloidl_caloisovl_trkidvl_trkisovl_ht200" && hlt->pass()) // 3  1   46410
+      //if (_hlt_map[hlt->hash()] == "hlt_ele10_caloidl_caloisovl_trkidvl_trkisovl_ht200") // 3  1   46410
+      //if (_hlt_map[hlt->hash()] == "hlt_ele15_caloidvt_caloisot_trkidt_trkisot" && hlt->pass())       //  2  1   35389
+      //if (_hlt_map[hlt->hash()] == "hlt_ele8_caloidl_trkidvl" && hlt->pass())                           // 2  1   67331
+      //if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidt_trkidvl_caloisovl_trkisovl_ele8_caloidt_trkidvl_caloisovl_trkisovl" && hlt->pass()) // 2  1   3554
+      //if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidvt_caloisovt_trkidt_trkisovt_sc8_mass30" && hlt->pass()) // 2  1   16791
+      //if (_hlt_map[hlt->hash()] == "hlt_ele8_caloidl_caloisovl" && hlt->pass())                       //  2  1   59231
+      //if (_hlt_map[hlt->hash()] == "hlt_ele15_caloidvt_caloisot_trkidt_trkisot_looseisopftau15" && hlt->pass()) // 2  1   25366
+      //if (_hlt_map[hlt->hash()] == "hlt_ele15_caloidvt_caloisot_trkidt_trkisot_looseisopftau20" && hlt->pass()) // 2  1   24236
+      
+
+
+	ispass = true;
+
+    }
+  
+  return ispass;
+}
 
 
 // Helpers

@@ -72,6 +72,7 @@ namespace bsm
             bool jets(const Event *);
             bool electron(const Event *);
             bool muon(const Event *);
+            bool trigger(const Event *);
 
             LeptonMode _lepton_mode;
 
@@ -95,6 +96,15 @@ namespace bsm
             P4MonitorPtr _muon_before_veto;
             P4MonitorPtr _electron_to_veto;
             P4MonitorPtr _muon_after_veto;
+
+            typedef std::map<std::size_t, std::string> HLTMap;
+
+            typedef std::map<bsm::Trigger, uint32_t> HLTCutflow;
+
+            HLTMap _hlt_map;
+            HLTCutflow _hlt_cutflow;
+
+
     };
 
     std::ostream &operator <<(std::ostream &, const SynchJuly2011Analyzer::LeptonMode &);

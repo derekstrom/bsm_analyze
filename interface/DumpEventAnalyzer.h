@@ -51,6 +51,7 @@ namespace bsm
             void dumpJets(const Event *);
             void dumpElectrons(const Event *);
             void dumpMuons(const Event *);
+            void dumpTriggers(const Event *);
 
             std::vector<Event::Extra> _events;
 
@@ -60,6 +61,15 @@ namespace bsm
             boost::shared_ptr<JetSelector> _jet_selector;
             boost::shared_ptr<ElectronSelector> _electron_selector;
             boost::shared_ptr<MuonSelector> _muon_selector;
+
+
+            typedef std::map<std::size_t, std::string> HLTMap;
+
+            typedef std::map<bsm::Trigger, uint32_t> HLTCutflow;
+
+            HLTMap _hlt_map;
+            HLTCutflow _hlt_cutflow;
+
     };
 }
 

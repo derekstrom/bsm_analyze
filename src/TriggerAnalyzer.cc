@@ -58,6 +58,8 @@ void TriggerAnalyzer::process(const Event *event)
             event->hlts().end() != hlt;
             ++hlt)
     {
+
+      //      cout << "trg: " << hlt->pass() << " " << _hlt_map[hlt->hash()] << endl;
         if (hlt->pass())
             ++_hlt_cutflow[*hlt];
         else

@@ -12,13 +12,17 @@
 #include "bsm_core/interface/ID.h"
 #include "bsm_input/interface/Algebra.h"
 #include "bsm_input/interface/Electron.pb.h"
+#include "bsm_input/interface/Event.pb.h"
+#include "bsm_input/interface/Input.pb.h"
 #include "bsm_input/interface/Jet.pb.h"
 #include "bsm_input/interface/Muon.pb.h"
 #include "bsm_input/interface/Physics.pb.h"
 #include "bsm_input/interface/PrimaryVertex.pb.h"
 #include "bsm_input/interface/Utility.h"
+#include "bsm_input/interface/Trigger.pb.h"
 #include "interface/DumpEventAnalyzer.h"
 #include "interface/Selector.h"
+#include "interface/TriggerAnalyzer.h"
 
 using namespace std;
 
@@ -94,8 +98,23 @@ void DumpEventAnalyzer::addEvent(const uint32_t &id, const uint32_t &lumi, const
         _events.push_back(event);
 }
 
-void DumpEventAnalyzer::onFileOpen(const std::string &filename, const Input *)
+void DumpEventAnalyzer::onFileOpen(const std::string &filename, const Input *input)
 {
+    if (!input->has_info())
+        return;
+
+    _out << "Filename: " << filename << endl;
+
+    typedef ::google::protobuf::RepeatedPtrField<TriggerItem> TriggerItems;
+    for(TriggerItems::const_iterator hlt = input->info().triggers().begin();
+            input->info().triggers().end() != hlt;
+            ++hlt)
+    {
+        if (_hlt_map.end() != _hlt_map.find(hlt->hash()))
+            continue;
+
+        _hlt_map[hlt->hash()] = hlt->name();
+    }
 }
 
 void DumpEventAnalyzer::process(const Event *event)
@@ -153,6 +172,7 @@ void DumpEventAnalyzer::dump(const Event *event)
     dumpJets(event);
     dumpElectrons(event);
     dumpMuons(event);
+    dumpTriggers(event);
 }
 
 void DumpEventAnalyzer::dumpPrimaryVertices(const Event *event)
@@ -279,3 +299,31 @@ void DumpEventAnalyzer::dumpMuons(const Event *event)
 
     _out << endl;
 }
+
+
+void DumpEventAnalyzer::dumpTriggers(const Event *event)
+{
+  if (!event->hlts().size())
+    return;
+  
+  typedef ::google::protobuf::RepeatedPtrField<Trigger> Triggers;
+  
+  _out << "Triggers" << endl;
+  
+  for(Triggers::const_iterator hlt = event->hlts().begin();
+      event->hlts().end() != hlt;
+      ++hlt)
+    {
+      
+      //      if (_hlt_map[hlt->hash()] == "hlt_ele10_caloidl_caloisovl_trkidvl_trkisovl_ht200")
+      //	_out << hlt->pass() << " : " << _hlt_map[hlt->hash()] << endl;
+
+
+      _out << hlt->pass() << " : " << _hlt_map[hlt->hash()] << endl;
+
+      
+    }
+  
+  _out << endl;
+}
+
