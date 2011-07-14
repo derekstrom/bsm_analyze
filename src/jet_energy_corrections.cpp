@@ -1,7 +1,7 @@
 // Apply jet energy corrections to good jets
-// (single thread)
+// (multi-threads)
 //
-// Created by Samvel Khalatyan, Jul 13, 2011
+// Created by Samvel Khalatyan, Jul 14, 2011
 // Copyright 2011, All rights reserved
 
 #include <iostream>
@@ -18,6 +18,7 @@
 #include "bsm_input/interface/Reader.h"
 #include "interface/MonitorCanvas.h"
 #include "interface/JetEnergyCorrectionsAnalyzer.h"
+#include "interface/Thread.h"
 
 using namespace std;
 
@@ -29,6 +30,8 @@ namespace fs = boost::filesystem;
 using bsm::JetEnergyCorrectionsAnalyzer;
 using bsm::Reader;
 using bsm::Event;
+using bsm::LorentzVectorCanvas;
+using bsm::ThreadController;
 
 typedef shared_ptr<JetEnergyCorrectionsAnalyzer> AnalyzerPtr;
 
@@ -112,8 +115,6 @@ void run(char *argv[],
         const po::variables_map &arguments)
 try
 {
-    using namespace bsm;
-
     // Prepare Analysis
     //
     AnalyzerPtr analyzer(new JetEnergyCorrectionsAnalyzer());
@@ -167,39 +168,19 @@ try
         return;
     }
 
-    uint32_t events_read = 0;
+    shared_ptr<ThreadController> controller(new ThreadController());
     const vector<string> &inputs = arguments["input"].as<vector<string> >();
     for(vector<string>::const_iterator input = inputs.begin();
             inputs.end() != input;
             ++input)
     {
-        shared_ptr<Reader> reader(new Reader(*input));
-        reader->open();
-        if (!reader->isOpen())
-        {
-            cerr << "failed to open: " << *input << endl;
-
-            continue;
-        }
-
-        for(shared_ptr<Event> event(new Event());
-                reader->read(event);
-                ++events_read)
-        try
-        {
-            analyzer->process(event.get());
-
-            event->Clear();
-        }
-        catch(...)
-        {
-            cerr << "failed to process: " << *input << endl;
-            break;
-        }
+        cout << *input << endl;
+        controller->push(*input);
     }
 
-    cout << endl;
-    cout << "Events Read: " << events_read << endl;
+    controller->use(analyzer);
+    controller->start();
+
     cout << *analyzer << endl;
 
     if (arguments.count("interactive"))
