@@ -258,7 +258,7 @@ void WtagMassAnalyzer::jets(const Event *event, const Electron *el)
     TLorentzVector el_p4;
     utility::set(&el_p4, &el->physics_object().p4());
 
-    double delta_phi_cut = TMath::Pi() / 2;
+    float delta_phi_cut = TMath::Pi() / 2;
 
     LockSelectorEventCounterOnUpdate lock(*_wjet_selector);
     const Jet *wjet = 0;
@@ -339,12 +339,12 @@ WtagMassAnalyzer::PBP4 WtagMassAnalyzer::leptonicLeg(const Event *event,
     // Find the jet with max Mass
     //
     const Jet *jet = 0;
-    double max_mass = 0;
+    float max_mass = 0;
     for(Jets::const_iterator ijet = jets.begin();
             jets.end() != ijet;
             ++ijet)
     {
-        double jet_mass = mass((*ijet)->physics_object().p4());
+        float jet_mass = mass((*ijet)->physics_object().p4());
         if (jet_mass <= max_mass)
             continue;
 
@@ -368,12 +368,12 @@ WtagMassAnalyzer::PBP4 WtagMassAnalyzer::hadronicLeg(const Event *event,
     // Find jet with max Mass and Wjet
     //
     const Jet *jet = 0;
-    double max_mass = 0;
+    float max_mass = 0;
     for(Jets::const_iterator ijet = jets.begin();
             jets.end() != ijet;
             ++ijet)
     {
-        double jet_mass = mass((*ijet)->physics_object().p4());
+        float jet_mass = mass((*ijet)->physics_object().p4());
         if (jet_mass <= max_mass)
             continue;
        

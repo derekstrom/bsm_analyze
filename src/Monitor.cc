@@ -180,8 +180,8 @@ void ElectronsMonitor::fill(const Electrons &electrons)
 {
     multiplicity()->fill(electrons.size());
 
-    double max_el_pt = 0;
-    double el_pt = 0;
+    float max_el_pt = 0;
+    float el_pt = 0;
     for(Electrons::const_iterator electron = electrons.begin();
             electrons.end() != electron;
             ++electron)
@@ -341,10 +341,10 @@ void JetsMonitor::fill(const Jets &jets)
 {
     multiplicity()->fill(jets.size());
 
-    double max_jet_pt = 0;
-    double max_jet_uncorrected_pt = 0;
-    double jet_pt = 0;
-    double jet_uncorrected_pt = 0;
+    float max_jet_pt = 0;
+    float max_jet_uncorrected_pt = 0;
+    float jet_pt = 0;
+    float jet_uncorrected_pt = 0;
     for(Jets::const_iterator jet = jets.begin();
             jets.end() != jet;
             ++jet)
@@ -659,8 +659,8 @@ void MuonsMonitor::fill(const Muons &muons)
 {
     multiplicity()->fill(muons.size());
 
-    double max_muon_pt = 0;
-    double muon_pt = 0;
+    float max_muon_pt = 0;
+    float muon_pt = 0;
     for(Muons::const_iterator muon = muons.begin();
             muons.end() != muon;
             ++muon)

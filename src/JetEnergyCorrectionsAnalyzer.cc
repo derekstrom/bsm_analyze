@@ -197,7 +197,7 @@ void JetEnergyCorrectionsAnalyzer::jets(const Event *event)
             _jec->setJetA(jet->extra().area());
             _jec->setRho(rho);
 
-            double jec = _jec->getCorrection();
+            float jec = _jec->getCorrection();
 
             LorentzVector jec_p4 = uncorrected_p4;
             jec_p4 *= jec;

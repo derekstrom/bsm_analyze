@@ -13,7 +13,7 @@
 using bsm::H1Proxy;
 using bsm::H2Proxy;
 
-H1Proxy::H1Proxy(const uint32_t &bins, const double &min, const double &max)
+H1Proxy::H1Proxy(const uint32_t &bins, const float &min, const float &max)
 {
     _histogram.reset(new stat::H1(bins, min, max));
 }
@@ -62,12 +62,12 @@ void H1Proxy::print(std::ostream &out) const
 // H2 Proxy
 //
 H2Proxy::H2Proxy(const uint32_t &x_bins,
-        const double &x_min,
-        const double &x_max,
+        const float &x_min,
+        const float &x_max,
 
         const uint32_t &y_bins,
-        const double &y_min,
-        const double &y_max)
+        const float &y_min,
+        const float &y_max)
 {
     _histogram.reset(new stat::H2(x_bins, x_min, x_max, y_bins, y_min, y_max));
 }

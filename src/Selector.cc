@@ -46,8 +46,8 @@ using bsm::LockSelectorEventCounterOnUpdate;
 ElectronSelector::ElectronSelector()
 {
     _et.reset(new Comparator<>(30, "Et"));
-    _eta.reset(new Comparator<std::less<double> >(2.5, "|eta|"));
-    _primary_vertex.reset(new Comparator<std::less<double> >(1, "|el.z() - pv.z()|"));
+    _eta.reset(new Comparator<std::less<float> >(2.5, "|eta|"));
+    _primary_vertex.reset(new Comparator<std::less<float> >(1, "|el.z() - pv.z()|"));
 
     monitor(_et);
     monitor(_eta);
@@ -129,7 +129,7 @@ void ElectronSelector::print(std::ostream &out) const
 JetSelector::JetSelector()
 {
     _pt.reset(new Comparator<>(50, "Pt"));
-    _eta.reset(new Comparator<std::less<double> >(2.4, "|eta|"));
+    _eta.reset(new Comparator<std::less<float> >(2.4, "|eta|"));
 
     monitor(_pt);
     monitor(_eta);
@@ -290,16 +290,16 @@ void MultiplicityCutflow::print(std::ostream &out) const
 MuonSelector::MuonSelector()
 {
     _pt.reset(new Comparator<>(30, "pT"));
-    _eta.reset(new Comparator<std::less<double> >(2.1, "|eta|"));
+    _eta.reset(new Comparator<std::less<float> >(2.1, "|eta|"));
     _is_global.reset(new Comparator<std::logical_and<bool> >(true, "is Global"));
     _is_tracker.reset(new Comparator<std::logical_and<bool> >(true, "is Tracker"));
     _muon_segments.reset(new Comparator<>(1, "Muon Segments"));
     _muon_hits.reset(new Comparator<>(0, "Muon Hits"));
-    _muon_normalized_chi2.reset(new Comparator<std::less<double> >(10, "Muon Chi2 / ndof"));
+    _muon_normalized_chi2.reset(new Comparator<std::less<float> >(10, "Muon Chi2 / ndof"));
     _tracker_hits.reset(new Comparator<>(10, "Tracker hits"));
     _pixel_hits.reset(new Comparator<>(0, "Pixel hits"));
-    _d0_bsp.reset(new Comparator<std::less<double> >(0.02, "|d0_bsp|"));
-    _primary_vertex.reset(new Comparator<std::less<double> >(1, "|mu.z() - pv.z()|"));
+    _d0_bsp.reset(new Comparator<std::less<float> >(0.02, "|d0_bsp|"));
+    _primary_vertex.reset(new Comparator<std::less<float> >(1, "|mu.z() - pv.z()|"));
 
     monitor(_pt);
     monitor(_eta);
@@ -561,9 +561,9 @@ WJetSelector::WJetSelector()
 {
     _children.reset(new Comparator<std::equal_to<uint32_t> >(2, "Children"));
     _pt.reset(new Comparator<>(200, "pT"));
-    _mass_drop.reset(new Comparator<std::less<double> >(0.4, "Mass drop"));
+    _mass_drop.reset(new Comparator<std::less<float> >(0.4, "Mass drop"));
     _mass_lower_bound.reset(new Comparator<>(60, "Mass lower bound"));
-    _mass_upper_bound.reset(new Comparator<std::less<double> >(130, "Mass upper bound"));
+    _mass_upper_bound.reset(new Comparator<std::less<float> >(130, "Mass upper bound"));
 
     monitor(_children);
     monitor(_pt);
@@ -595,10 +595,10 @@ bool WJetSelector::apply(const Jet &jet)
     if (!_pt->apply(bsm::pt(jet.physics_object().p4())))
         return false;
 
-    double m0 = bsm::mass(jet.physics_object().p4());
-    double m1 = bsm::mass(jet.children().Get(0).physics_object().p4());
-    double m2 = bsm::mass(jet.children().Get(1).physics_object().p4());
-    double m12 = bsm::mass(jet.children().Get(0).physics_object().p4()
+    float m0 = bsm::mass(jet.physics_object().p4());
+    float m1 = bsm::mass(jet.children().Get(0).physics_object().p4());
+    float m2 = bsm::mass(jet.children().Get(1).physics_object().p4());
+    float m12 = bsm::mass(jet.children().Get(0).physics_object().p4()
             + jet.children().Get(1).physics_object().p4());
 
     return _mass_drop->apply(std::max(m1, m2) / m0)

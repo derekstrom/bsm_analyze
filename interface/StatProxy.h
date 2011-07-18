@@ -18,7 +18,7 @@ namespace bsm
         public:
             typedef boost::shared_ptr<stat::H1> H1Ptr;
 
-            H1Proxy(const uint32_t &bins, const double &min, const double &max);
+            H1Proxy(const uint32_t &bins, const float &min, const float &max);
             H1Proxy(const H1Proxy &);
 
             const H1Ptr histogram() const;
@@ -46,12 +46,12 @@ namespace bsm
             typedef boost::shared_ptr<stat::H2> H2Ptr;
 
             H2Proxy(const uint32_t &x_bins,
-                    const double &x_min,
-                    const double &x_max,
+                    const float &x_min,
+                    const float &x_max,
                     
                     const uint32_t &y_bins,
-                    const double &y_min,
-                    const double &y_max);
+                    const float &y_min,
+                    const float &y_max);
 
             H2Proxy(const H2Proxy &);
 

@@ -79,8 +79,8 @@ namespace bsm
             public:
                 typedef boost::shared_ptr<LorentzVector> P4Ptr;
 
-                NeutrinoReconstruct(const double &mass_a,
-                        const double &mass_b);
+                NeutrinoReconstruct(const float &mass_a,
+                        const float &mass_b);
                 NeutrinoReconstruct(const NeutrinoReconstruct &);
 
                 // return number of solutions found
@@ -113,16 +113,16 @@ namespace bsm
 
                 void addSolution(P4Ptr &,
                         const LorentzVector &,
-                        const double &pz);
+                        const float &pz);
 
                 void setSolution(P4Ptr &,
-                        const double &,
-                        const double &,
-                        const double &,
-                        const double &);
+                        const float &,
+                        const float &,
+                        const float &,
+                        const float &);
 
-                double _mass_a;
-                double _mass_b;
+                float _mass_a;
+                float _mass_b;
 
                 uint32_t _solutions;
 
@@ -151,11 +151,11 @@ namespace bsm
 
                 const P4Ptr top() const;
 
-                double dr() const;
-                double dr_w_top() const;
-                double dr_b_top() const;
+                float dr() const;
+                float dr_w_top() const;
+                float dr_b_top() const;
 
-                double apply(const LorentzVector &w, const LorentzVector &b);
+                float apply(const LorentzVector &w, const LorentzVector &b);
 
                 void reset();
 
@@ -175,9 +175,9 @@ namespace bsm
 
                 P4Ptr _top;
 
-                double _dr;
-                double _dr_w_top;
-                double _dr_b_top;
+                float _dr;
+                float _dr_w_top;
+                float _dr_b_top;
         };
 
         // Leptonic decay of the t-quark:
@@ -202,12 +202,12 @@ namespace bsm
 
                 const P4Ptr top() const;
 
-                double dr() const;
-                double dr_l_top() const;
-                double dr_nu_top() const;
-                double dr_b_top() const;
+                float dr() const;
+                float dr_l_top() const;
+                float dr_nu_top() const;
+                float dr_b_top() const;
 
-                double apply(const LorentzVector &l,
+                float apply(const LorentzVector &l,
                         const LorentzVector &nu,
                         const LorentzVector &b);
 
@@ -229,10 +229,10 @@ namespace bsm
 
                 P4Ptr _top;
 
-                double _dr;
-                double _dr_l_top;
-                double _dr_nu_top;
-                double _dr_b_top;
+                float _dr;
+                float _dr_l_top;
+                float _dr_nu_top;
+                float _dr_b_top;
         };
 
         class TTbarDeltaRReconstruct : public core::Object
@@ -245,7 +245,7 @@ namespace bsm
                 TTbarDeltaRReconstruct();
                 TTbarDeltaRReconstruct(const TTbarDeltaRReconstruct &);
 
-                double dr() const;
+                float dr() const;
 
                 HadronicPtr hadronicDecay() const;
                 LeptonicPtr leptonicDecay() const;
@@ -254,7 +254,7 @@ namespace bsm
                 //
                 //  DR = DR_leptonic + DR_hadronic
                 //
-                double apply(const Jets &,
+                float apply(const Jets &,
                         const LorentzVector &lepton,
                         const LorentzVector &missing_energy,
                         const LorentzVector &wjet);
@@ -275,14 +275,14 @@ namespace bsm
                 //
                 TTbarDeltaRReconstruct &operator =(const TTbarDeltaRReconstruct &);
 
-                double minimize(const Jets &,
+                float minimize(const Jets &,
                         const Jets::const_iterator &jet1,
                         const Jets::const_iterator &jet2,
                         const LorentzVector &lepton,
                         const LorentzVector &missing_energy,
                         const LorentzVector &wjet);
 
-                double _dr;
+                float _dr;
                 
                 HadronicPtr _hadronic;
                 LeptonicPtr _leptonic;
