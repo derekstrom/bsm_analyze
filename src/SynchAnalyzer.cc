@@ -915,16 +915,6 @@ SynchJECJuly2011Analyzer::GoodJets
                 ++child)
         {
             const LorentzVector &child_p4 = child->physics_object().p4();
-            const float child_pt = pt(child_p4);
-            const float child_eta = eta(child_p4);
-            const float child_phi = phi(child_p4);
-
-            /*
-            out << "child: ";
-            printP4(out, child_p4);
-            out << endl;
-            out << child_pt << " " << child_eta << " " << child_phi << endl;
-            */
 
             // Electrons
             //
@@ -933,9 +923,7 @@ SynchJECJuly2011Analyzer::GoodJets
                     ++electron)
             {
                 const LorentzVector &electron_p4 = (*electron)->physics_object().p4();
-                if (child_pt == pt(electron_p4)
-                        && child_eta == eta(electron_p4)
-                        && child_phi == phi(electron_p4))
+                if (electron_p4 == child_p4)
                 {
                     corrected_p4 -= electron_p4;
 
@@ -945,14 +933,14 @@ SynchJECJuly2011Analyzer::GoodJets
                 }
             }
 
+            // Muons
+            //
             for(GoodMuons::const_iterator muon = muons.begin();
                     muons.end() != muon;
                     ++muon)
             {
                 const LorentzVector &muon_p4 = (*muon)->physics_object().p4();
-                if (child_pt == pt(muon_p4)
-                        && child_eta == eta(muon_p4)
-                        && child_phi == phi(muon_p4))
+                if (muon_p4 == child_p4)
                 {
                     corrected_p4 -= muon_p4;
 
@@ -975,10 +963,6 @@ SynchJECJuly2011Analyzer::GoodJets
         float correction = _jec->getCorrection();
         corrected_p4 *= correction;
 
-        Jet corrected_jet = *jet;
-
-        *corrected_jet.mutable_physics_object()->mutable_p4() = corrected_p4;
-
         if (!out.str().empty())
         {
             jets_out << setw(20) << "Uncorrected Jet ";
@@ -992,9 +976,19 @@ SynchJECJuly2011Analyzer::GoodJets
             jets_out << endl;
         }
 
+        // Original jet in the event can not be modified and Jet Selector can
+        // only be applied to jet: therefore copy jet, set corrected p4 and
+        // apply selector
+        //
+        Jet corrected_jet = *jet;
+
+        *corrected_jet.mutable_physics_object()->mutable_p4() = corrected_p4;
+
         if (!_jet_selector->apply(corrected_jet))
             continue;
 
+        // Store original jet and corrected p4
+        //
         CorrectedJet tmp;
         tmp.jet = &*jet;
         tmp.corrected_p4 = corrected_p4;
