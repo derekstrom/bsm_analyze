@@ -7,3 +7,6 @@
 [submodule "bsm_core"]
 	path = bsm_core
 	url = git://github.com/ksamdev/bsm_core.git
+[submodule "JetMETObjects"]
+	path = JetMETObjects
+	url = git://github.com/ksamdev/JetMETObjects.git
