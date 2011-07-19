@@ -180,8 +180,8 @@ void ElectronsMonitor::fill(const Electrons &electrons)
 {
     multiplicity()->fill(electrons.size());
 
-    double max_el_pt = 0;
-    double el_pt = 0;
+    float max_el_pt = 0;
+    float el_pt = 0;
     for(Electrons::const_iterator electron = electrons.begin();
             electrons.end() != electron;
             ++electron)
@@ -307,12 +307,16 @@ JetsMonitor::JetsMonitor()
 {
     _multiplicity.reset(new H1Proxy(10, 0, 10));
     _pt.reset(new H1Proxy(100, 0, 100));
+    _uncorrected_pt.reset(new H1Proxy(100, 0, 100));
     _leading_pt.reset(new H1Proxy(100, 0, 100));
+    _leading_uncorrected_pt.reset(new H1Proxy(100, 0, 100));
     _children.reset(new H1Proxy(10, 0, 10));
 
     monitor(_multiplicity);
     monitor(_pt);
+    monitor(_uncorrected_pt);
     monitor(_leading_pt);
+    monitor(_leading_uncorrected_pt);
     monitor(_children);
 }
 
@@ -320,12 +324,16 @@ JetsMonitor::JetsMonitor(const JetsMonitor &object)
 {
     _multiplicity.reset(new H1Proxy(*object._multiplicity));
     _pt.reset(new H1Proxy(*object._pt));
+    _uncorrected_pt.reset(new H1Proxy(*object._uncorrected_pt));
     _leading_pt.reset(new H1Proxy(*object._leading_pt));
+    _leading_uncorrected_pt.reset(new H1Proxy(*object._leading_uncorrected_pt));
     _children.reset(new H1Proxy(*object._children));
 
     monitor(_multiplicity);
     monitor(_pt);
+    monitor(_uncorrected_pt);
     monitor(_leading_pt);
+    monitor(_leading_uncorrected_pt);
     monitor(_children);
 }
 
@@ -333,8 +341,10 @@ void JetsMonitor::fill(const Jets &jets)
 {
     multiplicity()->fill(jets.size());
 
-    double max_jet_pt = 0;
-    double jet_pt = 0;
+    float max_jet_pt = 0;
+    float max_jet_uncorrected_pt = 0;
+    float jet_pt = 0;
+    float jet_uncorrected_pt = 0;
     for(Jets::const_iterator jet = jets.begin();
             jets.end() != jet;
             ++jet)
@@ -342,17 +352,29 @@ void JetsMonitor::fill(const Jets &jets)
         children()->fill(jet->children().size());
 
         jet_pt = bsm::pt(jet->physics_object().p4());
+        jet_uncorrected_pt = 0;
 
         pt()->fill(jet_pt);
+
+        if (jet->has_uncorrected_p4())
+        {
+            jet_uncorrected_pt = bsm::pt(jet->uncorrected_p4());
+
+            uncorrected_pt()->fill(jet_uncorrected_pt);
+        }
 
         if (jet_pt <= max_jet_pt)
             continue;
 
         max_jet_pt = jet_pt;
+        max_jet_uncorrected_pt = jet_uncorrected_pt;
     }
 
     if (max_jet_pt)
+    {
         leading_pt()->fill(max_jet_pt);
+        leading_uncorrected_pt()->fill(max_jet_uncorrected_pt);
+    }
 }
 
 const H1Ptr JetsMonitor::multiplicity() const
@@ -365,9 +387,19 @@ const H1Ptr JetsMonitor::pt() const
     return _pt->histogram();
 }
 
+const H1Ptr JetsMonitor::uncorrected_pt() const
+{
+    return _uncorrected_pt->histogram();
+}
+
 const H1Ptr JetsMonitor::leading_pt() const
 {
     return _leading_pt->histogram();
+}
+
+const H1Ptr JetsMonitor::leading_uncorrected_pt() const
+{
+    return _leading_uncorrected_pt->histogram();
 }
 
 const H1Ptr JetsMonitor::children() const
@@ -390,6 +422,9 @@ void JetsMonitor::print(std::ostream &out) const
     out << setw(16) << left << " [multiplicity]"
         << *multiplicity() << endl;
     out << setw(16) << left << " [pt]" << *pt() << endl;
+    out << setw(16) << left << " [uncorrected pt]" << *uncorrected_pt() << endl;
+    out << setw(16) << left << " [leading uncorrected pt] " << *leading_uncorrected_pt()
+        << endl;
     out << setw(16) << left << " [leading pt] " << *leading_pt()
         << endl;
     out << setw(16) << left << " [children]" << *children();
@@ -624,8 +659,8 @@ void MuonsMonitor::fill(const Muons &muons)
 {
     multiplicity()->fill(muons.size());
 
-    double max_muon_pt = 0;
-    double muon_pt = 0;
+    float max_muon_pt = 0;
+    float muon_pt = 0;
     for(Muons::const_iterator muon = muons.begin();
             muons.end() != muon;
             ++muon)

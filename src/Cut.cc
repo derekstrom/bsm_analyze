@@ -112,7 +112,7 @@ void Counter::update()
 
 // Cut
 //
-Cut::Cut(const double &value, const string &name):
+Cut::Cut(const float &value, const string &name):
     _value(value),
     _name(name),
     _is_disabled(false)
@@ -156,17 +156,17 @@ void Cut::setName(const string &name)
     _name = name;
 }
 
-double Cut::value() const
+float Cut::value() const
 {
     return _value;
 }
 
-void Cut::setValue(const double &value)
+void Cut::setValue(const float &value)
 {
     _value = value;
 }
 
-bool Cut::apply(const double &value)
+bool Cut::apply(const float &value)
 {
     if (isDisabled())
         return true;

@@ -319,8 +319,8 @@ void JetCanvas::draw(const JetsMonitor &monitor)
 {
     if (!_canvas)
     {
-        _canvas.reset(new TCanvas(_name.c_str(), _title.c_str(), 1024, 320));
-        _canvas->Divide(4);
+        _canvas.reset(new TCanvas(_name.c_str(), _title.c_str(), 1024, 640));
+        _canvas->Divide(3, 2);
     }
 
     _canvas->cd(1);
@@ -328,20 +328,30 @@ void JetCanvas::draw(const JetsMonitor &monitor)
     _multiplicity->GetXaxis()->SetTitle("N_{jet}");
     _multiplicity->Draw("hist");
 
+    _canvas->cd(4);
+    _children = convert(*monitor.children());
+    _children->GetXaxis()->SetTitle("N_{children}");
+    _children->Draw("hist");
+
     _canvas->cd(2);
     _leading_pt = convert(*monitor.leading_pt());
     _leading_pt->GetXaxis()->SetTitle("leading p^{jet}_{T} [GeV/c]");
     _leading_pt->Draw("hist");
+
+    _canvas->cd(5);
+    _leading_uncorrected_pt = convert(*monitor.leading_uncorrected_pt());
+    _leading_uncorrected_pt->GetXaxis()->SetTitle("leading uncorrected p^{jet}_{T} [GeV/c]");
+    _leading_uncorrected_pt->Draw("hist");
 
     _canvas->cd(3);
     _pt = convert(*monitor.pt());
     _pt->GetXaxis()->SetTitle("p^{jet}_{T} [GeV/c]");
     _pt->Draw("hist");
 
-    _canvas->cd(4);
-    _children = convert(*monitor.children());
-    _children->GetXaxis()->SetTitle("N_{children}");
-    _children->Draw("hist");
+    _canvas->cd(6);
+    _uncorrected_pt = convert(*monitor.uncorrected_pt());
+    _uncorrected_pt->GetXaxis()->SetTitle("Uncorrected p^{jet}_{T} [GeV/c]");
+    _uncorrected_pt->Draw("hist");
 }
 
 void JetCanvas::write(TDirectory *dir, const JetsMonitor &monitor)

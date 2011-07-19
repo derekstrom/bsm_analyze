@@ -85,6 +85,8 @@ namespace bsm
 
             TH1Ptr _multiplicity;
             TH1Ptr _leading_pt;
+            TH1Ptr _leading_uncorrected_pt;
+            TH1Ptr _uncorrected_pt;
             TH1Ptr _pt;
             TH1Ptr _children;
 

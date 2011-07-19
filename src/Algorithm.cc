@@ -82,7 +82,7 @@ const bsm::Jet *ClosestJet::find(const Jets &jets)
 {
     TLorentzVector lepton_p4(*_p4);
 
-    double min_delta_r = -1;
+    float min_delta_r = -1;
     const Jet *closest_jet = 0;
     for(Jets::const_iterator jet = jets.begin();
             jets.end() != jet;
@@ -90,7 +90,7 @@ const bsm::Jet *ClosestJet::find(const Jets &jets)
     { 
         utility::set(_p4.get(), &jet->physics_object().p4());
 
-        double delta_r = _p4->DeltaR(lepton_p4);
+        float delta_r = _p4->DeltaR(lepton_p4);
 
         if (-1 == min_delta_r
                 || delta_r < min_delta_r)
@@ -108,8 +108,8 @@ const bsm::Jet *ClosestJet::find(const Jets &jets)
 
 // Neutrino Momenturm Reconstructor
 //
-NeutrinoReconstruct::NeutrinoReconstruct(const double &mass_a,
-        const double &mass_b):
+NeutrinoReconstruct::NeutrinoReconstruct(const float &mass_a,
+        const float &mass_b):
     _mass_a(mass_a),
     _mass_b(mass_b),
     _solutions(0)
@@ -135,7 +135,7 @@ uint32_t NeutrinoReconstruct::apply(const LorentzVector &p4,
 {
     reset();
 
-    double a = _mass_a * _mass_a
+    float a = _mass_a * _mass_a
         - _mass_b * _mass_b
         + 2 * p4.px() * met.px()
         + 2 * p4.py() * met.py();
@@ -150,13 +150,13 @@ uint32_t NeutrinoReconstruct::apply(const LorentzVector &p4,
     //
     //      A x^2 + 2B x + C = 0
     //
-    double A = 4 * (p4.e() * p4.e() - p4.pz() * p4.pz());
-    double B = -2 * a * p4.pz();
-    double C = 4 * p4.e() * p4.e() * ( met.px() * met.px()
+    float A = 4 * (p4.e() * p4.e() - p4.pz() * p4.pz());
+    float B = -2 * a * p4.pz();
+    float C = 4 * p4.e() * p4.e() * ( met.px() * met.px()
             + met.py() * met.py())
         - a * a;
 
-    double discriminant = B * B - A * C;
+    float discriminant = B * B - A * C;
 
     if (0 > discriminant)
     {
@@ -241,16 +241,16 @@ void NeutrinoReconstruct::print(std::ostream &out) const
 //
 void NeutrinoReconstruct::addSolution(P4Ptr &solution,
         const LorentzVector &p4,
-        const double &pz)
+        const float &pz)
 {
     setSolution(solution, p4.e(), p4.px(), p4.py(), pz);
 }
 
 void NeutrinoReconstruct::setSolution(P4Ptr &solution,
-        const double &e,
-        const double &px,
-        const double &py,
-        const double &pz)
+        const float &e,
+        const float &px,
+        const float &py,
+        const float &pz)
 {
     solution->set_e(e);
     solution->set_px(px);
@@ -285,22 +285,22 @@ const HadronicDecay::P4Ptr HadronicDecay::top() const
     return _top;
 }
 
-double HadronicDecay::dr() const
+float HadronicDecay::dr() const
 {
     return _dr;
 }
 
-double HadronicDecay::dr_w_top() const
+float HadronicDecay::dr_w_top() const
 {
     return _dr_w_top;
 }
 
-double HadronicDecay::dr_b_top() const
+float HadronicDecay::dr_b_top() const
 {
     return _dr_b_top;
 }
 
-double HadronicDecay::apply(const LorentzVector &w, const LorentzVector &b)
+float HadronicDecay::apply(const LorentzVector &w, const LorentzVector &b)
 {
     _top->Clear();
 
@@ -387,27 +387,27 @@ const LeptonicDecay::P4Ptr LeptonicDecay::top() const
     return _top;
 }
 
-double LeptonicDecay::dr() const
+float LeptonicDecay::dr() const
 {
     return _dr;
 }
 
-double LeptonicDecay::dr_l_top() const
+float LeptonicDecay::dr_l_top() const
 {
     return _dr_l_top;
 }
 
-double LeptonicDecay::dr_nu_top() const
+float LeptonicDecay::dr_nu_top() const
 {
     return _dr_nu_top;
 }
 
-double LeptonicDecay::dr_b_top() const
+float LeptonicDecay::dr_b_top() const
 {
     return _dr_b_top;
 }
 
-double LeptonicDecay::apply(const LorentzVector &l,
+float LeptonicDecay::apply(const LorentzVector &l,
         const LorentzVector &nu,
         const LorentzVector &b)
 {
@@ -499,7 +499,7 @@ TTbarDeltaRReconstruct::TTbarDeltaRReconstruct(const TTbarDeltaRReconstruct &obj
     monitor(_leptonic);
 }
 
-double TTbarDeltaRReconstruct::dr() const
+float TTbarDeltaRReconstruct::dr() const
 {
     return _dr;
 }
@@ -514,7 +514,7 @@ TTbarDeltaRReconstruct::LeptonicPtr TTbarDeltaRReconstruct::leptonicDecay() cons
     return _leptonic;
 }
 
-double TTbarDeltaRReconstruct::apply(const Jets &jets,
+float TTbarDeltaRReconstruct::apply(const Jets &jets,
         const LorentzVector &lepton,
         const LorentzVector &missing_energy,
         const LorentzVector &wjet)
@@ -567,7 +567,7 @@ void TTbarDeltaRReconstruct::print(std::ostream &out) const
 
 // Privates
 //
-double TTbarDeltaRReconstruct::minimize(const Jets &jets,
+float TTbarDeltaRReconstruct::minimize(const Jets &jets,
         const Jets::const_iterator &jet1,
         const Jets::const_iterator &jet2,
         const LorentzVector &lepton,
@@ -596,7 +596,7 @@ double TTbarDeltaRReconstruct::minimize(const Jets &jets,
         LeptonicPtr ltop(new LeptonicDecay());
         HadronicPtr htop(new HadronicDecay());
 
-        double dr = ltop->apply(lepton, missing_energy, (*jet1)->physics_object().p4())
+        float dr = ltop->apply(lepton, missing_energy, (*jet1)->physics_object().p4())
             + htop->apply(wjet, (*jet2)->physics_object().p4());
 
         if (dr < _dr)

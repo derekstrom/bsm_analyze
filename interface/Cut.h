@@ -74,7 +74,7 @@ namespace bsm
     class Cut : public core::Object
     {
         public:
-            Cut(const double &value, const std::string &name = "");
+            Cut(const float &value, const std::string &name = "");
             Cut(const Cut &);
 
             const CounterPtr objects() const;
@@ -82,8 +82,8 @@ namespace bsm
 
             // Get actual cut value
             //
-            double value() const;
-            void setValue(const double &);
+            float value() const;
+            void setValue(const float &);
 
             // Get name of the cut
             //
@@ -92,7 +92,7 @@ namespace bsm
 
             // apply cut: implicitly count number of success
             //
-            bool apply(const double &);
+            bool apply(const float &);
 
             bool isDisabled() const;
 
@@ -116,9 +116,9 @@ namespace bsm
 
             // isPass is the actual application of the cut
             //
-            virtual bool isPass(const double &) = 0;
+            virtual bool isPass(const float &) = 0;
 
-            double _value;
+            float _value;
             std::string _name;
             bool _is_disabled;
 
@@ -137,7 +137,7 @@ namespace bsm
     //      }
     //
     //  2.  boost::shared_ptr<Cut> my_cut(
-    //          new Comparator<std::less_equal<double> >(10));
+    //          new Comparator<std::less_equal<float> >(10));
     //      if ((*my_cut)(energy))
     //      {
     //          // Energy <= 10
@@ -146,11 +146,11 @@ namespace bsm
     //  3.  cout << "Default cut (passes): " << *default_cut << endl;
     //      cout << "Default cut (> " << default_cut->value() << ")" << endl;
     //
-    template<class Compare = std::greater<double> >
+    template<class Compare = std::greater<float> >
         class Comparator : public Cut
         {
             public:
-                Comparator(const double &value, const std::string &name = "");
+                Comparator(const float &value, const std::string &name = "");
 
                 virtual uint32_t id() const;
 
@@ -159,7 +159,7 @@ namespace bsm
                 virtual void print(std::ostream &out) const;
 
             protected:
-                virtual bool isPass(const double &number);
+                virtual bool isPass(const float &number);
 
             private:
                 Compare _functor;
@@ -184,7 +184,7 @@ namespace bsm
 // Template(s) implementation
 //
 template<class Compare>
-    bsm::Comparator<Compare>::Comparator(const double &value,
+    bsm::Comparator<Compare>::Comparator(const float &value,
             const std::string &name):
         Cut(value, name)
 {
@@ -204,7 +204,7 @@ template<class Compare>
 }
 
 template<class Compare>
-    bool bsm::Comparator<Compare>::isPass(const double &number)
+    bool bsm::Comparator<Compare>::isPass(const float &number)
 {
     return _functor(number, value());
 }
