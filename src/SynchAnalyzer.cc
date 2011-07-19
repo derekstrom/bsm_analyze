@@ -7,6 +7,7 @@
 // Copyright 2011, All rights reserved
 
 #include <ostream>
+#include <iostream>
 #include <string>
 
 #include <boost/pointer_cast.hpp>
@@ -26,6 +27,24 @@ using namespace std;
 using boost::dynamic_pointer_cast;
 
 using bsm::SynchJuly2011Analyzer;
+
+int trigger1 = 0;
+int trigger2 = 0;
+int trigger3 = 0;
+int trigger4 = 0;
+int trigger5 = 0;
+int trigger6 = 0;
+int trigger7 = 0;
+int trigger8 = 0;
+int trigger9 = 0;
+int trigger10 = 0;
+int trigger11 = 0;
+int trigger12 = 0;
+int trigger13 = 0;
+int trigger14 = 0;
+int trigger15 = 0;
+int trigger16 = 0;
+
 
 SynchJuly2011Analyzer::SynchJuly2011Analyzer(const LeptonMode &mode):
     _lepton_mode(mode)
@@ -65,6 +84,7 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const LeptonMode &mode):
     monitor(_muon_selector);
     monitor(_muon_veto_selector);
 
+
     // Monitors
     //
     _leading_jet.reset(new LorentzVectorMonitor());
@@ -77,6 +97,7 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const LeptonMode &mode):
     _electron_to_veto.reset(new LorentzVectorMonitor());
     _muon_after_veto.reset(new LorentzVectorMonitor());
 
+
     monitor(_leading_jet);
 
     monitor(_electron_before_veto);
@@ -86,6 +107,10 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const LeptonMode &mode):
     monitor(_muon_before_veto);
     monitor(_electron_to_veto);
     monitor(_muon_after_veto);
+
+
+
+
 }
 
 SynchJuly2011Analyzer::SynchJuly2011Analyzer(const SynchJuly2011Analyzer &object):
@@ -157,6 +182,7 @@ SynchJuly2011Analyzer::SynchJuly2011Analyzer(const SynchJuly2011Analyzer &object
     monitor(_muon_before_veto);
     monitor(_electron_to_veto);
     monitor(_muon_after_veto);
+
 }
 
 const SynchJuly2011Analyzer::P4MonitorPtr SynchJuly2011Analyzer::leadingJet() const
@@ -245,10 +271,12 @@ void SynchJuly2011Analyzer::process(const Event *event)
         return;
 
     _cutflow->apply(VETO_SECOND_LEPTON);
-    
+
+
     if (!trigger(event))
       return;
-    
+ 
+
     _passed_events.push_back(event->extra());
 }
 
@@ -340,6 +368,25 @@ void SynchJuly2011Analyzer::print(std::ostream &out) const
 
         default: break;
     }
+
+    cout << endl << endl;
+    cout << "trigger1: " << trigger1 << endl;
+    cout << "trigger2: " << trigger2 << endl;
+    cout << "trigger3: " << trigger3 << endl;
+    cout << "trigger4: " << trigger4 << endl;
+    cout << "trigger5: " << trigger5 << endl;
+    cout << "trigger6: " << trigger6 << endl;
+    cout << "trigger7: " << trigger7 << endl;
+    cout << "trigger8: " << trigger8 << endl;
+    cout << "trigger9: " << trigger9 << endl;
+    cout << "trigger10: " << trigger10 << endl;
+    cout << "trigger11: " << trigger11 << endl;
+    cout << "trigger12: " << trigger12 << endl;
+    cout << "trigger13: " << trigger13 << endl;
+    cout << "trigger14: " << trigger14 << endl;
+    cout << "trigger15: " << trigger15 << endl;
+    cout << "trigger16: " << trigger16 << endl;
+
 }
 
 
@@ -357,12 +404,16 @@ bool SynchJuly2011Analyzer::jets(const Event *event)
     uint32_t selected_jets = 0;
     const Jet *leading_jet = 0;
     double leading_jet_pt = 0;
+    double leading_jet_pt_cut = 250;
+
     LockSelectorEventCounterOnUpdate lock(*_jet_selector);
     for(Jets::const_iterator jet = event->jets().begin();
-            event->jets().end() != jet
-                && 2 > selected_jets;
+	event->jets().end() != jet
+	  && 2 > selected_jets;
             ++jet)
     {
+
+
         if (_jet_selector->apply(*jet))
         {
             ++selected_jets;
@@ -375,13 +426,15 @@ bool SynchJuly2011Analyzer::jets(const Event *event)
                 leading_jet_pt = jet_pt;
             }
         }
+
     }
 
     if (1 < selected_jets
-            && leading_jet)
-        _leading_jet->fill(leading_jet->physics_object().p4());
+	&& leading_jet && leading_jet_pt > leading_jet_pt_cut)
+      _leading_jet->fill(leading_jet->physics_object().p4());
 
-    return 1 < selected_jets;
+    //    return 1 < selected_jets; 
+    return 1 < selected_jets && leading_jet_pt > leading_jet_pt_cut;
 }
 
 bool SynchJuly2011Analyzer::electron(const Event *event)
@@ -517,36 +570,40 @@ bool SynchJuly2011Analyzer::trigger(const Event *event)
       ++hlt)
     {
       
-
-
-
-      //      if (_hlt_map[hlt->hash()] == "hlt_ele10_caloidt_caloisovl_trkidt_trkisovl_ht200" && hlt->pass())  // 3  1   40568
-      //      if (_hlt_map[hlt->hash()] == "hlt_ele45_caloidvt_trkidt" && hlt->pass())                          // 2  1   27071
-      //if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraljet30" && hlt->pass())             // 2  1   35936
-      //if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraltrijet30" && hlt->pass())          // 2  1   30261
-      //if (_hlt_map[hlt->hash()] == "hlt_ele8_caloidl_caloisovl_jet40" && hlt->pass())                   // 2  1   59030
-      //if (_hlt_map[hlt->hash()] == "hlt_ele27_caloidvt_caloisot_trkidt_trkisot" && hlt->pass())         // 2  1   31390
-      //if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidl_caloisovl_ele8_caloidl_caloisovl" && hlt->pass()) // 2  1   6998
-      //if (_hlt_map[hlt->hash()] == "hlt_ele32_caloidl_caloisovl_sc17" && hlt->pass())                   // 2  1   17206
-      //if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraljet40_btagip" && hlt->pass())      // 2  1   30835
-      //if (_hlt_map[hlt->hash()] == "hlt_ele32_caloidvt_caloisot_trkidt_trkisot" && hlt->pass())         // 1  1   29449
-      //if (_hlt_map[hlt->hash()] == "hlt_ele15_caloidvt_trkidt_looseisopftau15" && hlt->pass())          // 2  1   29386
-      //if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidl_caloisovl_ele15_hfl" && hlt->pass())              // 2  1   311
-      //if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraldijet30" && hlt->pass())           // 2  1   34957
-      //if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidl_caloisovl" && hlt->pass())                        // 2  1   53099
+      if (_hlt_map[hlt->hash()] == "hlt_ele10_caloidt_caloisovl_trkidt_trkisovl_ht200" && hlt->pass())  // 3  1   40568
+	trigger1++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele45_caloidvt_trkidt" && hlt->pass())                          // 2  1   27071
+	trigger2++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraljet30" && hlt->pass())             // 2  1   35936
+	trigger3++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraltrijet30" && hlt->pass())          // 2  1   30261
+	trigger4++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele8_caloidl_caloisovl_jet40" && hlt->pass())                   // 2  1   59030
+	trigger5++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele27_caloidvt_caloisot_trkidt_trkisot" && hlt->pass())         // 2  1   31390
+	trigger6++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele32_caloidl_caloisovl_sc17" && hlt->pass())                   // 2  1   17206
+	trigger7++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraljet40_btagip" && hlt->pass())      // 2  1   30835
+	trigger8++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele32_caloidvt_caloisot_trkidt_trkisot" && hlt->pass())         // 1  1   29449
+	trigger9++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele25_caloidvt_trkidt_centraldijet30" && hlt->pass())           // 2  1   34957
+	trigger10++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidl_caloisovl" && hlt->pass())                        // 2  1   53099
+	trigger11++;
       if (_hlt_map[hlt->hash()] == "hlt_ele10_caloidl_caloisovl_trkidvl_trkisovl_ht200" && hlt->pass()) // 3  1   46410
-      //if (_hlt_map[hlt->hash()] == "hlt_ele10_caloidl_caloisovl_trkidvl_trkisovl_ht200") // 3  1   46410
-      //if (_hlt_map[hlt->hash()] == "hlt_ele15_caloidvt_caloisot_trkidt_trkisot" && hlt->pass())       //  2  1   35389
-      //if (_hlt_map[hlt->hash()] == "hlt_ele8_caloidl_trkidvl" && hlt->pass())                           // 2  1   67331
-      //if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidt_trkidvl_caloisovl_trkisovl_ele8_caloidt_trkidvl_caloisovl_trkisovl" && hlt->pass()) // 2  1   3554
-      //if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidvt_caloisovt_trkidt_trkisovt_sc8_mass30" && hlt->pass()) // 2  1   16791
-      //if (_hlt_map[hlt->hash()] == "hlt_ele8_caloidl_caloisovl" && hlt->pass())                       //  2  1   59231
-      //if (_hlt_map[hlt->hash()] == "hlt_ele15_caloidvt_caloisot_trkidt_trkisot_looseisopftau15" && hlt->pass()) // 2  1   25366
-      //if (_hlt_map[hlt->hash()] == "hlt_ele15_caloidvt_caloisot_trkidt_trkisot_looseisopftau20" && hlt->pass()) // 2  1   24236
+	trigger12++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele15_caloidvt_caloisot_trkidt_trkisot" && hlt->pass())       //  2  1   35389
+	trigger13++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele8_caloidl_trkidvl" && hlt->pass())                           // 2  1   67331
+	trigger14++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele17_caloidvt_caloisovt_trkidt_trkisovt_sc8_mass30" && hlt->pass()) // 2  1   16791
+	trigger15++;
+      if (_hlt_map[hlt->hash()] == "hlt_ele8_caloidl_caloisovl" && hlt->pass())                       //  2  1   59231
+	trigger16++;
       
-
-
-	ispass = true;
+      ispass = true;
 
     }
   

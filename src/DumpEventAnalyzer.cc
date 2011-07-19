@@ -315,11 +315,8 @@ void DumpEventAnalyzer::dumpTriggers(const Event *event)
       ++hlt)
     {
       
-      //      if (_hlt_map[hlt->hash()] == "hlt_ele10_caloidl_caloisovl_trkidvl_trkisovl_ht200")
-      //	_out << hlt->pass() << " : " << _hlt_map[hlt->hash()] << endl;
-
-
-      _out << hlt->pass() << " : " << _hlt_map[hlt->hash()] << endl;
+      if (_hlt_map[hlt->hash()] == "hlt_ele10_caloidl_caloisovl_trkidvl_trkisovl_ht200")
+	_out << hlt->pass() << " : " << _hlt_map[hlt->hash()] << endl;
 
       
     }

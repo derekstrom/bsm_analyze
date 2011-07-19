@@ -10,6 +10,7 @@
 #define BSM_SYNCHRONIZATION_ANALYZER
 
 #include <vector>
+#include <sstream>
 
 #include <boost/shared_ptr.hpp>
 
@@ -86,6 +87,8 @@ namespace bsm
             boost::shared_ptr<MuonSelector> _muon_veto_selector;
 
             std::vector<Event::Extra> _passed_events;
+
+	    std::ostringstream _out;
 
             P4MonitorPtr _leading_jet;
 
